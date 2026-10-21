@@ -4,7 +4,7 @@
 
 Сделан для уроков программирования с детьми: игру по описанию собирает нейросеть (Qwen, ChatGPT, GigaChat…), и получается ровно **3 файла — HTML, CSS, JS**, которые вставляются в CodePen.
 
-**Примеры:** [Фруктопад](https://si0683.github.io/ArcadeJS/examples/starter/) · [Флаппи](https://si0683.github.io/ArcadeJS/examples/flappy/) · [Змейка-умник](https://si0683.github.io/ArcadeJS/examples/snake/) · [Космо-арканоид](https://si0683.github.io/ArcadeJS/examples/breakout/) · [Лисёнок](https://si0683.github.io/ArcadeJS/examples/platformer/) · [Звёздный патруль](https://si0683.github.io/ArcadeJS/examples/shooter/) · [Злые эмодзи](https://si0683.github.io/ArcadeJS/examples/angry/) (физика) · [Космо-раннер 3D](https://si0683.github.io/ArcadeJS/examples/runner3d/)
+**Примеры:** [Фруктопад](https://si0683.github.io/ArcadeJS/examples/starter/) · [Флаппи](https://si0683.github.io/ArcadeJS/examples/flappy/) · [Змейка-умник](https://si0683.github.io/ArcadeJS/examples/snake/) · [Космо-арканоид](https://si0683.github.io/ArcadeJS/examples/breakout/) · [Лисёнок](https://si0683.github.io/ArcadeJS/examples/platformer/) · [Звёздный патруль](https://si0683.github.io/ArcadeJS/examples/shooter/) · [Злые эмодзи](https://si0683.github.io/ArcadeJS/examples/angry/) (физика) · [Космо-раннер 3D](https://si0683.github.io/ArcadeJS/examples/runner3d/) · [Приключение](https://si0683.github.io/ArcadeJS/examples/adventure/) (спрайты, звуки и музыка Kenney)
 
 ## 🚀 Быстрый старт с нейросетью
 
@@ -13,8 +13,8 @@
 ## Подключение
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.0.0/arcade.css">
-<script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.0.0/arcade.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/arcade.css">
+<script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/arcade.js"></script>
 <div id="game"></div>
 ```
 
@@ -43,7 +43,10 @@ Arcade.create({
 - **Управление:** клавиатура, мышь, касания, свайпы, экранные кнопки — всё через `game.key.left` и `game.pressed('action')`.
 - **Экраны:** меню, настройки (звук, мир, предмет, сложность), отсчёт, пауза, конец игры, рекорд в браузере.
 - **Эффекты:** частицы, всплывающие надписи, тряска, вспышка; 8 миров с анимированным фоном.
-- **Звуки:** 12 штук в папке `sounds/`.
+- **Звуки:** 12 встроенных, 67 звуков Kenney (грузятся при первом вызове), 20 восьмибитных звуков синтезатора ZzFX и свои звуки ZzFX числами.
+- **Музыка:** 5 фоновых мелодий (`music: 'adventure'`), выключатель в настройках.
+- **Спрайты:** 201 картинка Kenney — герои с анимацией ходьбы и прыжка, монстры, блоки, космос, животные (`image: 'knight'`).
+- **Эмодзи картинками** Twemoji — одинаково на любом компьютере.
 - **Физика Matter.js** (`physics: true`): падение, столкновения, башни, верёвки, бросок мышью — Matter.js грузится сам.
 - **3D на Three.js** (`mode: '3d'`): `game.add3d` — кубы, шары, эмодзи в 3D, камера за героем; те же меню, очки и управление.
 - **Квиз:** `game.ask()` — математика, русский, английский, история России или свои вопросы; `game.choose()` — выбор улучшения.
@@ -60,4 +63,13 @@ AI.md                  — справочник API для нейросетей
 tools/build.py         — собирает index.html и codepen.html примеров
 ```
 
-Новая версия: поменять `VERSION` в `arcade.js`, `python tools/build.py`, ссылки `@1.0.0` в AI.md/README, коммит и тег `vX.Y.Z` — jsDelivr отдаёт файлы по тегу. Уже вышедшие версии не менять: на них опираются уроки.
+Новая версия: поменять `VERSION` в `arcade.js`, `python tools/build.py`, ссылки `@1.1.0` в AI.md/README, коммит и тег `vX.Y.Z` — jsDelivr отдаёт файлы по тегу. Уже вышедшие версии не менять: на них опираются уроки.
+
+## Авторы ресурсов
+
+- Звуки и спрайты — [Kenney](https://kenney.nl) (CC0).
+- Музыка — Juhani Junkala, [OpenGameArt](https://opengameart.org/users/subspaceaudio) (CC0).
+- Эмодзи — [Twemoji](https://github.com/jdecked/twemoji) (графика CC BY 4.0, © Twitter/X и авторы Twemoji).
+- Синтезатор звуков — [ZzFX](https://github.com/KilledByAPixel/ZzFX), Frank Force (MIT).
+- Физика — [Matter.js](https://brm.io/matter-js/) (MIT), 3D — [Three.js](https://threejs.org) (MIT).
+- Встроенные звуки jump, coin, crash и др. — из уроков автора репозитория.

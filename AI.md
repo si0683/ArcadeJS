@@ -1,12 +1,12 @@
-# ArcadeJS 1.0.0 — справочник для нейросетей
+# ArcadeJS 1.1.0 — справочник для нейросетей
 
 Ты пишешь браузерную 2D-игру на ArcadeJS. Результат — ровно 3 файла: HTML, CSS, JS (чистый JavaScript, без TypeScript, React, import/export, npm). Меню, настройки, отсчёт 3-2-1, пауза, «Игра окончена», рекорд, панель очков и жизней, звуки, кнопки для телефона уже есть во фреймворке — **не пиши их сам**. Пиши только правила своей игры.
 
 ## 1. HTML (для CodePen — целиком в окно HTML)
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.0.0/arcade.css">
-<script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.0.0/arcade.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/arcade.css">
+<script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/arcade.js"></script>
 <div id="game"></div>
 ```
 
@@ -33,6 +33,9 @@ Arcade.create({
   difficulty: false,           // true — выбор сложности → game.diff (0.75 / 1 / 1.35)
   buttons: ['left', 'right', 'action'], // кнопки на телефоне: left right up down action
   actionLabel: '●',            // надпись на кнопке action
+  music: 'adventure',          // фоновая музыка: adventure, action, boss, calm, menu (false — без музыки)
+  sounds: ['laser', 'explosion'], // звуки Kenney, которые загрузить заранее (остальные грузятся при первом вызове)
+  emojiStyle: 'twemoji',       // эмодзи картинками Twemoji (одинаково везде); 'system' — шрифтом компьютера
 
   setup(game) { /* начало каждой игры: создать объекты и таймеры */ },
   update(game, dt) { /* каждый кадр: управление, столкновения; dt — секунды */ },
@@ -53,13 +56,14 @@ const hero = game.add({ emoji: '🐸', x: 100, y: 300, size: 50, tag: 'hero' });
 | Свойство | Что делает |
 |---|---|
 | `x, y` | центр объекта (в пикселях мира) |
-| `emoji` / `text` / `shape: 'rect' \| 'circle'` | вид: эмодзи, надпись или фигура |
+| `emoji` / `image` / `text` / `shape: 'rect' \| 'circle'` | вид: эмодзи, спрайт Kenney (`image: 'knight'`, раздел 10) или своя картинка (`image: 'https://…png'`), надпись, фигура |
 | `size` или `w, h` | размер (у эмодзи — размер шрифта) |
 | `color, radius, glow` | цвет фигуры, скругление прямоугольника, свечение |
 | `vx, vy` | скорость (пикс/с), `ax, ay` — ускорение, `gravity` — притяжение вниз |
 | `friction, maxSpeed` | торможение, предел скорости |
 | `angle, spin` | поворот (радианы) и скорость вращения |
 | `flip, alpha, z, blink` | отражение, прозрачность, порядок рисования, мигание N секунд |
+| `pose, animSpeed` | поза анимированного спрайта (`idle`, `walk`, `jump`, `fall`, `hurt`, `cheer`, `duck`, `attack`) — без `pose` выбирается сама; кадров в секунду |
 | `tag` | группа: `'enemy'`, `'coin'`… |
 | `bounce, wrap, inside` | отскок от краёв экрана / выход с другой стороны / не выходить за край |
 | `removeOffscreen: true` | удалить, когда улетел далеко за экран (для пуль и падающих предметов) |
@@ -108,7 +112,7 @@ const hero = game.add({ emoji: '🐸', x: 100, y: 300, size: 50, tag: 'hero' });
 | `game.every(1.5, fn)`, `game.after(3, fn)` | повтор / один раз через N секунд; `fn(game)`; на паузе стоят |
 | `game.burst(x, y, { emoji: '✨', color, count: 16 })` | взрыв частиц |
 | `game.popup(x, y, '+10', color)`, `game.shake(8, 0.3)`, `game.flash('#fff')` | надпись, тряска, вспышка |
-| `game.sound('coin', 0.5)` | звуки: jump, coin, crash, flap, hit, score, start, tick, bonus, lose, click, win |
+| `game.sound('coin', 0.5)` | звук и громкость: встроенные, Kenney и ZzFX — раздел 9 |
 | `game.text(t, x, y, { size, color })`, `game.emoji(e, x, y, size)`, `game.rect(x, y, w, h, color, { radius })`, `game.circle(x, y, r, color)`, `game.line(x1, y1, x2, y2, color, width)` | рисование в `draw` |
 | `game.rand(a, b)`, `game.randInt(a, b)`, `game.pick(list)`, `game.chance(0.3)`, `game.clamp(v, a, b)`, `game.dist(a, b)`, `game.angleTo(a, b)` | помощники |
 
@@ -127,7 +131,45 @@ game.choose([
 ]).then(card => card.apply());
 ```
 
-## 9. Физика (Matter.js) — `physics: true`
+## 9. Звуки и музыка
+
+```js
+game.sound('coin');            // встроенный звук (12 шт.)
+game.sound('laser', 0.7);      // звук Kenney (67 шт., грузится при первом вызове)
+game.sound('retro-jump');      // 8-битный звук, синтезатор ZzFX (без файлов)
+game.sound([, , 800, , .02, .05, 1]); // свой звук ZzFX: числа из конструктора https://killedbyapixel.github.io/ZzFX/
+game.music('boss');            // сменить фоновую музыку; game.music(false) — выключить
+```
+
+- Встроенные: jump, coin, crash, flap, hit, score, start, tick, bonus, lose, click, win.
+- Kenney (CC0): back, bell, bong, book, boom, chop, close, cloth, coins, computer, confirm, creak, door, door-close, drop, engine, error, explosion, forcefield, glass, glass-break, glitch, high-up, jingle-hit, jingle-nes, jingle-pizzi, jingle-sax, jingle-steel, knife, laser, laser-big, laser-retro, laser-small, laser2, laser3, low-down, metal, metal-click, mining, open, pep, phase-jump, phaser, phaser-down, plate, pluck, pot, powerup, powerup2, punch, punch-heavy, question, scroll, select, slime, space-trash, step, step-snow, step-wood, switch, sword, three-tone, thruster, thud, toggle, wood, zap.
+- ZzFX: retro-coin, retro-jump, retro-laser, retro-explosion, retro-boom, retro-hit, retro-powerup, retro-levelup, retro-win, retro-error, retro-blip, retro-click, retro-select, retro-bounce, retro-bubble, retro-magic, retro-whoosh, retro-splash, retro-alarm, retro-step.
+- Музыка (`music` в Arcade.create): adventure, action, boss, calm, menu. Играет во время игры, молчит в меню и на паузе, выключается в настройках.
+
+## 10. Спрайты Kenney и эмодзи-картинки
+
+```js
+game.add({ image: 'knight', x: 100, y: 300, size: 64 });                 // картинка из набора
+game.add({ image: 'adventurer', x, y, w: 44, h: 62, gravity: 1900 });     // персонаж: ходьба, прыжок и падение включаются сами
+game.add({ image: 'slime', x, y, size: 46, vx: -70 });                     // анимированный враг
+```
+
+Картинка вписывается в `size` (или `w × h`) без искажений; пиксельные спрайты не размываются. Мультяшные персонажи смотрят вправо (`flip: true` — влево), эмодзи — влево.
+
+| Набор | Имена |
+|---|---|
+| Персонажи с анимацией (ходьба, прыжок, падение, удар, радость) | adventurer, explorer, robot, zombie, woman, man |
+| Пиксельные персонажи (2 кадра ходьбы) | alien-green, alien-blue, alien-pink, alien-yellow, bat, slime, crab |
+| Пиксельные блоки и предметы | grass, dirt, snow, crate, block-coin, block-gold, plank, ladder, water, water-top, spikes, spring, lever, door, flag, sign, pipe, key, chest-gold, coin, gem, heart, heart-half, heart-empty, mushroom, plant, tree, cactus, snowman, cloud, block-angry, saw, spike-bot |
+| Подземелье (пиксели) | knight, hero, wizard, dwarf, viking, elf, princess, old-man, rogue, orc, skeleton, ghost, spider, cyclops, crab-red, sword, axe, hammer, dagger, potion-red, potion-green, potion-blue, chest, barrel |
+| Космос | ship-blue, ship-green, ship-red, ship-orange, ufo-red, ufo-green, ufo-blue, ufo-yellow, enemy-black, enemy-blue, enemy-green, enemy-red, meteor-big, meteor, meteor-small, meteor-grey, laser-blue, laser-red, laser-green, powerup-shield, powerup-bolt, powerup-star, pill, star-gold |
+| Животные (круглые) | elephant, giraffe, hippo, monkey, panda, parrot, penguin, pig, rabbit, snake |
+
+Все имена — `Arcade.sprites`. В 3D: `game.add3d({ image: 'robot', w: 2, h: 2.6 })`.
+
+Эмодзи (`emoji: '🐸'`) рисуются картинками Twemoji — одинаково на Windows, телефоне и Mac. Если картинка не загрузилась, эмодзи рисуется шрифтом.
+
+## 11. Физика (Matter.js) — `physics: true`
 
 Для игр, где всё падает, катится, складывается в башни и разлетается (как Angry Birds). Matter.js загрузится сам.
 
@@ -155,7 +197,7 @@ Arcade.create({
 
 Положение физических объектов (`x, y, angle, vx, vy`) обновляется само — не меняй их напрямую, используй `game.velocity`.
 
-## 10. 3D (Three.js) — `mode: '3d'`
+## 12. 3D (Three.js) — `mode: '3d'`
 
 Меню, панель, звуки, очки, жизни, `game.key`, `game.pressed`, `game.every`, `game.hit` работают как в 2D. Three.js загрузится сам. Оси: x — вправо, y — вверх, z — к камере (вдаль — отрицательные z).
 
@@ -187,7 +229,7 @@ Arcade.create({
 | `game.follow(obj, { offset: { x, y, z } })` | камера едет за объектом |
 | `game.three.THREE / scene / camera / renderer / sun` | сам Three.js для сложного |
 
-## 11. Полный пример (лови фрукты)
+## 13. Полный пример (лови фрукты)
 
 ```js
 const LAB = { title: 'Фруктопад', hero: '🧺', speed: 500, lives: 3 };
@@ -219,7 +261,7 @@ function drop(game) {
 }
 ```
 
-Ещё примеры (каждый — 3 файла): https://github.com/si0683/ArcadeJS/tree/main/examples — `starter` (лови фрукты), `flappy` (птичка), `snake` (змейка + вопросы), `breakout` (арканоид + выбор улучшения), `platformer` (карта из символов, камера, платформы), `shooter` (автострельба, сложность), `angry` (физика Matter.js: рогатка и башня), `runner3d` (3D на Three.js).
+Ещё примеры (каждый — 3 файла): https://github.com/si0683/ArcadeJS/tree/main/examples — `starter` (лови фрукты), `flappy` (птичка), `snake` (змейка + вопросы), `breakout` (арканоид + выбор улучшения), `platformer` (карта из символов, камера, платформы), `shooter` (автострельба, сложность), `angry` (физика Matter.js: рогатка и башня), `runner3d` (3D на Three.js), `adventure` (спрайты и звуки Kenney, музыка).
 
 ## Правила
 
@@ -227,4 +269,4 @@ function drop(game) {
 - В начале JS — объект `LAB` (настройки для детей), дальше `Arcade.create`, ниже свои функции.
 - Не используй `requestAnimationFrame`, `setInterval`, свои меню и свой `<canvas>`: всё это уже делает ArcadeJS. Для повторов — `game.every`.
 - Объекты, которые улетают с экрана (пули, падающие предметы), создавай с `removeOffscreen: true`.
-- Графика — эмодзи и фигуры, картинки из интернета не нужны.
+- Графика — эмодзи, спрайты Kenney (`image`) и фигуры. Чужие картинки из интернета не нужны.

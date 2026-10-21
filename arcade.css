@@ -1,5 +1,5 @@
 /* ============================================================
-   ArcadeJS 1.0.0 — оформление: сцена, панель, экраны, кнопки.
+   ArcadeJS 1.1.0 — оформление: сцена, панель, экраны, кнопки.
    Цвет кнопок берётся из мира игры (--arc-accent).
    Свой цвет: .arc-root { --arc-accent: #ff4d6d; } в style.css игры.
    ============================================================ */
@@ -150,6 +150,9 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
 .arc-touch-up { right: 5em; bottom: 4.6em; }
 .arc-touch-down { right: 5em; }
 .arc-touch-action { right: 0.8em; width: 4.2em; height: 4.2em; background: color-mix(in srgb, var(--arc-accent) 55%, transparent); }
+
+/* ---------- Эмодзи-картинки Twemoji в меню и карточках ---------- */
+.arc-emoji { width: 1em; height: 1em; vertical-align: -0.1em; }
 
 /* ---------- Анимации ---------- */
 @keyframes arc-fade { from { opacity: 0; } }

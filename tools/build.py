@@ -5,6 +5,7 @@
     python tools/build.py
 
 Что делает:
+0. Вписывает в arcade.js звуки Kenney и спрайты (inject_assets).
 1. examples/<игра>/index.html и style.css — одинаковая заготовка для каждого примера
    (style.css создаётся, только если его ещё нет).
 2. examples/<игра>/codepen.html — часть для окна HTML в CodePen.
@@ -29,6 +30,7 @@ EXAMPLES = {
     'shooter': 'Звёздный патруль',
     'angry': 'Злые эмодзи',
     'runner3d': 'Космо-раннер 3D',
+    'adventure': 'Приключение',
 }
 
 CODEPEN = f'''<!-- Библиотека ArcadeJS: оформление и движок игры -->
@@ -74,7 +76,30 @@ def check_platformer_map():
     print(f'Карта платформера: {len(rows)} строк по {lengths.pop()} клеток')
 
 
+def replace_block(js, mark, block):
+    """Заменяет всё между // MARK:START и // MARK:END."""
+    start, end = f'  // {mark}:START\n', f'  // {mark}:END'
+    return js.split(start)[0] + start + block + '\n' + end + js.split(end, 1)[1]
+
+
+def inject_assets():
+    """Вписывает в arcade.js список звуков Kenney (sounds/kenney) и спрайтов (tools/sprites.json)."""
+    import json
+    js_path = ROOT / 'arcade.js'
+    js = js_path.read_text(encoding='utf-8')
+    names = sorted(f.stem for f in (ROOT / 'sounds' / 'kenney').glob('*.wav'))
+    block = '  const KENNEY_SOUNDS = [' + ', '.join(repr(n) for n in names) + '];'
+    js = replace_block(js, 'KENNEY', block)
+    data = json.loads((ROOT / 'tools' / 'sprites.json').read_text(encoding='utf-8'))
+    anims = json.dumps(data['anims'], ensure_ascii=False, separators=(',', ':'))
+    block = '  const SPRITE_NAMES = ' + json.dumps(data['images']) + ';\n  const SPRITE_ANIMS = ' + anims + ';'
+    js = replace_block(js, 'SPRITES', block)
+    js_path.write_text(js, encoding='utf-8', newline='\n')
+    print(f'arcade.js: {len(names)} звуков Kenney, {len(data["images"])} спрайтов, {len(data["anims"])} анимаций')
+
+
 if __name__ == '__main__':
+    inject_assets()
     for folder, title in EXAMPLES.items():
         d = ROOT / 'examples' / folder
         (d / 'index.html').write_text(index_html(title), encoding='utf-8', newline='\n')

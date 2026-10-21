@@ -1,8 +1,8 @@
 /* ============================================================
-   ArcadeJS 1.0.0 — фреймворк для быстрых 2D-игр в браузере.
+   ArcadeJS 1.1.0 — фреймворк для быстрых 2D-игр в браузере.
    Подключение (две строки в HTML):
-     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.0.0/arcade.css">
-     <script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.0.0/arcade.js"></script>
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/arcade.css">
+     <script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/arcade.js"></script>
    Игра: Arcade.create({ title, setup(game), update(game, dt) }).
    Фреймворк сам делает меню, настройки, отсчёт, паузу, экран
    «Игра окончена», рекорд, панель очков и жизней, управление
@@ -17,7 +17,7 @@
 (function () {
   'use strict';
 
-  const VERSION = '1.0.0';
+  const VERSION = '1.1.0';
 
   // Адрес папки, откуда загружен arcade.js: рядом лежат звуки
   const SCRIPT_SRC = (document.currentScript && document.currentScript.src) || '';
@@ -33,6 +33,103 @@
     hit: 'hit.wav', score: 'score.mp3', start: 'start.wav', tick: 'tick.wav',
     bonus: 'bonus.wav', lose: 'lose.wav', click: 'click.wav', win: 'win.mp3'
   };
+
+  // Звуки Kenney (CC0): грузятся при первом game.sound('laser'). Список вписывает tools/build.py
+  // KENNEY:START
+  const KENNEY_SOUNDS = ['back', 'bell', 'bong', 'book', 'boom', 'chop', 'close', 'cloth', 'coins', 'computer', 'confirm', 'creak', 'door', 'door-close', 'drop', 'engine', 'error', 'explosion', 'forcefield', 'glass', 'glass-break', 'glitch', 'high-up', 'jingle-hit', 'jingle-nes', 'jingle-pizzi', 'jingle-sax', 'jingle-steel', 'knife', 'laser', 'laser-big', 'laser-retro', 'laser-small', 'laser2', 'laser3', 'low-down', 'metal', 'metal-click', 'mining', 'open', 'pep', 'phase-jump', 'phaser', 'phaser-down', 'plate', 'pluck', 'pot', 'powerup', 'powerup2', 'punch', 'punch-heavy', 'question', 'scroll', 'select', 'slime', 'space-trash', 'step', 'step-snow', 'step-wood', 'switch', 'sword', 'three-tone', 'thruster', 'thud', 'toggle', 'wood', 'zap'];
+  // KENNEY:END
+
+  // Фоновая музыка (CC0, Juhani Junkala): music: 'adventure' в Arcade.create или game.music('boss')
+  const MUSIC = { menu: 'menu.mp3', adventure: 'adventure.mp3', action: 'action.mp3', boss: 'boss.mp3', calm: 'calm.mp3' };
+
+  // Спрайты Kenney (CC0): game.add({ image: 'knight' }). Список и анимации вписывает tools/build.py
+  // SPRITES:START
+  const SPRITE_NAMES = ["adventurer", "adventurer-attack", "adventurer-cheer", "adventurer-duck", "adventurer-fall", "adventurer-hurt", "adventurer-idle", "adventurer-jump", "adventurer-walk0", "adventurer-walk1", "adventurer-walk2", "adventurer-walk3", "adventurer-walk4", "adventurer-walk5", "adventurer-walk6", "adventurer-walk7", "alien-blue", "alien-blue-2", "alien-green", "alien-green-2", "alien-pink", "alien-pink-2", "alien-yellow", "alien-yellow-2", "axe", "barrel", "bat", "bat-2", "block-angry", "block-coin", "block-gold", "cactus", "chest", "chest-gold", "cloud", "coin", "crab", "crab-2", "crab-red", "crate", "cyclops", "dagger", "dirt", "door", "dwarf", "elephant", "elf", "enemy-black", "enemy-blue", "enemy-green", "enemy-red", "explorer", "explorer-attack", "explorer-cheer", "explorer-duck", "explorer-fall", "explorer-hurt", "explorer-idle", "explorer-jump", "explorer-walk0", "explorer-walk1", "explorer-walk2", "explorer-walk3", "explorer-walk4", "explorer-walk5", "explorer-walk6", "explorer-walk7", "flag", "gem", "ghost", "giraffe", "grass", "hammer", "heart", "heart-empty", "heart-half", "hero", "hippo", "key", "knight", "ladder", "laser-blue", "laser-green", "laser-red", "lever", "man", "man-attack", "man-cheer", "man-duck", "man-fall", "man-hurt", "man-idle", "man-jump", "man-walk0", "man-walk1", "man-walk2", "man-walk3", "man-walk4", "man-walk5", "man-walk6", "man-walk7", "meteor", "meteor-big", "meteor-grey", "meteor-small", "monkey", "mushroom", "old-man", "orc", "panda", "parrot", "penguin", "pig", "pill", "pipe", "plank", "plant", "potion-blue", "potion-green", "potion-red", "powerup-bolt", "powerup-shield", "powerup-star", "princess", "rabbit", "robot", "robot-attack", "robot-cheer", "robot-duck", "robot-fall", "robot-hurt", "robot-idle", "robot-jump", "robot-walk0", "robot-walk1", "robot-walk2", "robot-walk3", "robot-walk4", "robot-walk5", "robot-walk6", "robot-walk7", "rogue", "saw", "ship-blue", "ship-green", "ship-orange", "ship-red", "sign", "skeleton", "slime", "slime-2", "snake", "snow", "snowman", "spider", "spike-bot", "spikes", "spring", "star-gold", "sword", "tree", "ufo-blue", "ufo-green", "ufo-red", "ufo-yellow", "viking", "water", "water-top", "wizard", "woman", "woman-attack", "woman-cheer", "woman-duck", "woman-fall", "woman-hurt", "woman-idle", "woman-jump", "woman-walk0", "woman-walk1", "woman-walk2", "woman-walk3", "woman-walk4", "woman-walk5", "woman-walk6", "woman-walk7", "zombie", "zombie-attack", "zombie-cheer", "zombie-duck", "zombie-fall", "zombie-hurt", "zombie-idle", "zombie-jump", "zombie-walk0", "zombie-walk1", "zombie-walk2", "zombie-walk3", "zombie-walk4", "zombie-walk5", "zombie-walk6", "zombie-walk7"];
+  const SPRITE_ANIMS = {"alien-green":{"idle":["alien-green"],"walk":["alien-green","alien-green-2"],"pixel":true},"alien-blue":{"idle":["alien-blue"],"walk":["alien-blue","alien-blue-2"],"pixel":true},"alien-pink":{"idle":["alien-pink"],"walk":["alien-pink","alien-pink-2"],"pixel":true},"alien-yellow":{"idle":["alien-yellow"],"walk":["alien-yellow","alien-yellow-2"],"pixel":true},"bat":{"idle":["bat"],"walk":["bat","bat-2"],"pixel":true},"slime":{"idle":["slime"],"walk":["slime","slime-2"],"pixel":true},"crab":{"idle":["crab"],"walk":["crab","crab-2"],"pixel":true},"adventurer":{"idle":["adventurer-idle"],"jump":["adventurer-jump"],"fall":["adventurer-fall"],"hurt":["adventurer-hurt"],"cheer":["adventurer-cheer"],"duck":["adventurer-duck"],"attack":["adventurer-attack"],"walk":["adventurer-walk0","adventurer-walk1","adventurer-walk2","adventurer-walk3","adventurer-walk4","adventurer-walk5","adventurer-walk6","adventurer-walk7"]},"explorer":{"idle":["explorer-idle"],"jump":["explorer-jump"],"fall":["explorer-fall"],"hurt":["explorer-hurt"],"cheer":["explorer-cheer"],"duck":["explorer-duck"],"attack":["explorer-attack"],"walk":["explorer-walk0","explorer-walk1","explorer-walk2","explorer-walk3","explorer-walk4","explorer-walk5","explorer-walk6","explorer-walk7"]},"robot":{"idle":["robot-idle"],"jump":["robot-jump"],"fall":["robot-fall"],"hurt":["robot-hurt"],"cheer":["robot-cheer"],"duck":["robot-duck"],"attack":["robot-attack"],"walk":["robot-walk0","robot-walk1","robot-walk2","robot-walk3","robot-walk4","robot-walk5","robot-walk6","robot-walk7"]},"zombie":{"idle":["zombie-idle"],"jump":["zombie-jump"],"fall":["zombie-fall"],"hurt":["zombie-hurt"],"cheer":["zombie-cheer"],"duck":["zombie-duck"],"attack":["zombie-attack"],"walk":["zombie-walk0","zombie-walk1","zombie-walk2","zombie-walk3","zombie-walk4","zombie-walk5","zombie-walk6","zombie-walk7"]},"woman":{"idle":["woman-idle"],"jump":["woman-jump"],"fall":["woman-fall"],"hurt":["woman-hurt"],"cheer":["woman-cheer"],"duck":["woman-duck"],"attack":["woman-attack"],"walk":["woman-walk0","woman-walk1","woman-walk2","woman-walk3","woman-walk4","woman-walk5","woman-walk6","woman-walk7"]},"man":{"idle":["man-idle"],"jump":["man-jump"],"fall":["man-fall"],"hurt":["man-hurt"],"cheer":["man-cheer"],"duck":["man-duck"],"attack":["man-attack"],"walk":["man-walk0","man-walk1","man-walk2","man-walk3","man-walk4","man-walk5","man-walk6","man-walk7"]}};
+  // SPRITES:END
+
+  // Эмодзи картинками Twemoji (CC BY 4.0): одинаково красиво на любом компьютере
+  const TWEMOJI = 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.3/assets/svg/';
+
+  // Звуки-синтезатор ZzFX (MIT, Frank Force): game.sound('retro-coin') или свой game.sound([...числа...])
+  const ZZFX = {
+    'retro-coin': [, , 1675, , .06, .24, 1, 1.82, , , 837, .06],
+    'retro-jump': [, , 200, .02, .08, .15, 1, 1.5, 20],
+    'retro-laser': [, , 1200, , .04, .12, 2, 2, -30],
+    'retro-explosion': [2, , 90, .02, .2, .6, 4, 2, , , , , , 1.5, , .4],
+    'retro-boom': [3, , 60, .03, .3, .8, 4, 3, , , , , , 2, , .6, .2],
+    'retro-hit': [, , 300, , .05, .2, 2, 1, -10, , , , , 1],
+    'retro-powerup': [, , 400, .02, .2, .3, 1, 1.5, 10, , , , .05],
+    'retro-levelup': [, , 330, .02, .3, .4, 1, 1.5, , , 330, .08, .1],
+    'retro-win': [, , 523, .02, .15, .3, 1, 2, , , 262, .1],
+    'retro-error': [, , 150, , .1, .25, 3, 1, -5],
+    'retro-blip': [, , 800, , .02, .05, 1],
+    'retro-click': [, , 1500, , .01, .02, 5],
+    'retro-select': [, , 700, , .03, .08, , 1, , , 200, .03],
+    'retro-bounce': [, , 300, , .05, .1, 0, 1, 30],
+    'retro-bubble': [, , 600, , .02, .08, 0, 1, 60],
+    'retro-magic': [, , 900, .05, .3, .4, 0, 1, , , , , .06, , 30],
+    'retro-whoosh': [, , 100, .1, .2, .3, 4, 1, 15, , , , , 2],
+    'retro-splash': [, , 400, .01, .1, .3, 4, 1, , , , , , 3],
+    'retro-alarm': [, , 880, , .2, .1, 5, , , , , , .1],
+    'retro-step': [.5, , 120, , .01, .04, 4, 1, , , , , , 4]
+  };
+
+  // Генератор ZzFX Micro 1.4.0 (MIT License, Copyright 2019 Frank Force, github.com/KilledByAPixel/ZzFX):
+  // по 20 числам строит звук. Здесь он только считает отсчёты, играет их Web Audio игры
+  function zzfxSamples(volume = 1, randomness = .05, frequency = 220, attack = 0, sustain = 0, release = .1, shape = 0, shapeCurve = 1,
+    slide = 0, deltaSlide = 0, pitchJump = 0, pitchJumpTime = 0, repeatTime = 0, noise = 0, modulation = 0, bitCrush = 0, delay = 0,
+    sustainVolume = 1, decay = 0, tremolo = 0, filter = 0) {
+    const sampleRate = 44100, PI2 = Math.PI * 2, abs = Math.abs, sign = v => v < 0 ? -1 : 1;
+    let startSlide = slide *= 500 * PI2 / sampleRate / sampleRate,
+      startFrequency = frequency *= (1 + randomness * 2 * Math.random() - randomness) * PI2 / sampleRate,
+      modOffset = 0, repeat = 0, crush = 0, jump = 1, length, b = [], t = 0, i = 0, s = 0, f;
+    const quality = 2, w = PI2 * abs(filter) * 2 / sampleRate, cos = Math.cos(w), alpha = Math.sin(w) / 2 / quality,
+      a0 = 1 + alpha, a1 = -2 * cos / a0, a2 = (1 - alpha) / a0, b0 = (1 + sign(filter) * cos) / 2 / a0,
+      b1 = -(sign(filter) + cos) / a0, b2 = b0;
+    let x2 = 0, x1 = 0, y2 = 0, y1 = 0;
+    attack = attack * sampleRate || 9; decay *= sampleRate; sustain *= sampleRate; release *= sampleRate; delay *= sampleRate;
+    deltaSlide *= 500 * PI2 / sampleRate ** 3; modulation *= PI2 / sampleRate; pitchJump *= PI2 / sampleRate;
+    pitchJumpTime *= sampleRate; repeatTime = repeatTime * sampleRate | 0; volume *= .3;
+    for (length = attack + decay + sustain + release + delay | 0; i < length; b[i++] = s * volume) {
+      if (!(++crush % (bitCrush * 100 | 0))) {
+        s = shape ? shape > 1 ? shape > 2 ? shape > 3 ? shape > 4 ? (t / PI2 % 1 < shapeCurve / 2) * 2 - 1 : Math.sin(t ** 3)
+          : Math.max(Math.min(Math.tan(t), 1), -1) : 1 - (2 * t / PI2 % 2 + 2) % 2 : 1 - 4 * abs(Math.round(t / PI2) - t / PI2) : Math.sin(t);
+        s = (repeatTime ? 1 - tremolo + tremolo * Math.sin(PI2 * i / repeatTime) : 1) * (shape > 4 ? s : sign(s) * abs(s) ** shapeCurve) *
+          (i < attack ? i / attack : i < attack + decay ? 1 - ((i - attack) / decay) * (1 - sustainVolume) : i < attack + decay + sustain ? sustainVolume
+            : i < length - delay ? (length - i - delay) / release * sustainVolume : 0);
+        s = delay ? s / 2 + (delay > i ? 0 : (i < length - delay ? 1 : (length - i) / delay) * b[i - delay | 0] / 2 / volume) : s;
+        if (filter) s = y1 = b2 * x2 + b1 * (x2 = x1) + b0 * (x1 = s) - a2 * y2 - a1 * (y2 = y1);
+      }
+      f = (frequency += slide += deltaSlide) * Math.cos(modulation * modOffset++);
+      t += f + f * noise * (i * i * PI2 % 2 - 1);
+      if (jump && ++jump > pitchJumpTime) { frequency += pitchJump; startFrequency += pitchJump; jump = 0; }
+      if (repeatTime && !(++repeat % repeatTime)) { frequency = startFrequency; slide = startSlide; jump = jump || 1; }
+    }
+    return b;
+  }
+
+  // Код картинки эмодзи для Twemoji: 😀 → 1f600, 👩‍🚀 → 1f469-200d-1f680
+  function emojiCode(text) {
+    const s = text.indexOf('\u200d') < 0 ? text.replace(/\uFE0F/g, '') : text;
+    return Array.from(s).map(c => c.codePointAt(0).toString(16)).join('-');
+  }
+  const emojiImages = {};
+  function emojiImage(text) {
+    if (!emojiImages[text]) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous'; // картинка с CDN не портит холст: можно сохранить скриншот игры
+      img.onerror = () => { img.failed = true; };
+      img.src = TWEMOJI + emojiCode(text) + '.svg';
+      emojiImages[text] = img;
+    }
+    return emojiImages[text];
+  }
+  // Эмодзи для HTML (меню, карточки): картинка, а если не загрузилась — обычный символ
+  function emojiHTML(text, style) {
+    if (style === 'system' || !text) return text || '';
+    return '<img class="arc-emoji" alt="' + text + '" src="' + TWEMOJI + emojiCode(text) + '.svg" onerror="this.replaceWith(this.alt)">';
+  }
 
   // Миры: цвета фона, акцент для кнопок и украшения на фоне
   const WORLDS = {
@@ -241,12 +338,14 @@
       physics: false, mode: '2d',
       buttons: null, actionLabel: '●',
       sound: true, volume: 0.6,
+      music: false, musicVolume: 0.35, sounds: [], emojiStyle: 'twemoji',
       setup: null, update: null, draw: null, drawBehind: null, onOver: null
     }, config || {});
 
     const id = 'arcade-' + String(config.title).toLowerCase().replace(/[^a-zа-яё0-9]+/gi, '-');
     const settings = Object.assign({
       sound: config.sound,
+      music: true,
       world: config.world,
       subject: (config.quiz && config.quiz.subject) || 'math',
       difficulty: 'normal'
@@ -398,6 +497,10 @@
     }
 
     function drawEmojiRaw(emoji, x, y, size) {
+      if (config.emojiStyle !== 'system') {
+        const img = emojiImage(emoji);
+        if (img.complete && img.naturalWidth && !img.failed) { ctx.drawImage(img, x - size / 2, y - size / 2, size, size); return; }
+      }
       ctx.font = size + 'px ' + EMOJI_FONT;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -410,7 +513,7 @@
     game.add = function (props) {
       const o = Object.assign({
         x: 0, y: 0, vx: 0, vy: 0, ax: 0, ay: 0, gravity: 0, friction: 0, maxSpeed: 0,
-        size: 40, w: 0, h: 0, emoji: '', text: '', shape: '', color: '#ffffff', radius: 0,
+        size: 40, w: 0, h: 0, emoji: '', text: '', image: '', pose: '', animSpeed: 10, shape: '', color: '#ffffff', radius: 0,
         angle: 0, spin: 0, alpha: 1, flip: false, z: 0, tag: '', fixed: false,
         bounce: false, wrap: false, inside: false, solid: false, oneWay: false,
         life: 0, fade: false, removeOffscreen: false, blink: 0, glow: '',
@@ -418,7 +521,7 @@
       }, props || {});
       if (!o.w) o.w = o.size;
       if (!o.h) o.h = o.size;
-      if (!o.shape) o.shape = o.emoji ? 'emoji' : o.text ? 'text' : 'rect';
+      if (!o.shape) o.shape = o.image ? 'image' : o.emoji ? 'emoji' : o.text ? 'text' : 'rect';
       o.startLife = o.life;
       o.prevX = o.x; o.prevY = o.y;
       o.remove = function () { o.dead = true; };
@@ -537,6 +640,8 @@
       ctx.fillStyle = o.color;
       if (o.shape === 'emoji') {
         drawEmojiRaw(o.emoji, 0, 0, Math.min(o.w, o.h));
+      } else if (o.shape === 'image') {
+        drawSprite(o);
       } else if (o.shape === 'text') {
         ctx.font = (o.font || '700 ' + o.size + 'px Rubik, sans-serif');
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -548,6 +653,42 @@
         ctx.fill();
       }
       ctx.restore();
+    }
+
+    // Картинка спрайта: имя из каталога Kenney ('knight') или свой адрес ('https://…/hero.png')
+    const spriteImages = {};
+    function spriteImage(name) {
+      if (!spriteImages[name]) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = /[/.]/.test(name) ? name : BASE + 'sprites/' + name + '.png';
+        spriteImages[name] = img;
+      }
+      return spriteImages[name];
+    }
+    // Поза персонажа: своя (o.pose) или сама — прыжок, падение, ходьба, стоит
+    function spriteFrame(o) {
+      const anims = SPRITE_ANIMS[o.image];
+      if (!anims) return o.image;
+      let pose = o.pose;
+      if (!pose) {
+        const airborne = (o.gravity || o.physBody) && !o.onGround;
+        if (airborne && anims.jump) pose = o.vy > 0 && anims.fall ? 'fall' : 'jump';
+        else if (Math.abs(o.vx) > 10 && anims.walk) pose = 'walk';
+        else pose = 'idle';
+      }
+      const frames = anims[pose] || anims.idle;
+      return frames[Math.floor(game.time * o.animSpeed) % frames.length];
+    }
+    function drawSprite(o) {
+      const img = spriteImage(spriteFrame(o));
+      if (!img.complete || !img.naturalWidth) return;
+      // Вписываем картинку в w × h без искажений; мелкие пиксельные — без размытия
+      const k = Math.min(o.w / img.naturalWidth, o.h / img.naturalHeight);
+      const w = img.naturalWidth * k, h = img.naturalHeight * k;
+      ctx.imageSmoothingEnabled = img.naturalWidth > 32;
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+      ctx.imageSmoothingEnabled = true;
     }
 
     function roundRect(x, y, w, h, r) {
@@ -777,6 +918,12 @@
       x.fillText(emoji, 64, 72);
       const tex = new T.CanvasTexture(c);
       tex.colorSpace = T.SRGBColorSpace;
+      if (config.emojiStyle !== 'system') {
+        // Когда загрузится картинка Twemoji — перерисуем текстуру ею
+        const img = emojiImage(emoji);
+        const paint = () => { if (img.failed || !img.naturalWidth) return; x.clearRect(0, 0, 128, 128); x.drawImage(img, 4, 4, 120, 120); tex.needsUpdate = true; };
+        if (img.complete) paint(); else img.addEventListener('load', paint);
+      }
       return tex;
     }
 
@@ -790,9 +937,16 @@
       }, props || {});
       if (o.size) { o.w = o.h = o.d = o.size; }
       if (o.emoji && !props.shape) o.shape = 'emoji';
+      if (o.image && !props.shape) o.shape = 'image';
       let mesh;
       if (o.shape === 'emoji') {
         mesh = new T.Sprite(new T.SpriteMaterial({ map: emojiTexture(o.emoji), transparent: true }));
+        mesh.scale.set(o.w, o.h, 1);
+      } else if (o.shape === 'image') {
+        // Спрайт Kenney или своя картинка в 3D — всегда смотрит в камеру
+        const tex = new T.TextureLoader().load(spriteImage(o.image).src);
+        tex.colorSpace = T.SRGBColorSpace;
+        mesh = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true }));
         mesh.scale.set(o.w, o.h, 1);
       } else {
         const g = {
@@ -816,7 +970,7 @@
     };
     function syncMesh(o) {
       o.mesh.position.set(o.x, o.y, o.z);
-      if (o.shape !== 'plane' && o.shape !== 'emoji') o.mesh.rotation.set(o.rx, o.ry, o.rz);
+      if (o.shape !== 'plane' && o.shape !== 'emoji' && o.shape !== 'image') o.mesh.rotation.set(o.rx, o.ry, o.rz);
       o.mesh.visible = !(o.blink > 0 && Math.floor(o.blink * 12) % 2 === 0);
     }
     function update3d(o, dt) {
@@ -992,32 +1146,88 @@
     }
 
     /* ---------- Звук: Web Audio ---------- */
+    // 12 основных звуков грузятся сразу, звуки Kenney — при первом вызове (или заранее: sounds: ['laser'])
     let audio = null;
     const buffers = {};
+    const loadingSounds = {};
+    function soundFile(name) {
+      if (SOUNDS[name]) return SOUNDS[name];
+      if (KENNEY_SOUNDS.includes(name)) return 'kenney/' + name + '.wav';
+      return null;
+    }
+    function loadSound(name) {
+      if (buffers[name]) return Promise.resolve(buffers[name]);
+      const file = soundFile(name);
+      if (!audio || !file) return Promise.resolve(null);
+      if (!loadingSounds[name]) {
+        loadingSounds[name] = fetch(BASE + 'sounds/' + file)
+          .then(r => r.arrayBuffer())
+          .then(data => audio.decodeAudioData(data))
+          .then(buf => { buffers[name] = buf; return buf; })
+          .catch(() => null); // звук не загрузился — играем без него
+      }
+      return loadingSounds[name];
+    }
     function unlockAudio() {
       if (audio) { if (audio.state === 'suspended') audio.resume(); return; }
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
       audio = new AC();
-      Object.keys(SOUNDS).forEach(name => {
-        fetch(BASE + 'sounds/' + SOUNDS[name])
-          .then(r => r.arrayBuffer())
-          .then(data => audio.decodeAudioData(data))
-          .then(buf => { buffers[name] = buf; })
-          .catch(() => { /* звук не загрузился — играем без него */ });
-      });
+      Object.keys(SOUNDS).concat(config.sounds || []).forEach(loadSound);
     }
     ['pointerdown', 'keydown', 'touchstart'].forEach(ev => window.addEventListener(ev, unlockAudio, { passive: true }));
 
-    game.sound = function (name, volume) {
-      if (!settings.sound || !audio || !buffers[name]) return;
+    function playBuffer(buf, volume) {
       const src = audio.createBufferSource();
       const gain = audio.createGain();
       gain.gain.value = (volume === undefined ? 1 : volume) * config.volume;
-      src.buffer = buffers[name];
+      src.buffer = buf;
       src.connect(gain).connect(audio.destination);
       src.start();
+    }
+    // Звук ZzFX: из готового набора ('retro-coin') или свой массив чисел
+    function zzfxBuffer(params) {
+      const key = JSON.stringify(params);
+      if (!buffers[key]) {
+        const samples = zzfxSamples(...params);
+        const buf = audio.createBuffer(1, Math.max(1, samples.length), 44100);
+        buf.getChannelData(0).set(samples);
+        buffers[key] = buf;
+      }
+      return buffers[key];
+    }
+
+    // game.sound('coin') — встроенный звук, game.sound('laser') — звук Kenney,
+    // game.sound('retro-coin') — синтезатор ZzFX, game.sound([, , 800, , .02]) — свой звук ZzFX
+    game.sound = function (name, volume) {
+      if (!settings.sound || !audio) return;
+      if (Array.isArray(name)) { playBuffer(zzfxBuffer(name), volume); return; }
+      if (ZZFX[name]) { playBuffer(zzfxBuffer(ZZFX[name]), volume); return; }
+      if (buffers[name]) { playBuffer(buffers[name], volume); return; }
+      loadSound(name).then(buf => { if (buf) playBuffer(buf, volume); });
     };
+
+    // Фоновая музыка: играет во время игры, молчит в меню и на паузе
+    let musicEl = null;
+    let musicName = config.music || '';
+    let musicState = '';
+    game.music = function (name) { musicName = name || ''; musicState = ''; };
+    function updateMusic() {
+      const playing = ['countdown', 'play', 'quiz', 'choose'].includes(game.state);
+      const want = settings.music && settings.sound && musicName && playing ? musicName : '';
+      const key = want + '|' + game.state;
+      if (key === musicState) return;
+      musicState = key;
+      if (!want) { if (musicEl) musicEl.pause(); return; }
+      if (!musicEl || musicEl.dataset.name !== want) {
+        if (musicEl) musicEl.pause();
+        musicEl = new Audio(MUSIC[want] ? BASE + 'sounds/music/' + MUSIC[want] : want);
+        musicEl.loop = true;
+        musicEl.dataset.name = want;
+      }
+      musicEl.volume = config.musicVolume;
+      musicEl.play().catch(() => { musicState = ''; }); // браузер ещё не разрешил звук — попробуем позже
+    }
 
     /* ---------- Очки, жизни, уровни ---------- */
     game.addScore = function (n, x, y) {
@@ -1095,7 +1305,7 @@
       s.innerHTML = '';
       const panel = el('div', 'arc-panel arc-menu');
       panel.append(
-        el('div', 'arc-logo', config.emoji),
+        el('div', 'arc-logo', emojiHTML(config.emoji, config.emojiStyle)),
         el('h1', 'arc-title', config.title),
         config.subtitle ? el('p', 'arc-subtitle', config.subtitle) : '',
         el('p', 'arc-best', '🏆 Рекорд: ' + game.best)
@@ -1139,6 +1349,7 @@
       const panel = el('div', 'arc-panel');
       panel.append(el('h2', 'arc-title arc-title-small', '⚙️ Настройки'));
       panel.append(choiceRow('Звук', [{ id: true, label: '🔊 Вкл' }, { id: false, label: '🔇 Выкл' }], settings.sound, v => { settings.sound = v; }));
+      if (config.music) panel.append(choiceRow('Музыка', [{ id: true, label: '🎵 Вкл' }, { id: false, label: '🔇 Выкл' }], settings.music, v => { settings.music = v; }));
       if (config.worlds) {
         const names = Array.isArray(config.worlds) ? config.worlds : Object.keys(WORLDS);
         panel.append(choiceRow('Мир', names.filter(n => WORLDS[n]).map(n => ({ id: n, label: WORLDS[n].icon + ' ' + WORLDS[n].name })), settings.world, v => { settings.world = v; setWorld(v); render(); }));
@@ -1169,7 +1380,7 @@
       const record = game.score > 0 && game.score >= game.best;
       const panel = el('div', 'arc-panel');
       panel.append(
-        el('div', 'arc-logo', win ? '🏆' : '💥'),
+        el('div', 'arc-logo', emojiHTML(win ? '🏆' : '💥', config.emojiStyle)),
         el('h2', 'arc-title arc-title-small', win ? 'Победа!' : 'Игра окончена'),
         el('p', 'arc-final', '⭐ ' + game.score),
         el('p', 'arc-best', record ? '🎉 Новый рекорд!' : '🏆 Рекорд: ' + game.best)
@@ -1230,7 +1441,7 @@
         panel.append(el('h2', 'arc-title arc-title-small', title || 'Выбери улучшение'));
         const row = el('div', 'arc-cards');
         cards.forEach((card, i) => {
-          const b = button('<span class="arc-card-icon">' + (card.icon || '⭐') + '</span><b>' + (i + 1) + '. ' + (card.title || '') + '</b><small>' + (card.text || '') + '</small>', 'arc-card', () => {
+          const b = button('<span class="arc-card-icon">' + emojiHTML(card.icon || '⭐', config.emojiStyle) + '</span><b>' + (i + 1) + '. ' + (card.title || '') + '</b><small>' + (card.text || '') + '</small>', 'arc-card', () => {
             show(null);
             game.state = before === 'choose' ? 'play' : before;
             last = performance.now();
@@ -1356,6 +1567,7 @@
         if (endingLeft <= 0) finish();
       }
       if (game.state !== 'pause' && game.state !== 'quiz' && game.state !== 'choose') updateEffects(dt);
+      updateMusic();
       render(dt);
     };
 
@@ -1407,7 +1619,9 @@
     version: VERSION,
     create: create,
     worlds: Object.keys(WORLDS),
-    sounds: Object.keys(SOUNDS),
+    sounds: Object.keys(SOUNDS).concat(KENNEY_SOUNDS, Object.keys(ZZFX)),
+    music: Object.keys(MUSIC),
+    sprites: SPRITE_NAMES,
     subjects: SUBJECTS.map(s => s.id),
     rand: rand, randInt: randInt, pick: pick, chance: chance, clamp: clamp, shuffle: shuffle, dist: dist, angleTo: angleTo
   };

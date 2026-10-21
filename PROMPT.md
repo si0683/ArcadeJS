@@ -24,25 +24,27 @@
 Должно получиться ровно 3 файла, как три окна в CodePen: HTML, CSS, JS.
 Только обычный HTML, CSS и ЧИСТЫЙ JavaScript. НЕ используй TypeScript, React, JSX, Vue, npm, import и export, свой <canvas>, requestAnimationFrame и setInterval.
 
-Полный справочник движка: https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.0.0/AI.md
+Полный справочник движка: https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/AI.md
 Запасная ссылка: https://raw.githubusercontent.com/si0683/ArcadeJS/main/AI.md
 Готовые примеры: https://github.com/si0683/ArcadeJS/tree/main/examples
 
 Если ссылки не открываются, вот главное:
 - HTML — ровно эти 3 строки:
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.0.0/arcade.css">
-<script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.0.0/arcade.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/arcade.css">
+<script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/arcade.js"></script>
 <div id="game"></div>
 - CSS — почти пустой, можно свой цвет кнопок: .arc-root { --arc-accent: #ff4d6d; }
 - JS: сначала const LAB = { ... } — 6–10 настроек для детей с комментариями (название, герой-эмодзи, скорость, жизни…), потом
   Arcade.create({ title, emoji, subtitle, help, world, worlds: true, lives, buttons: ['left', 'right', 'action'], quiz, physics, mode, setup(game) { ... }, update(game, dt) { ... } })
   и ниже свои функции. Свои переменные храни в game.data. Меню, настройки, отсчёт, пауза, «Игра окончена», рекорд, панель очков и жизней уже есть — не пиши их.
 - Объекты: const hero = game.add({ emoji: '🐱', x, y, size: 60, vx, vy, gravity, tag: 'hero', inside: true }); враги и предметы — с tag и removeOffscreen: true.
-  Свойства: x, y (центр), size или w, h, emoji / text / shape: 'rect' | 'circle', color, vx, vy, gravity, spin, angle, flip, bounce, wrap, inside, life, blink, hitbox.
+  Свойства: x, y (центр), size или w, h, emoji / image / text / shape: 'rect' | 'circle', color, vx, vy, gravity, spin, angle, flip, bounce, wrap, inside, life, blink, hitbox.
 - obj.remove(), game.all('tag'), game.first('tag'), game.count('tag'), game.hit(a, b), game.hitAny(a, 'tag'), game.collide(a, 'ground') — твёрдые платформы (a.onGround), game.follow(hero) — камера.
 - Управление: game.key.left / right / up / down / action — зажато; game.pressed('action') — нажато сейчас (пробел, касание); game.pressed('left') — стрелка или свайп; game.pointer.x / y / down — мышь и палец.
 - game.addScore(10, x, y), game.loseLife(), game.addLife(), game.nextLevel(), game.over(), game.win(), game.message('Текст'), game.hud('⏱', 30).
-- game.every(1.5, fn), game.after(2, fn) — таймеры; game.burst(x, y, { emoji: '✨' }), game.popup(x, y, '+10'), game.shake(); game.sound('coin') — jump, coin, crash, flap, hit, score, start, tick, bonus, lose, click, win.
+- game.every(1.5, fn), game.after(2, fn) — таймеры; game.burst(x, y, { emoji: '✨' }), game.popup(x, y, '+10'), game.shake().
+- Звуки: game.sound('coin') — jump, coin, crash, flap, hit, score, start, tick, bonus, lose, click, win; звуки Kenney — laser, explosion, boom, powerup, coins, sword, punch, door, zap, step, error, confirm, jingle-nes…; 8-битные — retro-jump, retro-coin, retro-laser, retro-explosion, retro-powerup, retro-win… Фоновая музыка: music: 'adventure' (action, boss, calm, menu) в Arcade.create.
+- Графика: эмодзи (emoji: '🐱', рисуются картинками) или готовые спрайты (image: 'knight'). Персонажи с анимацией ходьбы и прыжка: adventurer, explorer, robot, zombie, woman, man; пиксельные: alien-green, slime, bat, knight, wizard, orc, skeleton, ghost; блоки: grass, dirt, crate, plank, spikes, coin, gem, heart, flag, door, key; космос: ship-blue, ufo-red, enemy-red, meteor, laser-blue, powerup-star; животные: panda, penguin, rabbit, monkey, pig. Полный список — в справочнике.
 - game.rand(a, b), game.randInt(a, b), game.pick(list), game.chance(0.3), game.clamp(v, a, b).
 - Вопросы (quiz: true): game.ask().then(ok => { ... }). Выбор улучшения: game.choose([{ icon, title, text, apply }]).then(card => card.apply()).
 - Физика (physics: { walls: true, drag: true }): game.add({ ..., body: true }) или body: 'static'; game.velocity(obj, vx, vy), game.onCollide('a', 'b', fn), game.link(a, b).
@@ -83,6 +85,6 @@ Arcade.create({
 1. Вставьте промт в Qwen, **не отправляя**, и вместе с учеником перепишите четыре строки «МОЯ ИГРА»: название, идею одним предложением, управление и мир.
 2. Режим Qwen: ❌ без «Web Dev» и «Мышления», ✅ с «Поиском» (чтобы открыть справочник).
 3. Три ответа Qwen вставьте в окна **HTML**, **CSS**, **JS** на [codepen.io/pen](https://codepen.io/pen/).
-4. Идеи для учеников: «кот ловит рыбок в космосе», «змейка в лесу ест ягоды и отвечает на вопросы по математике», «башня из ящиков, которую надо сбить мячом» (физика), «гонка по 3D-трассе» (3D).
+4. Идеи для учеников: «рыцарь в подземелье собирает зелья» (спрайты и музыка), «кот ловит рыбок в космосе», «змейка в лесу ест ягоды и отвечает на вопросы по математике», «башня из ящиков, которую надо сбить мячом» (физика), «гонка по 3D-трассе» (3D).
 
-Готовые примеры игр на ArcadeJS: [Фруктопад](https://si0683.github.io/ArcadeJS/examples/starter/) · [Флаппи](https://si0683.github.io/ArcadeJS/examples/flappy/) · [Змейка-умник](https://si0683.github.io/ArcadeJS/examples/snake/) · [Космо-арканоид](https://si0683.github.io/ArcadeJS/examples/breakout/) · [Лисёнок](https://si0683.github.io/ArcadeJS/examples/platformer/) · [Звёздный патруль](https://si0683.github.io/ArcadeJS/examples/shooter/) · [Злые эмодзи](https://si0683.github.io/ArcadeJS/examples/angry/) · [Космо-раннер 3D](https://si0683.github.io/ArcadeJS/examples/runner3d/)
+Готовые примеры игр на ArcadeJS: [Фруктопад](https://si0683.github.io/ArcadeJS/examples/starter/) · [Флаппи](https://si0683.github.io/ArcadeJS/examples/flappy/) · [Змейка-умник](https://si0683.github.io/ArcadeJS/examples/snake/) · [Космо-арканоид](https://si0683.github.io/ArcadeJS/examples/breakout/) · [Лисёнок](https://si0683.github.io/ArcadeJS/examples/platformer/) · [Звёздный патруль](https://si0683.github.io/ArcadeJS/examples/shooter/) · [Злые эмодзи](https://si0683.github.io/ArcadeJS/examples/angry/) · [Космо-раннер 3D](https://si0683.github.io/ArcadeJS/examples/runner3d/) · [Приключение](https://si0683.github.io/ArcadeJS/examples/adventure/)
