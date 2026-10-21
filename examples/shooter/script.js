@@ -1,54 +1,55 @@
-/* Космический шутер на ArcadeJS: корабль стреляет сам, сбивай пришельцев.
-   ← → или палец — движение. Каждые 10 побед — улучшение. */
+/* Star Patrol — the ship fires on its own, shoot down the invaders.
+   ← → or finger to move. Every 10 kills: pick an upgrade.
+   Shows difficulty (game.diff), hit points and auto-fire. */
 
-// ===== 0. ЛАБОРАТОРИЯ ИГРЫ 🧪 =====
-const LAB = {
-  title: 'Звёздный патруль', // название в меню
-  ship: '🚀',                // корабль
-  enemies: ['👾', '🛸', '☄️'], // враги
-  shipSpeed: 420,            // скорость корабля
-  fireEvery: 0.3,            // выстрел каждые N секунд
-  bulletSpeed: 700,          // скорость пуль
-  enemyEvery: 0.9,           // новый враг каждые N секунд
-  enemySpeed: 140,           // скорость врагов
-  lives: 3,                  // жизни
-  bulletColor: '#ffe066'     // цвет пуль
+// ===== Settings =====
+const CONFIG = {
+  title: 'Star Patrol',
+  ship: '🚀',
+  enemies: ['👾', '🛸', '☄️'],
+  shipSpeed: 420,
+  fireEvery: 0.3,            // a shot every N seconds
+  bulletSpeed: 700,
+  enemyEvery: 0.9,           // a new enemy every N seconds
+  enemySpeed: 140,
+  lives: 3,
+  bulletColor: '#ffe066'
 };
 
 Arcade.create({
-  title: LAB.title,
-  emoji: LAB.ship,
-  subtitle: 'Не пропусти пришельцев вниз',
+  title: CONFIG.title,
+  emoji: CONFIG.ship,
+  subtitle: "Don't let the invaders reach the bottom",
   width: 600, height: 800,
   world: 'space', worlds: true,
-  difficulty: true,                  // в настройках: легко / нормально / сложно → game.diff
-  lives: LAB.lives,
+  difficulty: true,                  // easy / normal / hard in settings → game.diff
+  lives: CONFIG.lives,
   buttons: ['left', 'right'],
 
   setup(game) {
     const d = game.data;
-    d.ship = game.add({ emoji: LAB.ship, x: game.width / 2, y: game.height - 80, size: 56, angle: -Math.PI / 4, tag: 'ship', inside: true });
-    d.fireEvery = LAB.fireEvery;
+    d.ship = game.add({ emoji: CONFIG.ship, x: game.width / 2, y: game.height - 80, size: 56, angle: -Math.PI / 4, tag: 'ship', inside: true });
+    d.fireEvery = CONFIG.fireEvery;
     d.double = false;
     d.kills = 0;
     d.fireTimer = 0;
-    game.every(LAB.enemyEvery / game.diff, spawnEnemy);
+    game.every(CONFIG.enemyEvery / game.diff, spawnEnemy);
   },
 
   update(game, dt) {
     const d = game.data, ship = d.ship;
 
     ship.vx = 0;
-    if (game.key.left) ship.vx = -LAB.shipSpeed;
-    if (game.key.right) ship.vx = LAB.shipSpeed;
+    if (game.key.left) ship.vx = -CONFIG.shipSpeed;
+    if (game.key.right) ship.vx = CONFIG.shipSpeed;
     if (game.pointer.down) ship.x += (game.pointer.x - ship.x) * Math.min(1, dt * 12);
 
-    // Автоматическая стрельба
+    // Auto-fire
     d.fireTimer -= dt;
     if (d.fireTimer <= 0) {
       d.fireTimer = d.fireEvery;
       const shots = d.double ? [-14, 14] : [0];
-      shots.forEach(dx => game.add({ shape: 'circle', size: 10, x: ship.x + dx, y: ship.y - 30, vy: -LAB.bulletSpeed, color: LAB.bulletColor, glow: LAB.bulletColor, tag: 'bullet', removeOffscreen: true }));
+      shots.forEach(dx => game.add({ shape: 'circle', size: 10, x: ship.x + dx, y: ship.y - 30, vy: -CONFIG.bulletSpeed, color: CONFIG.bulletColor, glow: CONFIG.bulletColor, tag: 'bullet', removeOffscreen: true }));
       game.sound('tick', 0.15);
     }
 
@@ -73,11 +74,11 @@ Arcade.create({
 });
 
 function spawnEnemy(game) {
-  const hp = game.chance(0.2) ? 3 : 1; // иногда крепкий враг
+  const hp = game.chance(0.2) ? 3 : 1; // sometimes a tough one
   game.add({
-    emoji: game.pick(LAB.enemies), x: game.rand(40, game.width - 40), y: -40,
+    emoji: game.pick(CONFIG.enemies), x: game.rand(40, game.width - 40), y: -40,
     size: hp > 1 ? 62 : 46, hp: hp,
-    vy: LAB.enemySpeed * game.diff * game.rand(0.8, 1.3), vx: game.rand(-40, 40), bounce: false,
+    vy: CONFIG.enemySpeed * game.diff * game.rand(0.8, 1.3), vx: game.rand(-40, 40),
     spin: game.rand(-1, 1), tag: 'enemy'
   });
 }
@@ -85,8 +86,8 @@ function spawnEnemy(game) {
 function upgrade(game) {
   const d = game.data;
   game.choose([
-    { icon: '⚡', title: 'Скорострельность', text: 'Стреляешь на 25% чаще', apply: () => { d.fireEvery *= 0.75; } },
-    { icon: '✌️', title: 'Двойной выстрел', text: 'Две пули сразу', apply: () => { d.double = true; } },
-    { icon: '❤️', title: '+1 жизнь', text: 'Ещё одна попытка', apply: () => game.addLife() }
+    { icon: '⚡', title: 'Rapid fire', text: 'Shoot 25% faster', apply: () => { d.fireEvery *= 0.75; } },
+    { icon: '✌️', title: 'Double shot', text: 'Two bullets at once', apply: () => { d.double = true; } },
+    { icon: '❤️', title: '+1 life', text: 'One more try', apply: () => game.addLife() }
   ]).then(card => { card.apply(); game.nextLevel(); });
 }

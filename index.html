@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArcadeJS — a tiny framework for fast browser games</title>
+  <meta name="description" content="Write only the rules of your game: ArcadeJS brings menu, HUD, input, sounds, music, sprites, particles, Matter.js physics and Three.js 3D. No build step. Works great with AI.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕹️</text></svg>">
+  <!-- The landing page itself is built with BlockUI, ArcadeJS's sister library for websites -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/BlockUI@2.0.0/blockui.css">
+  <script src="https://cdn.jsdelivr.net/gh/si0683/BlockUI@2.0.0/blockui.js"></script>
+  <style>
+    .code { margin: 0; padding: 18px 20px; border-radius: var(--bui-radius); background: #0b1020; color: #e2e8f0; font: 14px/1.6 ui-monospace, Consolas, monospace; overflow-x: auto; white-space: pre; }
+    .play { width: 100%; aspect-ratio: 4 / 3; border: 0; border-radius: calc(var(--bui-radius) * 1.5); box-shadow: 0 0 60px color-mix(in srgb, var(--bui-main) 45%, transparent); background: #000; }
+    .game-card { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 26px 18px; text-align: center; }
+    .game-card .emoji { font-size: 3rem; line-height: 1; }
+  </style>
+</head>
+<body>
+
+<header class="bui-header">
+  <div class="bui-container">
+    <a class="bui-logo" href="#top"><span>🕹️</span><span>ArcadeJS</span></a>
+    <nav class="bui-nav">
+      <a href="#start">Start</a>
+      <a href="#features">Features</a>
+      <a href="#examples">Examples</a>
+      <a href="#ai">AI</a>
+      <a href="https://github.com/si0683/ArcadeJS">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<section class="bui-hero" id="top">
+  <div class="bui-container">
+    <div>
+      <span class="bui-badge">v2.0 · MIT · no build step</span>
+      <h1>Write the rules. Get the game.</h1>
+      <p>ArcadeJS brings the menu, HUD, controls, sounds, music, sprites, particles, physics and 3D. Your game is 50–150 lines of plain JavaScript — and AI models write it fluently.</p>
+      <div class="bui-row">
+        <a class="bui-btn bui-btn-big" href="#start">Get started</a>
+        <a class="bui-btn bui-btn-ghost bui-btn-big" href="AI.md">Docs</a>
+      </div>
+      <ul class="bui-facts">
+        <li><b>9</b><span>live examples</span></li>
+        <li><b>99</b><span>sounds</span></li>
+        <li><b>201</b><span>sprites</span></li>
+      </ul>
+    </div>
+    <div>
+      <!-- A real ArcadeJS game: try it -->
+      <iframe class="play" src="examples/adventure/" title="Adventure — ArcadeJS demo" loading="lazy"></iframe>
+    </div>
+  </div>
+</section>
+
+<section class="bui-section bui-section-alt" id="start">
+  <div class="bui-container">
+    <div class="bui-head"><span class="bui-label">Get started</span><h2>A complete game in 20 lines</h2><p>Menu, settings, pause, game over, high score and touch buttons come for free.</p></div>
+    <div class="bui-grid bui-grid-2">
+<pre class="code">&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.css"&gt;
+&lt;script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.js"&gt;&lt;/script&gt;
+&lt;div id="game"&gt;&lt;/div&gt;
+
+# or
+npm install arcadejs
+
+import Arcade from 'arcadejs';
+import 'arcadejs/arcade.css';</pre>
+<pre class="code">Arcade.create({
+  title: 'Fruit Drop', emoji: '🍉', world: 'sky',
+  lives: 3, buttons: ['left', 'right'],
+  setup(game) {
+    game.data.hero = game.add({ emoji: '🧺', x: 400, y: 540, size: 70, inside: true });
+    game.every(0.7, g => g.add({ emoji: g.pick(['🍎', '🍌']),
+      x: g.rand(40, 760), y: -30, vy: 220, tag: 'fruit', removeOffscreen: true }));
+  },
+  update(game) {
+    const hero = game.data.hero;
+    hero.vx = game.key.left ? -500 : game.key.right ? 500 : 0;
+    const fruit = game.hitAny(hero, 'fruit');
+    if (fruit) { fruit.remove(); game.addScore(1, fruit.x, fruit.y); game.sound('coin'); }
+  }
+});</pre>
+    </div>
+  </div>
+</section>
+
+<section class="bui-section" id="features">
+  <div class="bui-container">
+    <div class="bui-head"><span class="bui-label">Features</span><h2>Everything around your game, done</h2></div>
+    <div class="bui-grid">
+      <div class="bui-feature"><div class="bui-icon" data-icon="mdi:gamepad-variant"></div><h3>Screens &amp; input</h3><p>Menu, settings, countdown, pause, game over, high score. Keyboard, mouse, touch, swipes, on-screen buttons.</p></div>
+      <div class="bui-feature"><div class="bui-icon" data-icon="mdi:run-fast"></div><h3>Objects &amp; camera</h3><p>Emoji, sprites and shapes with velocity, gravity, collisions, platforms and a follow camera.</p></div>
+      <div class="bui-feature"><div class="bui-icon" data-icon="mdi:music"></div><h3>Sound &amp; music</h3><p>99 sounds (Kenney, ZzFX 8-bit, built-in) and 5 background tracks.</p></div>
+      <div class="bui-feature"><div class="bui-icon" data-icon="mdi:robot-happy"></div><h3>Sprites</h3><p>201 Kenney sprites; characters animate walking and jumping by themselves.</p></div>
+      <div class="bui-feature"><div class="bui-icon" data-icon="mdi:atom-variant"></div><h3>Physics</h3><p><code>physics: true</code> — Matter.js bodies, ropes, collision events, drag-and-throw.</p></div>
+      <div class="bui-feature"><div class="bui-icon" data-icon="mdi:cube-outline"></div><h3>3D</h3><p><code>mode: '3d'</code> — Three.js boxes, spheres, emoji billboards, chase camera.</p></div>
+      <div class="bui-feature"><div class="bui-icon" data-icon="mdi:trophy"></div><h3>Progression</h3><p>Levels, lives, upgrade picker (<code>game.choose</code>) and quizzes (<code>game.ask</code>).</p></div>
+      <div class="bui-feature"><div class="bui-icon" data-icon="mdi:earth"></div><h3>i18n</h3><p>English and Russian interface, every text overridable.</p></div>
+      <div class="bui-feature"><div class="bui-icon" data-icon="mdi:language-typescript"></div><h3>TypeScript</h3><p>Typed API, ES module, safe SSR import for Next.js and friends.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="bui-section bui-section-alt" id="examples">
+  <div class="bui-container">
+    <div class="bui-head"><span class="bui-label">Examples</span><h2>Play the demos — 3 files each</h2></div>
+    <div class="bui-grid bui-grid-4">
+      <a class="bui-card game-card" href="examples/starter/"><span class="emoji">🍉</span><h3>Fruit Drop</h3><p>The 50-line starter</p></a>
+      <a class="bui-card game-card" href="examples/flappy/"><span class="emoji">🐤</span><h3>Flappy</h3><p>Gravity and taps</p></a>
+      <a class="bui-card game-card" href="examples/snake/"><span class="emoji">🐍</span><h3>Quiz Snake</h3><p>Grid, timers, quiz</p></a>
+      <a class="bui-card game-card" href="examples/breakout/"><span class="emoji">🧱</span><h3>Space Breakout</h3><p>Upgrade picker</p></a>
+      <a class="bui-card game-card" href="examples/platformer/"><span class="emoji">🦊</span><h3>Little Fox</h3><p>Text map, platforms, camera</p></a>
+      <a class="bui-card game-card" href="examples/shooter/"><span class="emoji">🚀</span><h3>Star Patrol</h3><p>Auto-fire, difficulty</p></a>
+      <a class="bui-card game-card" href="examples/angry/"><span class="emoji">🐦</span><h3>Angry Emoji</h3><p>Matter.js physics</p></a>
+      <a class="bui-card game-card" href="examples/runner3d/"><span class="emoji">🛸</span><h3>Space Runner 3D</h3><p>Three.js</p></a>
+      <a class="bui-card game-card" href="examples/adventure/"><span class="emoji">🗺️</span><h3>Adventure</h3><p>Sprites, sounds, music</p></a>
+    </div>
+  </div>
+</section>
+
+<section class="bui-section" id="ai">
+  <div class="bui-container">
+    <div class="bui-cta">
+      <h2>Let AI write the game</h2>
+      <p>Paste the prompt template into ChatGPT, Claude, Qwen or GigaChat, describe your idea — get a playable game in 3 files.</p>
+      <div class="bui-row" style="justify-content:center">
+        <a class="bui-btn bui-btn-light bui-btn-big" href="PROMPT.md">Prompt template</a>
+        <a class="bui-btn bui-btn-light bui-btn-big" href="PROMPT.ru.md">Промт на русском</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="bui-footer">© <span data-year></span> ArcadeJS · MIT License · <a href="https://github.com/si0683/ArcadeJS">GitHub</a> · <a href="THIRD_PARTY.md">Credits</a> · Sister project: <a href="https://si0683.github.io/BlockUI/">BlockUI</a> for websites</footer>
+
+<script>BlockUI.start({ name: 'ArcadeJS', lang: 'en', style: 'dark', color: 'purple' });</script>
+</body>
+</html>

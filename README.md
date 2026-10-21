@@ -1,28 +1,40 @@
 # 🕹️ ArcadeJS
 
-Фреймворк для быстрых 2D-игр в браузере: подключил двумя строками — и у игры уже есть меню, настройки, отсчёт, пауза, экран «Игра окончена», рекорд, очки и жизни, звуки, частицы, кнопки для телефона и вопросы-квиз. Остаётся описать правила своей игры — обычно 50–150 строк.
+**A tiny framework for fast browser games.** Two lines of HTML and your game already has a menu, settings, countdown, pause, game-over screen, high score, HUD, keyboard / mouse / touch / swipe controls, sounds and music, particles, sprites and a camera. You write only the rules — usually 50–150 lines.
 
-Сделан для уроков программирования с детьми: игру по описанию собирает нейросеть (Qwen, ChatGPT, GigaChat…), и получается ровно **3 файла — HTML, CSS, JS**, которые вставляются в CodePen.
+Optional add-ons load on demand: **Matter.js physics** (`physics: true`) and **Three.js 3D** (`mode: '3d'`).
 
-**Примеры:** [Фруктопад](https://si0683.github.io/ArcadeJS/examples/starter/) · [Флаппи](https://si0683.github.io/ArcadeJS/examples/flappy/) · [Змейка-умник](https://si0683.github.io/ArcadeJS/examples/snake/) · [Космо-арканоид](https://si0683.github.io/ArcadeJS/examples/breakout/) · [Лисёнок](https://si0683.github.io/ArcadeJS/examples/platformer/) · [Звёздный патруль](https://si0683.github.io/ArcadeJS/examples/shooter/) · [Злые эмодзи](https://si0683.github.io/ArcadeJS/examples/angry/) (физика) · [Космо-раннер 3D](https://si0683.github.io/ArcadeJS/examples/runner3d/) · [Приключение](https://si0683.github.io/ArcadeJS/examples/adventure/) (спрайты, звуки и музыка Kenney)
+[Website & live demos](https://si0683.github.io/ArcadeJS/) · [API reference](AI.md) · [AI prompt template](PROMPT.md) · [Русский](README.ru.md)
 
-## 🚀 Быстрый старт с нейросетью
+| | | |
+|---|---|---|
+| [Fruit Drop](https://si0683.github.io/ArcadeJS/examples/starter/) — 50 lines | [Flappy](https://si0683.github.io/ArcadeJS/examples/flappy/) | [Quiz Snake](https://si0683.github.io/ArcadeJS/examples/snake/) |
+| [Space Breakout](https://si0683.github.io/ArcadeJS/examples/breakout/) | [Little Fox](https://si0683.github.io/ArcadeJS/examples/platformer/) — platformer | [Star Patrol](https://si0683.github.io/ArcadeJS/examples/shooter/) — shooter |
+| [Angry Emoji](https://si0683.github.io/ArcadeJS/examples/angry/) — physics | [Space Runner 3D](https://si0683.github.io/ArcadeJS/examples/runner3d/) — Three.js | [Adventure](https://si0683.github.io/ArcadeJS/examples/adventure/) — sprites & music |
 
-Готовый шаблон промта — **[PROMPT.md](PROMPT.md)**: поменяйте строки «МОЯ ИГРА» (название, идея, управление, мир) и отправьте в Qwen, ChatGPT или GigaChat — получите игру в 3 файлах для CodePen.
-
-## Подключение
+## Install
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/arcade.css">
-<script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/arcade.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.css">
+<script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.js"></script>
 <div id="game"></div>
 ```
 
-## Игра за 20 строк
+or
+
+```bash
+npm install arcadejs
+```
+```js
+import Arcade from 'arcadejs';
+import 'arcadejs/arcade.css';
+```
+
+## A game in 20 lines
 
 ```js
 Arcade.create({
-  title: 'Фруктопад', emoji: '🍉', world: 'sky', lives: 3, buttons: ['left', 'right'],
+  title: 'Fruit Drop', emoji: '🍉', world: 'sky', lives: 3, buttons: ['left', 'right'],
   setup(game) {
     game.data.hero = game.add({ emoji: '🧺', x: 400, y: 540, size: 70, inside: true });
     game.every(0.7, g => g.add({ emoji: g.pick(['🍎', '🍌']), x: g.rand(40, 760), y: -30, vy: 220, tag: 'fruit', removeOffscreen: true }));
@@ -36,40 +48,39 @@ Arcade.create({
 });
 ```
 
-## Что внутри
+## Features
 
-- **Объекты:** эмодзи, надписи, прямоугольники и круги со скоростью, гравитацией, вращением, отскоком, временем жизни; группы по тегам.
-- **Столкновения:** `hit`, `hitAny`, твёрдые платформы `collide` (в том числе «снизу насквозь»), камера `follow`.
-- **Управление:** клавиатура, мышь, касания, свайпы, экранные кнопки — всё через `game.key.left` и `game.pressed('action')`.
-- **Экраны:** меню, настройки (звук, мир, предмет, сложность), отсчёт, пауза, конец игры, рекорд в браузере.
-- **Эффекты:** частицы, всплывающие надписи, тряска, вспышка; 8 миров с анимированным фоном.
-- **Звуки:** 12 встроенных, 67 звуков Kenney (грузятся при первом вызове), 20 восьмибитных звуков синтезатора ZzFX и свои звуки ZzFX числами.
-- **Музыка:** 5 фоновых мелодий (`music: 'adventure'`), выключатель в настройках.
-- **Спрайты:** 201 картинка Kenney — герои с анимацией ходьбы и прыжка, монстры, блоки, космос, животные (`image: 'knight'`).
-- **Эмодзи картинками** Twemoji — одинаково на любом компьютере.
-- **Физика Matter.js** (`physics: true`): падение, столкновения, башни, верёвки, бросок мышью — Matter.js грузится сам.
-- **3D на Three.js** (`mode: '3d'`): `game.add3d` — кубы, шары, эмодзи в 3D, камера за героем; те же меню, очки и управление.
-- **Квиз:** `game.ask()` — математика, русский, английский, история России или свои вопросы; `game.choose()` — выбор улучшения.
+- **Objects:** emoji, sprites, text, rectangles and circles with velocity, gravity, rotation, bouncing, lifetime and tags.
+- **Collisions:** `hit`, `hitAny`, solid and one-way platforms (`collide`), camera `follow`.
+- **Input:** keyboard, mouse, touch, swipes and on-screen buttons through one API — `game.key.left`, `game.pressed('action')`.
+- **Screens:** menu, settings (sound, music, world, quiz subject, difficulty), countdown, pause, game over, high score saved in the browser.
+- **Effects:** particles, popups, screen shake, flash; 8 animated background worlds.
+- **Audio:** 12 built-in sounds, 67 Kenney sounds (loaded on demand), 20 ZzFX 8-bit presets plus your own ZzFX sounds, 5 background music tracks.
+- **Sprites:** 201 Kenney images — animated characters that walk/jump/fall automatically, monsters, tiles, spaceships, animals (`image: 'knight'`). Emoji render as Twemoji images, identical on every device.
+- **Quiz & upgrades:** `game.ask()` with your own questions, `game.choose()` to pick 1 of N cards — handy for roguelikes and educational games.
+- **Physics:** `physics: true` — Matter.js bodies, constraints, collision events, drag-and-throw.
+- **3D:** `mode: '3d'` — `game.add3d` boxes, spheres, emoji billboards, chase camera, shadows.
+- **i18n:** English and Russian interface (`lang`), any text overridable (`texts`).
+- **TypeScript types**, ES module, safe SSR import.
 
-Полный справочник — [AI.md](AI.md) (написан так, чтобы его понимали нейросети).
+## Build games with AI
 
-## Для разработчиков
+ArcadeJS is designed so that an LLM (ChatGPT, Claude, Qwen, GigaChat, DeepSeek…) can write a complete game from a short description: [PROMPT.md](PROMPT.md) is a ready-to-use prompt template, [AI.md](AI.md) is a compact API reference the model can read.
+
+## Repository
 
 ```
-arcade.js / arcade.css — фреймворк (версия в arcade.js: VERSION)
-sounds/                — звуки
-examples/<игра>/       — примеры: index.html, style.css, script.js, codepen.html
-AI.md                  — справочник API для нейросетей
-tools/build.py         — собирает index.html и codepen.html примеров
+arcade.js / arcade.css   the framework (VERSION constant in arcade.js)
+arcade.mjs / arcade.d.ts ES module entry and TypeScript types
+sounds/ sprites/         audio and sprite assets
+examples/<name>/         examples: index.html, style.css, script.js, codepen.html
+AI.md                    API reference
+PROMPT.md, PROMPT.ru.md  prompt templates for LLMs
+tools/build.py           regenerates asset lists, example HTML and arcade.mjs
 ```
 
-Новая версия: поменять `VERSION` в `arcade.js`, `python tools/build.py`, ссылки `@1.1.0` в AI.md/README, коммит и тег `vX.Y.Z` — jsDelivr отдаёт файлы по тегу. Уже вышедшие версии не менять: на них опираются уроки.
+Release: bump `VERSION` in `arcade.js` and `package.json`, update `@x.y.z` links, run `python tools/build.py`, commit, tag `vX.Y.Z`, `npm publish`. Published versions are never changed — jsDelivr serves every tag forever.
 
-## Авторы ресурсов
+## License
 
-- Звуки и спрайты — [Kenney](https://kenney.nl) (CC0).
-- Музыка — Juhani Junkala, [OpenGameArt](https://opengameart.org/users/subspaceaudio) (CC0).
-- Эмодзи — [Twemoji](https://github.com/jdecked/twemoji) (графика CC BY 4.0, © Twitter/X и авторы Twemoji).
-- Синтезатор звуков — [ZzFX](https://github.com/KilledByAPixel/ZzFX), Frank Force (MIT).
-- Физика — [Matter.js](https://brm.io/matter-js/) (MIT), 3D — [Three.js](https://threejs.org) (MIT).
-- Встроенные звуки jump, coin, crash и др. — из уроков автора репозитория.
+MIT — see [LICENSE](LICENSE). Assets and add-on libraries have their own licenses: [THIRD_PARTY.md](THIRD_PARTY.md) (Kenney and music are CC0; Twemoji requires attribution).

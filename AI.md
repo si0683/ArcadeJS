@@ -1,213 +1,221 @@
-# ArcadeJS 1.1.0 — справочник для нейросетей
+# ArcadeJS 2.0 — API reference (for developers and LLMs)
 
-Ты пишешь браузерную 2D-игру на ArcadeJS. Результат — ровно 3 файла: HTML, CSS, JS (чистый JavaScript, без TypeScript, React, import/export, npm). Меню, настройки, отсчёт 3-2-1, пауза, «Игра окончена», рекорд, панель очков и жизней, звуки, кнопки для телефона уже есть во фреймворке — **не пиши их сам**. Пиши только правила своей игры.
+ArcadeJS is a small browser game framework. A game is **3 files — HTML, CSS, JS** (plain JavaScript, no build step). The framework already provides: menu, settings, 3-2-1 countdown, pause, game-over screen, high score, HUD (score, lives, level), keyboard / mouse / touch / swipe input, on-screen buttons for phones, sounds and music, particles, sprites, camera, timers, quiz and upgrade picker, optional physics (Matter.js) and 3D (Three.js). **Do not re-implement these** — write only the rules of your game.
 
-## 1. HTML (для CodePen — целиком в окно HTML)
+## 1. Install
 
+**CDN (CodePen, plain HTML):**
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/arcade.css">
-<script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/arcade.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.css">
+<script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.js"></script>
 <div id="game"></div>
 ```
 
-## 2. CSS
+**npm (Vite, webpack, Next.js client components):**
+```bash
+npm install arcadejs
+```
+```js
+import Arcade from 'arcadejs';
+import 'arcadejs/arcade.css';
+Arcade.create({ /* ... */ });
+```
+TypeScript types are included. Importing on the server is safe (does nothing); create the game in the browser (e.g. inside `useEffect`).
 
-Можно оставить почти пустым. Свой цвет кнопок: `.arc-root { --arc-accent: #ff4d6d; }`
-
-## 3. JS — каркас игры
+## 2. Skeleton
 
 ```js
-// ===== 0. ЛАБОРАТОРИЯ ИГРЫ 🧪 ===== (настройки для детей, 5–10 строк)
-const LAB = { title: 'Моя игра', hero: '🐸', speed: 400, lives: 3, world: 'sky' };
+const CONFIG = { title: 'My game', hero: '🐸', speed: 400, lives: 3, world: 'sky' }; // your tweakable settings
 
 Arcade.create({
-  title: LAB.title,            // название в меню
-  emoji: LAB.hero,             // большая картинка в меню
-  subtitle: 'Цель игры',       // строка под названием
-  help: '← → — движение',      // подсказка (по умолчанию — из buttons)
-  width: 800, height: 600,     // размер мира; для телефона удобно 480 × 720
-  world: LAB.world,            // sky, space, forest, ocean, night, candy, desert, city
-  worlds: true,                // выбор мира в настройках
-  lives: LAB.lives,            // 0 — без жизней
-  quiz: false,                 // true — вопросы game.ask() и выбор предмета в настройках
-  difficulty: false,           // true — выбор сложности → game.diff (0.75 / 1 / 1.35)
-  buttons: ['left', 'right', 'action'], // кнопки на телефоне: left right up down action
-  actionLabel: '●',            // надпись на кнопке action
-  music: 'adventure',          // фоновая музыка: adventure, action, boss, calm, menu (false — без музыки)
-  sounds: ['laser', 'explosion'], // звуки Kenney, которые загрузить заранее (остальные грузятся при первом вызове)
-  emojiStyle: 'twemoji',       // эмодзи картинками Twemoji (одинаково везде); 'system' — шрифтом компьютера
+  title: CONFIG.title,          // menu title
+  emoji: CONFIG.hero,           // big emoji in the menu
+  subtitle: 'Goal of the game', // line under the title
+  help: '← → move',             // controls hint (auto-generated from buttons if empty)
+  width: 800, height: 600,      // world size; the game scales to the window. Phones: 480 × 720
+  world: CONFIG.world,          // sky, space, forest, ocean, night, candy, desert, city
+  worlds: true,                 // world picker in settings
+  lives: CONFIG.lives,          // 0 = no lives
+  buttons: ['left', 'right', 'action'], // on-screen buttons on touch devices: left right up down action
+  actionLabel: '●',             // label of the action button
+  music: 'adventure',           // background music: adventure, action, boss, calm, menu (false = none)
+  sounds: ['laser'],            // Kenney sounds to preload (others load on first use)
+  quiz: false,                  // true or { questions: [...] } — enables game.ask()
+  difficulty: false,            // true: difficulty picker → game.diff (0.75 / 1 / 1.35)
+  physics: false,               // true or { gravity, walls, drag } — Matter.js
+  mode: '2d',                   // '3d' — Three.js and game.add3d
+  lang: 'en',                   // 'en' | 'ru'; default: the browser language
+  texts: { play: '▶ Start' },   // override any interface text
+  emojiStyle: 'twemoji',        // emoji as Twemoji images (same on every device); 'system' — device font
+  assetsUrl: '',                // serve sounds/ and sprites/ from your own host
 
-  setup(game) { /* начало каждой игры: создать объекты и таймеры */ },
-  update(game, dt) { /* каждый кадр: управление, столкновения; dt — секунды */ },
-  draw(game, ctx) { /* необязательно: своё рисование поверх объектов */ },
-  drawBehind(game, ctx) { /* необязательно: рисование под объектами */ },
-  onOver(game, win) { /* необязательно: после конца игры */ }
+  setup(game) { /* start of every round: create objects and timers */ },
+  update(game, dt) { /* every frame: input and collisions; dt in seconds */ },
+  draw(game, ctx) { /* optional: custom drawing over objects */ },
+  drawBehind(game, ctx) { /* optional: custom drawing under objects */ },
+  onOver(game, win) { /* optional: after the game ends */ }
 });
 ```
 
-Свои переменные храни в `game.data` (обнуляется при каждом старте): `game.data.hero = game.add({...})`. Свои функции объявляй ниже `Arcade.create` и передавай в них `game`.
+Keep your variables in `game.data` (reset every round): `game.data.hero = game.add({...})`. Put helper functions below `Arcade.create` and pass `game` to them.
 
-## 4. Объекты
+## 3. Objects
 
 ```js
 const hero = game.add({ emoji: '🐸', x: 100, y: 300, size: 50, tag: 'hero' });
 ```
 
-| Свойство | Что делает |
+| Property | Meaning |
 |---|---|
-| `x, y` | центр объекта (в пикселях мира) |
-| `emoji` / `image` / `text` / `shape: 'rect' \| 'circle'` | вид: эмодзи, спрайт Kenney (`image: 'knight'`, раздел 10) или своя картинка (`image: 'https://…png'`), надпись, фигура |
-| `size` или `w, h` | размер (у эмодзи — размер шрифта) |
-| `color, radius, glow` | цвет фигуры, скругление прямоугольника, свечение |
-| `vx, vy` | скорость (пикс/с), `ax, ay` — ускорение, `gravity` — притяжение вниз |
-| `friction, maxSpeed` | торможение, предел скорости |
-| `angle, spin` | поворот (радианы) и скорость вращения |
-| `flip, alpha, z, blink` | отражение, прозрачность, порядок рисования, мигание N секунд |
-| `pose, animSpeed` | поза анимированного спрайта (`idle`, `walk`, `jump`, `fall`, `hurt`, `cheer`, `duck`, `attack`) — без `pose` выбирается сама; кадров в секунду |
-| `tag` | группа: `'enemy'`, `'coin'`… |
-| `bounce, wrap, inside` | отскок от краёв экрана / выход с другой стороны / не выходить за край |
-| `removeOffscreen: true` | удалить, когда улетел далеко за экран (для пуль и падающих предметов) |
-| `life: 2, fade: true` | исчезнуть через 2 с, плавно бледнея |
-| `oneWay: true` | платформа, сквозь которую прыгают снизу (для `game.collide`) |
-| `fixed: true` | не двигается с камерой (интерфейс) |
-| `hitbox: 0.8` | доля размера для столкновений; `hp` — здоровье; любые свои поля тоже можно |
+| `x, y` | center, in world pixels |
+| `emoji` / `image` / `text` / `shape: 'rect' \| 'circle'` | look: emoji, sprite (`image: 'knight'` or an image URL, section 7), text, shape |
+| `size` or `w, h` | size (for emoji — font size) |
+| `color, radius, glow` | shape colour, rectangle corner radius, glow colour |
+| `vx, vy` | velocity (px/s); `ax, ay` — acceleration; `gravity` — downward pull |
+| `friction, maxSpeed` | damping, speed limit |
+| `angle, spin` | rotation (radians) and rotation speed |
+| `flip, alpha, z, blink` | mirror, opacity, draw order, blink for N seconds |
+| `pose, animSpeed` | animated sprite pose (`idle`, `walk`, `jump`, `fall`, `hurt`, `cheer`, `duck`, `attack`) — automatic if omitted; frames per second |
+| `tag` | group name: `'enemy'`, `'coin'`… |
+| `bounce, wrap, inside` | bounce off screen edges / wrap around / stay inside |
+| `removeOffscreen: true` | remove when far off screen (bullets, falling items) |
+| `life: 2, fade: true` | disappear after 2 s, fading out |
+| `oneWay: true` | platform you can jump through from below (for `game.collide`) |
+| `fixed: true` | does not move with the camera (UI) |
+| `hitbox: 0.8` | fraction of the size used for collisions; `hp` — hit points; any custom fields are fine |
 
-| Функция | Что делает |
+| Function | Meaning |
 |---|---|
-| `obj.remove()` / `game.remove(obj)` | удалить |
-| `game.all('enemy')`, `game.first('hero')`, `game.count('coin')`, `game.clear('enemy')` | найти, посчитать, удалить группу |
-| `game.hit(a, b)` | столкнулись ли a и b |
-| `game.hitAny(a, 'coin')` | первый объект группы, который касается a, или null |
-| `game.hitAll(a, 'coin')` | все такие объекты |
-| `game.collide(a, 'ground')` | выталкивает a из твёрдых объектов группы; возвращает `{ top, bottom, left, right }`, ставит `a.onGround` |
-| `game.follow(hero, { atX: 0.4, minX: 0, maxX: 3000 })` | камера едет за героем (`game.camera.x/y`) |
+| `obj.remove()` / `game.remove(obj)` | remove |
+| `game.all('enemy')`, `game.first('hero')`, `game.count('coin')`, `game.clear('enemy')` | find, count, remove a group |
+| `game.hit(a, b)` | do a and b overlap |
+| `game.hitAny(a, 'coin')` | first object of the group touching a, or null |
+| `game.hitAll(a, 'coin')` | all of them |
+| `game.collide(a, 'ground')` | pushes a out of solid objects of the group; returns `{ top, bottom, left, right }` and sets `a.onGround` |
+| `game.follow(hero, { atX: 0.4, minX: 0, maxX: 3000 })` | camera follows the hero (`game.camera.x/y`) |
 
-## 5. Управление
+## 4. Input
 
-| Код | Что значит |
+| Code | Meaning |
 |---|---|
-| `game.key.left / right / up / down / action` | клавиша зажата (стрелки, WASD, пробел/Enter, кнопки на телефоне) |
-| `game.pressed('action')` | нажата в этом кадре (прыжок, выстрел). Касание экрана = `action` |
-| `game.pressed('left')` и т.д. | нажатие стрелки **или свайп** в эту сторону |
-| `game.isDown('KeyF')`, `game.pressed('KeyF')` | любая клавиша по коду |
-| `game.pointer.x / y / down` | мышь или палец (координаты мира) |
+| `game.key.left / right / up / down / action` | held (arrows, WASD, Space/Enter, on-screen buttons) |
+| `game.pressed('action')` | pressed this frame (jump, shoot). A tap on the screen is `action` |
+| `game.pressed('left')` etc. | arrow key **or swipe** in that direction |
+| `game.isDown('KeyF')`, `game.pressed('KeyF')` | any key by `KeyboardEvent.code` |
+| `game.pointer.x / y / down` | mouse or finger in world coordinates |
 
-## 6. Очки, жизни, уровни, экраны
+## 5. Score, lives, levels, screens
 
-| Функция | Что делает |
+| Function | Meaning |
 |---|---|
-| `game.addScore(10, x, y)` | очки (+ всплывающая надпись в x, y) |
-| `game.loseLife()` | минус жизнь, тряска, звук, неуязвимость `hurtTime` с; при 0 — конец игры. Вернёт false, если герой ещё неуязвим |
-| `game.addLife()` | плюс жизнь |
-| `game.nextLevel()` | уровень +1 и надпись «Уровень N»; `game.level` |
-| `game.hud('⏱', 30)` | своя строка на панели |
-| `game.message('Текст', 2)` | надпись по центру на 2 с |
-| `game.over()` / `game.win()` | конец игры: проигрыш / победа (рекорд сохранится сам) |
-| `game.score, game.lives, game.level, game.time, game.diff, game.width, game.height, game.state` | состояние |
+| `game.addScore(10, x, y)` | add points (+ popup at x, y) |
+| `game.loseLife()` | lose a life: shake, sound, `hurtTime` s invulnerability; game over at 0. Returns false while invulnerable |
+| `game.addLife()` | gain a life |
+| `game.nextLevel()` | level +1 with a "Level N" banner; `game.level` |
+| `game.hud('⏱', 30)` | custom HUD item |
+| `game.message('Text', 2)` | centered banner for 2 s |
+| `game.over()` / `game.win()` | end the game: lose / win (high score is saved) |
+| `game.score, game.lives, game.level, game.time, game.diff, game.width, game.height, game.state, game.lang` | state |
 
-## 7. Таймеры, эффекты, звуки, рисование
+## 6. Timers, effects, drawing
 
-| Функция | Что делает |
+| Function | Meaning |
 |---|---|
-| `game.every(1.5, fn)`, `game.after(3, fn)` | повтор / один раз через N секунд; `fn(game)`; на паузе стоят |
-| `game.burst(x, y, { emoji: '✨', color, count: 16 })` | взрыв частиц |
-| `game.popup(x, y, '+10', color)`, `game.shake(8, 0.3)`, `game.flash('#fff')` | надпись, тряска, вспышка |
-| `game.sound('coin', 0.5)` | звук и громкость: встроенные, Kenney и ZzFX — раздел 9 |
-| `game.text(t, x, y, { size, color })`, `game.emoji(e, x, y, size)`, `game.rect(x, y, w, h, color, { radius })`, `game.circle(x, y, r, color)`, `game.line(x1, y1, x2, y2, color, width)` | рисование в `draw` |
-| `game.rand(a, b)`, `game.randInt(a, b)`, `game.pick(list)`, `game.chance(0.3)`, `game.clamp(v, a, b)`, `game.dist(a, b)`, `game.angleTo(a, b)` | помощники |
+| `game.every(1.5, fn)`, `game.after(3, fn)` | repeat / once after N seconds; `fn(game)`; paused with the game |
+| `game.burst(x, y, { emoji: '✨', color, count: 16 })` | particle burst |
+| `game.popup(x, y, '+10', color)`, `game.shake(8, 0.3)`, `game.flash('#fff')` | popup text, screen shake, flash |
+| `game.text(t, x, y, { size, color })`, `game.emoji(e, x, y, size)`, `game.rect(x, y, w, h, color, { radius })`, `game.circle(x, y, r, color)`, `game.line(x1, y1, x2, y2, color, width)` | drawing inside `draw` |
+| `game.rand(a, b)`, `game.randInt(a, b)`, `game.pick(list)`, `game.chance(0.3)`, `game.clamp(v, a, b)`, `game.shuffle(list)`, `game.dist(a, b)`, `game.angleTo(a, b)` | helpers |
 
-## 8. Вопросы и выбор улучшения
+## 7. Sounds, music, sprites
 
 ```js
-// quiz: true в Arcade.create; предмет (математика, русский, английский, история России) — в настройках
-game.ask().then(ok => { if (ok) game.addScore(10); else game.loseLife(); });
-// Свой вопрос:
-game.ask({ text: 'Столица России?', answer: 'Москва', options: ['Москва', 'Казань', 'Сочи', 'Омск'] });
+game.sound('coin');                    // built-in (12)
+game.sound('laser', 0.7);              // Kenney sound (67), loads on first use
+game.sound('retro-jump');              // 8-bit ZzFX preset (20), no files
+game.sound([, , 800, , .02, .05, 1]);  // your own ZzFX sound — design one at https://killedbyapixel.github.io/ZzFX/
+game.music('boss');                    // switch background music; game.music(false) — stop
+```
 
-// Выбор 1 из нескольких карточек (игра на паузе, пока не выбрали):
+- Built-in: jump, coin, crash, flap, hit, score, start, tick, bonus, lose, click, win.
+- Kenney: back, bell, bong, book, boom, chop, close, cloth, coins, computer, confirm, creak, door, door-close, drop, engine, error, explosion, forcefield, glass, glass-break, glitch, high-up, jingle-hit, jingle-nes, jingle-pizzi, jingle-sax, jingle-steel, knife, laser, laser2, laser3, laser-big, laser-retro, laser-small, low-down, metal, metal-click, mining, open, pep, phase-jump, phaser, phaser-down, plate, pluck, pot, powerup, powerup2, punch, punch-heavy, question, scroll, select, slime, space-trash, step, step-snow, step-wood, switch, sword, three-tone, thruster, thud, toggle, wood, zap.
+- ZzFX: retro-coin, retro-jump, retro-laser, retro-explosion, retro-boom, retro-hit, retro-powerup, retro-levelup, retro-win, retro-error, retro-blip, retro-click, retro-select, retro-bounce, retro-bubble, retro-magic, retro-whoosh, retro-splash, retro-alarm, retro-step.
+- Music: adventure, action, boss, calm, menu — or a URL. Plays during the game, silent in menu and pause, toggle in settings.
+
+```js
+game.add({ image: 'knight', x: 100, y: 300, size: 64 });              // sprite
+game.add({ image: 'adventurer', x, y, w: 44, h: 62, gravity: 1900 });  // character: walk/jump/fall animate automatically
+game.add({ image: 'https://example.com/hero.png', x, y, size: 80 });   // your own image
+```
+
+| Set | Names |
+|---|---|
+| Animated characters (walk, jump, fall, hurt, cheer) | adventurer, explorer, robot, zombie, woman, man |
+| Pixel characters (2-frame walk) | alien-green, alien-blue, alien-pink, alien-yellow, bat, slime, crab |
+| Pixel tiles and items | grass, dirt, snow, crate, block-coin, block-gold, plank, ladder, water, water-top, spikes, spring, lever, door, flag, sign, pipe, key, chest-gold, coin, gem, heart, heart-half, heart-empty, mushroom, plant, tree, cactus, snowman, cloud, block-angry, saw, spike-bot |
+| Dungeon (pixel) | knight, hero, wizard, dwarf, viking, elf, princess, old-man, rogue, orc, skeleton, ghost, spider, cyclops, crab-red, sword, axe, hammer, dagger, potion-red, potion-green, potion-blue, chest, barrel |
+| Space | ship-blue, ship-green, ship-red, ship-orange, ufo-red, ufo-green, ufo-blue, ufo-yellow, enemy-black, enemy-blue, enemy-green, enemy-red, meteor-big, meteor, meteor-small, meteor-grey, laser-blue, laser-red, laser-green, powerup-shield, powerup-bolt, powerup-star, pill, star-gold |
+| Animals (round) | elephant, giraffe, hippo, monkey, panda, parrot, penguin, pig, rabbit, snake |
+
+Sprites fit `size` (or `w × h`) without distortion; pixel art stays crisp. Characters face right (`flip: true` — left); emoji face left. All names: `Arcade.sprites`.
+
+## 8. Quiz and upgrade picker
+
+```js
+// quiz: { questions: [...] } in Arcade.create — your own questions (any language)
+quiz: { questions: [{ text: 'Capital of France?', answer: 'Paris', wrong: ['Rome', 'Berlin', 'Madrid'] }] }
+
+game.ask().then(ok => { if (ok) game.addScore(10); else game.loseLife(); });   // pauses the game
+game.ask({ text: '2 + 2 = ?', answer: '4', wrong: ['3', '5', '6'] });         // a one-off question
+
+// Pick 1 of N cards (the game is paused until chosen)
 game.choose([
-  { icon: '⚡', title: 'Быстрее', text: '+20% скорости', apply: () => { game.data.speed *= 1.2; } },
-  { icon: '❤️', title: '+1 жизнь', text: 'Ещё попытка', apply: () => game.addLife() }
+  { icon: '⚡', title: 'Faster', text: '+20% speed', apply: () => { game.data.speed *= 1.2; } },
+  { icon: '❤️', title: '+1 life', text: 'One more try', apply: () => game.addLife() }
 ]).then(card => card.apply());
 ```
 
-## 9. Звуки и музыка
+Built-in subjects: generated math (every language); with `lang: 'ru'` also Russian spelling, English–Russian words and Russian history.
 
-```js
-game.sound('coin');            // встроенный звук (12 шт.)
-game.sound('laser', 0.7);      // звук Kenney (67 шт., грузится при первом вызове)
-game.sound('retro-jump');      // 8-битный звук, синтезатор ZzFX (без файлов)
-game.sound([, , 800, , .02, .05, 1]); // свой звук ZzFX: числа из конструктора https://killedbyapixel.github.io/ZzFX/
-game.music('boss');            // сменить фоновую музыку; game.music(false) — выключить
-```
+## 9. Physics (Matter.js) — `physics: true`
 
-- Встроенные: jump, coin, crash, flap, hit, score, start, tick, bonus, lose, click, win.
-- Kenney (CC0): back, bell, bong, book, boom, chop, close, cloth, coins, computer, confirm, creak, door, door-close, drop, engine, error, explosion, forcefield, glass, glass-break, glitch, high-up, jingle-hit, jingle-nes, jingle-pizzi, jingle-sax, jingle-steel, knife, laser, laser-big, laser-retro, laser-small, laser2, laser3, low-down, metal, metal-click, mining, open, pep, phase-jump, phaser, phaser-down, plate, pluck, pot, powerup, powerup2, punch, punch-heavy, question, scroll, select, slime, space-trash, step, step-snow, step-wood, switch, sword, three-tone, thruster, thud, toggle, wood, zap.
-- ZzFX: retro-coin, retro-jump, retro-laser, retro-explosion, retro-boom, retro-hit, retro-powerup, retro-levelup, retro-win, retro-error, retro-blip, retro-click, retro-select, retro-bounce, retro-bubble, retro-magic, retro-whoosh, retro-splash, retro-alarm, retro-step.
-- Музыка (`music` в Arcade.create): adventure, action, boss, calm, menu. Играет во время игры, молчит в меню и на паузе, выключается в настройках.
-
-## 10. Спрайты Kenney и эмодзи-картинки
-
-```js
-game.add({ image: 'knight', x: 100, y: 300, size: 64 });                 // картинка из набора
-game.add({ image: 'adventurer', x, y, w: 44, h: 62, gravity: 1900 });     // персонаж: ходьба, прыжок и падение включаются сами
-game.add({ image: 'slime', x, y, size: 46, vx: -70 });                     // анимированный враг
-```
-
-Картинка вписывается в `size` (или `w × h`) без искажений; пиксельные спрайты не размываются. Мультяшные персонажи смотрят вправо (`flip: true` — влево), эмодзи — влево.
-
-| Набор | Имена |
-|---|---|
-| Персонажи с анимацией (ходьба, прыжок, падение, удар, радость) | adventurer, explorer, robot, zombie, woman, man |
-| Пиксельные персонажи (2 кадра ходьбы) | alien-green, alien-blue, alien-pink, alien-yellow, bat, slime, crab |
-| Пиксельные блоки и предметы | grass, dirt, snow, crate, block-coin, block-gold, plank, ladder, water, water-top, spikes, spring, lever, door, flag, sign, pipe, key, chest-gold, coin, gem, heart, heart-half, heart-empty, mushroom, plant, tree, cactus, snowman, cloud, block-angry, saw, spike-bot |
-| Подземелье (пиксели) | knight, hero, wizard, dwarf, viking, elf, princess, old-man, rogue, orc, skeleton, ghost, spider, cyclops, crab-red, sword, axe, hammer, dagger, potion-red, potion-green, potion-blue, chest, barrel |
-| Космос | ship-blue, ship-green, ship-red, ship-orange, ufo-red, ufo-green, ufo-blue, ufo-yellow, enemy-black, enemy-blue, enemy-green, enemy-red, meteor-big, meteor, meteor-small, meteor-grey, laser-blue, laser-red, laser-green, powerup-shield, powerup-bolt, powerup-star, pill, star-gold |
-| Животные (круглые) | elephant, giraffe, hippo, monkey, panda, parrot, penguin, pig, rabbit, snake |
-
-Все имена — `Arcade.sprites`. В 3D: `game.add3d({ image: 'robot', w: 2, h: 2.6 })`.
-
-Эмодзи (`emoji: '🐸'`) рисуются картинками Twemoji — одинаково на Windows, телефоне и Mac. Если картинка не загрузилась, эмодзи рисуется шрифтом.
-
-## 11. Физика (Matter.js) — `physics: true`
-
-Для игр, где всё падает, катится, складывается в башни и разлетается (как Angry Birds). Matter.js загрузится сам.
+For games where things fall, roll, stack and topple (Angry Birds-like). Matter.js loads automatically.
 
 ```js
 Arcade.create({
-  physics: { gravity: 1, walls: true, drag: 'ball' }, // walls — стены и пол по краям; drag — какие объекты можно тянуть мышью/пальцем (true — любые)
+  physics: { gravity: 1, walls: true, drag: 'ball' }, // walls: invisible walls and floor; drag: which objects can be dragged (true = any)
   setup(game) {
-    game.add({ x: 400, y: 585, w: 800, h: 30, color: '#6ab04c', body: 'static' });       // неподвижная опора
-    game.add({ emoji: '📦', bodyShape: 'box', x: 500, y: 300, size: 60, body: true, tag: 'box' }); // ящик
-    const ball = game.add({ emoji: '⚽', x: 200, y: 100, size: 50, body: true, restitution: 0.8, tag: 'ball' }); // мяч, упругий
+    game.add({ x: 400, y: 585, w: 800, h: 30, color: '#6ab04c', body: 'static' });                  // fixed ground
+    game.add({ emoji: '📦', bodyShape: 'box', x: 500, y: 300, size: 60, body: true, tag: 'box' });   // crate
+    game.add({ emoji: '⚽', x: 200, y: 100, size: 50, body: true, restitution: 0.8, tag: 'ball' });  // bouncy ball
     game.onCollide('ball', 'box', (ball, box) => { box.remove(); game.addScore(10); });
   }
 });
 ```
 
-| Код | Что делает |
+| Code | Meaning |
 |---|---|
-| `body: true` / `body: 'static'` | объект подчиняется физике / неподвижная опора |
-| `bodyShape: 'box' \| 'circle'` | форма тела (по умолчанию: эмодзи и круги — круг, остальное — прямоугольник) |
-| `restitution` (0…1), `density`, `friction` | упругость, тяжесть, трение |
-| `game.velocity(obj, vx, vy)`, `game.push(obj, vx, vy)` | задать / добавить скорость (пикс/с) |
-| `game.onCollide('a', 'b', (a, b) => …)` | столкнулись объекты двух групп |
-| `game.link(a, b, { length, stiffness })` | верёвка/пружина между объектами; `b` может быть точкой `{ x, y }`. `game.unlink(link)` — убрать |
-| `game.physics.Matter`, `game.physics.engine` | сам Matter.js для сложного |
+| `body: true` / `body: 'static'` | dynamic body / fixed support |
+| `bodyShape: 'box' \| 'circle'` | body shape (default: circle for emoji and circles, box otherwise) |
+| `restitution` (0…1), `density`, `friction` | bounciness, weight, friction |
+| `game.velocity(obj, vx, vy)`, `game.push(obj, vx, vy)` | set / add velocity (px/s) |
+| `game.onCollide('a', 'b', (a, b) => …)` | collision between two groups |
+| `game.link(a, b, { length, stiffness })` | rope / spring; `b` can be a point `{ x, y }`. `game.unlink(link)` removes it |
+| `game.physics.Matter`, `game.physics.engine` | raw Matter.js |
 
-Положение физических объектов (`x, y, angle, vx, vy`) обновляется само — не меняй их напрямую, используй `game.velocity`.
+Physics objects update `x, y, angle, vx, vy` themselves — change velocity with `game.velocity`, not by assigning.
 
-## 12. 3D (Three.js) — `mode: '3d'`
+## 10. 3D (Three.js) — `mode: '3d'`
 
-Меню, панель, звуки, очки, жизни, `game.key`, `game.pressed`, `game.every`, `game.hit` работают как в 2D. Three.js загрузится сам. Оси: x — вправо, y — вверх, z — к камере (вдаль — отрицательные z).
+Menu, HUD, sounds, score, lives, `game.key`, `game.pressed`, `game.every`, `game.hit` work as in 2D. Three.js loads automatically. Axes: x right, y up, z toward the camera (far away is negative z).
 
 ```js
 Arcade.create({
   mode: '3d', world: 'space', buttons: ['left', 'right', 'action'],
   setup(game) {
-    game.add3d({ shape: 'plane', w: 10, d: 200, z: -90, color: '#2b2d42' });              // пол
-    game.data.hero = game.add3d({ emoji: '🛸', w: 1.8, h: 1.8, y: 0.9, gravity: 24, tag: 'hero' }); // эмодзи в 3D
-    game.follow(game.data.hero, { offset: { x: 0, y: 3.5, z: 7 } });                     // камера сзади
+    game.add3d({ shape: 'plane', w: 10, d: 200, z: -90, color: '#2b2d42' });                 // floor
+    game.data.hero = game.add3d({ emoji: '🛸', w: 1.8, h: 1.8, y: 0.9, gravity: 24, tag: 'hero' });
+    game.follow(game.data.hero, { offset: { x: 0, y: 3.5, z: 7 } });                        // chase camera
     game.every(0.8, g => g.add3d({ shape: 'box', size: 1.5, x: g.pick([-3, 0, 3]), y: 0.75, z: -100, vz: 20, color: '#8d6e63', tag: 'rock', removeOffscreen: true }));
   },
   update(game) {
@@ -220,32 +228,32 @@ Arcade.create({
 });
 ```
 
-| `game.add3d({...})` | Что значит |
+| `game.add3d({...})` | Meaning |
 |---|---|
-| `shape` | `box`, `sphere`, `cylinder`, `cone`, `plane` (пол), `emoji` (картинка-эмодзи, всегда смотрит в камеру; ставится сама, если указан `emoji`) |
-| `x, y, z`, `w, h, d` или `size` | положение и размер (в метрах) |
-| `vx, vy, vz`, `gravity`, `spin` | скорость, притяжение вниз (объект встаёт на пол y = 0, `onGround`), вращение |
-| `color, tag, life, blink, removeOffscreen` | как в 2D (`removeOffscreen` — удалить, когда пролетел за камеру) |
-| `game.follow(obj, { offset: { x, y, z } })` | камера едет за объектом |
-| `game.three.THREE / scene / camera / renderer / sun` | сам Three.js для сложного |
+| `shape` | `box`, `sphere`, `cylinder`, `cone`, `plane` (floor), `emoji` / `image` (billboards facing the camera) |
+| `x, y, z`, `w, h, d` or `size` | position and size (meters) |
+| `vx, vy, vz`, `gravity`, `spin` | velocity, downward pull (stands on the floor y = 0, `onGround`), rotation |
+| `color, tag, life, blink, removeOffscreen` | as in 2D (`removeOffscreen` — remove once behind the camera) |
+| `game.follow(obj, { offset: { x, y, z } })` | chase camera |
+| `game.three.THREE / scene / camera / renderer / sun` | raw Three.js |
 
-## 13. Полный пример (лови фрукты)
+## 11. Complete example
 
 ```js
-const LAB = { title: 'Фруктопад', hero: '🧺', speed: 500, lives: 3 };
+const CONFIG = { title: 'Fruit Drop', hero: '🧺', speed: 500, lives: 3 };
 
 Arcade.create({
-  title: LAB.title, emoji: '🍉', subtitle: 'Лови фрукты, не лови бомбы',
-  world: 'sky', worlds: true, lives: LAB.lives, buttons: ['left', 'right'],
+  title: CONFIG.title, emoji: '🍉', subtitle: 'Catch the fruit, dodge the bombs',
+  world: 'sky', worlds: true, lives: CONFIG.lives, buttons: ['left', 'right'],
   setup(game) {
-    game.data.hero = game.add({ emoji: LAB.hero, x: game.width / 2, y: game.height - 60, size: 70, inside: true });
+    game.data.hero = game.add({ emoji: CONFIG.hero, x: game.width / 2, y: game.height - 60, size: 70, inside: true });
     game.every(0.7, drop);
   },
   update(game, dt) {
     const hero = game.data.hero;
     hero.vx = 0;
-    if (game.key.left) hero.vx = -LAB.speed;
-    if (game.key.right) hero.vx = LAB.speed;
+    if (game.key.left) hero.vx = -CONFIG.speed;
+    if (game.key.right) hero.vx = CONFIG.speed;
     if (game.pointer.down) hero.x = game.pointer.x;
     const fruit = game.hitAny(hero, 'fruit');
     if (fruit) { fruit.remove(); game.addScore(1, fruit.x, fruit.y); game.sound('coin'); }
@@ -261,12 +269,12 @@ function drop(game) {
 }
 ```
 
-Ещё примеры (каждый — 3 файла): https://github.com/si0683/ArcadeJS/tree/main/examples — `starter` (лови фрукты), `flappy` (птичка), `snake` (змейка + вопросы), `breakout` (арканоид + выбор улучшения), `platformer` (карта из символов, камера, платформы), `shooter` (автострельба, сложность), `angry` (физика Matter.js: рогатка и башня), `runner3d` (3D на Three.js), `adventure` (спрайты и звуки Kenney, музыка).
+More examples (3 files each): https://github.com/si0683/ArcadeJS/tree/main/examples — `starter` (catch game), `flappy`, `snake` (draw hook, timers, quiz), `breakout` (upgrade picker), `platformer` (text map, camera, platforms), `shooter` (auto-fire, difficulty), `angry` (Matter.js physics), `runner3d` (Three.js), `adventure` (Kenney sprites, sounds and music).
 
-## Правила
+## Rules for generated code
 
-- Комментарии в коде — на русском, код простой: функции, без классов.
-- В начале JS — объект `LAB` (настройки для детей), дальше `Arcade.create`, ниже свои функции.
-- Не используй `requestAnimationFrame`, `setInterval`, свои меню и свой `<canvas>`: всё это уже делает ArcadeJS. Для повторов — `game.every`.
-- Объекты, которые улетают с экрана (пули, падающие предметы), создавай с `removeOffscreen: true`.
-- Графика — эмодзи, спрайты Kenney (`image`) и фигуры. Чужие картинки из интернета не нужны.
+- Start the JS with a `CONFIG` object of tweakable settings, then `Arcade.create`, then helper functions.
+- Don't use `requestAnimationFrame`, `setInterval`, your own menus or your own `<canvas>` — ArcadeJS does this. Use `game.every` for repeats.
+- Give objects that fly off screen `removeOffscreen: true`.
+- Graphics: emoji, built-in sprites (`image`) and shapes; no external images are required.
+- Interface texts follow `lang`; for a single-language game set `lang` explicitly.

@@ -1,23 +1,24 @@
-/* Платформер на ArcadeJS: беги, прыгай, собирай монеты и дойди до флага.
-   ← → — бег, ↑ или пробел — прыжок. Прыжок врагу на голову побеждает его. */
+/* Little Fox — a platformer: run, jump, collect candy and reach the flag.
+   ← → run, ↑ or Space jump. Jump on enemies to defeat them.
+   Shows a text-based level map, solid and one-way platforms, and the camera. */
 
-// ===== 0. ЛАБОРАТОРИЯ ИГРЫ 🧪 =====
-const LAB = {
-  title: 'Лисёнок',      // название в меню
-  hero: '🦊',            // герой
-  enemy: '🐌',           // враг
-  coin: '🍬',            // монетка
-  speed: 300,            // скорость бега
-  jump: 760,             // сила прыжка
-  gravity: 1900,         // притяжение
-  enemySpeed: 70,        // скорость врагов
-  lives: 3,              // жизни
-  world: 'candy'         // мир
+// ===== Settings =====
+const CONFIG = {
+  title: 'Little Fox',
+  hero: '🦊',
+  enemy: '🐌',
+  coin: '🍬',
+  speed: 300,
+  jump: 760,
+  gravity: 1900,
+  enemySpeed: 70,
+  lives: 3,
+  world: 'candy'
 };
 
-// Карта уровня: каждый символ — клетка 48 × 48
-// # — земля, = — платформа, - — платформа «снизу насквозь»,
-// o — монетка, e — враг, P — старт героя, F — флаг финиша
+// Level map: one character per 48 × 48 tile
+// # ground, = brick platform, - one-way platform, o coin,
+// e enemy, P player start, F finish flag
 const MAP = [
   '                                                                        ',
   '                                                                        ',
@@ -34,12 +35,12 @@ const MAP = [
 const TILE = 48;
 
 Arcade.create({
-  title: LAB.title,
-  emoji: LAB.hero,
-  subtitle: 'Дойди до флага 🏁',
+  title: CONFIG.title,
+  emoji: CONFIG.hero,
+  subtitle: 'Reach the flag 🏁',
   width: 800, height: MAP.length * TILE,
-  world: LAB.world, worlds: true,
-  lives: LAB.lives,
+  world: CONFIG.world, worlds: true,
+  lives: CONFIG.lives,
   buttons: ['left', 'right', 'action'], actionLabel: '⤒',
 
   setup(game) {
@@ -49,44 +50,44 @@ Arcade.create({
         if (ch === '#') game.add({ x, y, w: TILE, h: TILE, color: ty > 0 && MAP[ty - 1][tx] === '#' ? '#a0522d' : '#6ab04c', tag: 'ground', hitbox: 1 });
         if (ch === '=') game.add({ x, y, w: TILE, h: TILE / 2, color: '#e17055', radius: 6, tag: 'ground', hitbox: 1 });
         if (ch === '-') game.add({ x, y: y - TILE / 4, w: TILE, h: 12, color: '#fdcb6e', radius: 6, tag: 'ground', oneWay: true, hitbox: 1 });
-        if (ch === 'o') game.add({ emoji: LAB.coin, x, y, size: 30, tag: 'coin' });
-        if (ch === 'e') game.add({ emoji: LAB.enemy, x, y, size: 40, h: 38, vx: -LAB.enemySpeed, gravity: LAB.gravity, tag: 'enemy' });
+        if (ch === 'o') game.add({ emoji: CONFIG.coin, x, y, size: 30, tag: 'coin' });
+        if (ch === 'e') game.add({ emoji: CONFIG.enemy, x, y, size: 40, h: 38, vx: -CONFIG.enemySpeed, gravity: CONFIG.gravity, tag: 'enemy' });
         if (ch === 'F') game.add({ emoji: '🏁', x, y, size: 56, tag: 'flag' });
         if (ch === 'P') game.data.start = { x, y };
       });
     });
     const s = game.data.start;
-    game.data.hero = game.add({ emoji: LAB.hero, x: s.x, y: s.y, w: 38, h: 42, size: 46, gravity: LAB.gravity, tag: 'hero', z: 2 });
+    game.data.hero = game.add({ emoji: CONFIG.hero, x: s.x, y: s.y, w: 38, h: 42, size: 46, gravity: CONFIG.gravity, tag: 'hero', z: 2 });
     game.follow(game.data.hero, { atX: 0.35, minX: 0, maxX: MAP[0].length * TILE - game.width });
   },
 
   update(game, dt) {
     const hero = game.data.hero;
 
-    // Бег и прыжок
+    // Run and jump
     hero.vx = 0;
-    if (game.key.left) { hero.vx = -LAB.speed; hero.flip = false; }
-    if (game.key.right) { hero.vx = LAB.speed; hero.flip = true; }
+    if (game.key.left) { hero.vx = -CONFIG.speed; hero.flip = false; }
+    if (game.key.right) { hero.vx = CONFIG.speed; hero.flip = true; }   // emoji face left
     if ((game.pressed('up') || game.pressed('action')) && hero.onGround) {
-      hero.vy = -LAB.jump;
+      hero.vy = -CONFIG.jump;
       game.sound('jump', 0.5);
     }
     game.collide(hero, 'ground');
     hero.x = Math.max(hero.w / 2, hero.x);
 
-    // Враги ходят и разворачиваются у стен и края платформы
+    // Enemies walk and turn at walls and ledges
     game.all('enemy').forEach(e => {
       const side = game.collide(e, 'ground');
       const ahead = { x: e.x + Math.sign(e.vx) * 26, y: e.y + 40, w: 4, h: 4, hitbox: 1 };
       if (side.left || side.right || (e.onGround && !game.all('ground').some(g => game.hit(ahead, g)))) {
-        e.vx = e.vx > 0 ? -LAB.enemySpeed : LAB.enemySpeed;
+        e.vx = e.vx > 0 ? -CONFIG.enemySpeed : CONFIG.enemySpeed;
       }
       e.flip = e.vx > 0;
       if (game.hit(hero, e)) {
         if (hero.vy > 0 && hero.y < e.y - 10) {
-          // Прыжок на голову
+          // Stomp
           e.remove();
-          hero.vy = -LAB.jump * 0.6;
+          hero.vy = -CONFIG.jump * 0.6;
           game.addScore(50, e.x, e.y);
           game.burst(e.x, e.y, { emoji: '💫', count: 6 });
           game.sound('crash', 0.4);
@@ -110,7 +111,7 @@ Arcade.create({
       game.win();
     }
 
-    // Упал в яму
+    // Fell into a pit
     if (hero.y > game.height + 60) {
       if (game.loseLife() && game.lives > 0) {
         hero.x = game.data.start.x; hero.y = game.data.start.y; hero.vy = 0; hero.blink = 1;

@@ -1,43 +1,43 @@
-/* Арканоид на ArcadeJS: отбивай шар и разбивай кирпичи.
-   Мышь, палец или стрелки — платформа. Пробел или касание — запуск шара. */
+/* Space Breakout — bounce the ball and break all the bricks.
+   Mouse, finger or arrows move the paddle; Space or tap launches the ball.
+   Shows game.choose() — pick an upgrade between levels. */
 
-// ===== 0. ЛАБОРАТОРИЯ ИГРЫ 🧪 =====
-const LAB = {
-  title: 'Космо-арканоид', // название в меню
-  ball: '🔵',              // шар
-  paddleWidth: 130,        // ширина платформы
-  paddleColor: '#00e5ff',  // цвет платформы
-  ballSpeed: 380,          // скорость шара
-  rows: 4,                 // рядов кирпичей на 1 уровне
-  cols: 9,                 // кирпичей в ряду
-  lives: 3,                // жизни
-  colors: ['#ff4d6d', '#ffb703', '#8ac926', '#4cc9f0', '#b388ff'], // цвета рядов
-  world: 'space'           // мир
+// ===== Settings =====
+const CONFIG = {
+  title: 'Space Breakout',
+  ball: '🔵',
+  paddleWidth: 130,
+  paddleColor: '#00e5ff',
+  ballSpeed: 380,
+  rows: 4,                 // brick rows on level 1
+  cols: 9,                 // bricks per row
+  lives: 3,
+  colors: ['#ff4d6d', '#ffb703', '#8ac926', '#4cc9f0', '#b388ff'],
+  world: 'space'
 };
 
 Arcade.create({
-  title: LAB.title,
+  title: CONFIG.title,
   emoji: '🧱',
-  subtitle: 'Разбей все кирпичи',
-  help: 'Мышь, палец или ← → — платформа · Пробел или касание — запуск',
-  world: LAB.world, worlds: true,
-  lives: LAB.lives,
+  subtitle: 'Break all the bricks',
+  world: CONFIG.world, worlds: true,
+  lives: CONFIG.lives,
   buttons: ['left', 'right', 'action'],
 
   setup(game) {
     const d = game.data;
-    d.width = LAB.paddleWidth;
-    d.speed = LAB.ballSpeed;
-    d.paddle = game.add({ x: game.width / 2, y: game.height - 40, w: d.width, h: 18, radius: 9, color: LAB.paddleColor, glow: LAB.paddleColor });
-    d.ball = game.add({ emoji: LAB.ball, size: 24, x: 0, y: 0, tag: 'ball', hitbox: 1 });
-    d.stuck = true;                 // шар лежит на платформе до запуска
-    buildBricks(game, LAB.rows);
+    d.width = CONFIG.paddleWidth;
+    d.speed = CONFIG.ballSpeed;
+    d.paddle = game.add({ x: game.width / 2, y: game.height - 40, w: d.width, h: 18, radius: 9, color: CONFIG.paddleColor, glow: CONFIG.paddleColor });
+    d.ball = game.add({ emoji: CONFIG.ball, size: 24, x: 0, y: 0, tag: 'ball', hitbox: 1 });
+    d.stuck = true;                 // the ball sits on the paddle until launched
+    buildBricks(game, CONFIG.rows);
   },
 
   update(game, dt) {
     const d = game.data, paddle = d.paddle, ball = d.ball;
 
-    // Платформа: клавиши или мышь/палец
+    // Paddle: keys or mouse/finger
     if (game.key.left) paddle.x -= 600 * dt;
     if (game.key.right) paddle.x += 600 * dt;
     if (game.pointer.down) paddle.x = game.pointer.x;
@@ -50,7 +50,7 @@ Arcade.create({
       return;
     }
 
-    // Стены
+    // Walls
     if (ball.x < 12 || ball.x > game.width - 12) { ball.vx *= -1; ball.x = game.clamp(ball.x, 12, game.width - 12); }
     if (ball.y < 12) { ball.vy = Math.abs(ball.vy); }
     if (ball.y > game.height + 20) {
@@ -59,13 +59,13 @@ Arcade.create({
       return;
     }
 
-    // Платформа: угол отскока зависит от места удара
+    // Paddle: bounce angle depends on where the ball hits
     if (ball.vy > 0 && game.hit(ball, paddle)) {
       launch(game, (ball.x - paddle.x) / (paddle.w / 2) * 0.9);
       game.sound('jump', 0.5);
     }
 
-    // Кирпич
+    // Brick
     const brick = game.hitAny(ball, 'brick');
     if (brick) {
       brick.remove();
@@ -78,7 +78,7 @@ Arcade.create({
   }
 });
 
-// Запуск шара под углом: -1 — влево, 0 — вверх, 1 — вправо
+// Launch at an angle: -1 left, 0 up, 1 right
 function launch(game, side) {
   const a = -Math.PI / 2 + side;
   game.data.ball.vx = Math.cos(a) * game.data.speed;
@@ -86,26 +86,26 @@ function launch(game, side) {
 }
 
 function buildBricks(game, rows) {
-  const w = (game.width - 60) / LAB.cols;
+  const w = (game.width - 60) / CONFIG.cols;
   for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < LAB.cols; c++) {
-      game.add({ x: 30 + w * c + w / 2, y: 80 + r * 34, w: w - 8, h: 26, radius: 6, color: LAB.colors[r % LAB.colors.length], tag: 'brick', hitbox: 1 });
+    for (let c = 0; c < CONFIG.cols; c++) {
+      game.add({ x: 30 + w * c + w / 2, y: 80 + r * 34, w: w - 8, h: 26, radius: 6, color: CONFIG.colors[r % CONFIG.colors.length], tag: 'brick', hitbox: 1 });
     }
   }
 }
 
-// Все кирпичи разбиты: выбор улучшения и новый уровень
+// All bricks broken: pick an upgrade, then the next level
 function levelUp(game) {
   const d = game.data;
   d.stuck = true;
   game.choose([
-    { icon: '↔️', title: 'Шире', text: 'Платформа +30', apply: () => { d.width += 30; } },
-    { icon: '🐢', title: 'Медленнее', text: 'Шар на 15% медленнее', apply: () => { d.speed *= 0.85; } },
-    { icon: '❤️', title: '+1 жизнь', text: 'Ещё одна попытка', apply: () => game.addLife() }
+    { icon: '↔️', title: 'Wider', text: 'Paddle +30', apply: () => { d.width += 30; } },
+    { icon: '🐢', title: 'Slower', text: 'Ball 15% slower', apply: () => { d.speed *= 0.85; } },
+    { icon: '❤️', title: '+1 life', text: 'One more try', apply: () => game.addLife() }
   ]).then(card => {
     card.apply();
     const level = game.nextLevel();
     d.speed *= 1.08;
-    buildBricks(game, Math.min(LAB.rows + level - 1, 8));
+    buildBricks(game, Math.min(CONFIG.rows + level - 1, 8));
   });
 }

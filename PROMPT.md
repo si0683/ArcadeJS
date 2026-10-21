@@ -1,90 +1,59 @@
-# Промт: любая игра на ArcadeJS
+# Prompt template: any game with ArcadeJS
 
-Шаблон промта для быстрой разработки: ученик (или вы) меняет строки «МОЯ ИГРА» — название, идею, управление и мир, а нейросеть (Qwen, ChatGPT, GigaChat, DeepSeek…) пишет игру на ArcadeJS. Получается 3 файла — HTML, CSS, JS — для CodePen. Скопируйте промт **одной кнопкой** (два квадратика в правом верхнем углу блока).
+Fill in the **MY GAME** block and paste the whole prompt into any LLM (ChatGPT, Claude, Gemini, Qwen, GigaChat, DeepSeek…). You get a complete game in 3 files that runs locally, on any static hosting or in CodePen. The prompt contains a compact API cheat sheet, so it works even when the model cannot open links.
 
-Полный справочник движка — [AI.md](AI.md), примеры — [examples](examples).
-
-<!-- Файл создаётся скриптом CreateGame01PROMT/tools/build.py (D:\02GameBrowser\CreateGame01PROMT) — правьте там. -->
-
-<!-- Для ИИ-агентов: ВЕСЬ промт — один блок ````text. Шпаргалка API внутри промта нужна, если нейросеть не откроет ссылку на AI.md.
-     Версия ArcadeJS в ссылках — ARCADE_VERSION в tools/build.py. -->
+Русская версия — [PROMPT.ru.md](PROMPT.ru.md). Full API — [AI.md](AI.md).
 
 ````text
-Ты — разработчик браузерных игр. Сделай игру для CodePen на моём игровом движке ArcadeJS.
+You are a senior game developer. Build a complete browser game with the ArcadeJS framework.
 
-МОЯ ИГРА (меняю только эти строки):
-Название: Космический кот
-Идея: кот летает на ракете, ловит рыбок и уворачивается от метеоритов
-Управление: стрелки влево-вправо, на телефоне кнопки
-Мир: космос
+MY GAME:
+Title: Space Cat
+Idea: a cat flies a rocket, catches fish and dodges meteors; every 10 fish the game speeds up
+Controls: arrow keys or A/D; on phones — on-screen buttons and swipes
+Look: space world; emoji graphics (or built-in Kenney sprites); background music
+Extras: levels, an upgrade choice between levels, a boss every 3 levels
+Interface language: English
 
-Миры: небо (sky), космос (space), лес (forest), океан (ocean), ночь (night), сладости (candy), пустыня (desert), город (city).
-В идею можно добавить: вопросы по математике, русскому, английскому или истории; физику (всё падает и сталкивается); 3D.
+OUTPUT — exactly 3 files, each in its own code block with the file name above it:
+1) index.html — a full HTML document that connects
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.css">
+   <script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.js"></script>
+   plus style.css, an empty <div id="game"></div> and script.js at the end of <body>;
+2) style.css — usually almost empty (optional accent colour: .arc-root { --arc-accent: #ff4d6d; });
+3) script.js — plain JavaScript: a CONFIG object with tweakable settings, then Arcade.create({...}), then helper functions.
+Plain HTML/CSS/JavaScript only: no TypeScript, React, npm, import/export, no build step.
 
-Должно получиться ровно 3 файла, как три окна в CodePen: HTML, CSS, JS.
-Только обычный HTML, CSS и ЧИСТЫЙ JavaScript. НЕ используй TypeScript, React, JSX, Vue, npm, import и export, свой <canvas>, requestAnimationFrame и setInterval.
+ArcadeJS reference (read it first): https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/AI.md
+Backup: https://raw.githubusercontent.com/si0683/ArcadeJS/main/AI.md · Examples: https://github.com/si0683/ArcadeJS/tree/main/examples
 
-Полный справочник движка: https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/AI.md
-Запасная ссылка: https://raw.githubusercontent.com/si0683/ArcadeJS/main/AI.md
-Готовые примеры: https://github.com/si0683/ArcadeJS/tree/main/examples
+If you cannot open the links, use this summary:
+- ArcadeJS already has: menu, settings, 3-2-1 countdown, pause, game over, high score, HUD (score/lives/level), keyboard/mouse/touch/swipe input, on-screen buttons, sounds, music, particles, sprites, camera. Do NOT write your own menus, canvas, requestAnimationFrame or setInterval.
+- Arcade.create({ title, emoji, subtitle, help, width: 800, height: 600, world: 'sky'|'space'|'forest'|'ocean'|'night'|'candy'|'desert'|'city', worlds: true, lives: 3, buttons: ['left','right','up','down','action'], music: 'adventure'|'action'|'boss'|'calm'|'menu', lang: 'en'|'ru', quiz, difficulty, physics, mode: '3d', setup(game) {...}, update(game, dt) {...}, draw(game, ctx) {...} }). Keep your variables in game.data.
+- Objects: game.add({ emoji: '🐱' | image: 'knight' | text | shape: 'rect'|'circle', x, y, size or w/h, color, vx, vy, gravity, spin, angle, flip, tag, bounce, wrap, inside, removeOffscreen: true, life, blink, hitbox, hp }). obj.remove(); game.all(tag); game.first(tag); game.count(tag); game.clear(tag).
+- Collisions: game.hit(a, b); game.hitAny(a, 'tag') → object or null; game.collide(a, 'ground') → solid platforms, sets a.onGround (oneWay: true for jump-through); game.follow(hero) — camera.
+- Input: game.key.left/right/up/down/action (held); game.pressed('action') (this frame; tap = action); game.pressed('left') also fires on swipe; game.pointer.x/y/down.
+- Game: game.addScore(10, x, y), game.loseLife() (auto game over at 0), game.addLife(), game.nextLevel(), game.over(), game.win(), game.message('Text'), game.hud('⏱', 30); state: game.score, lives, level, time, diff, width, height.
+- Timers & effects: game.every(sec, fn), game.after(sec, fn) — fn(game); game.burst(x, y, { emoji: '✨', count }), game.popup(x, y, '+10'), game.shake(), game.flash(color).
+- Sounds: game.sound(name, volume) — built-in jump, coin, crash, flap, hit, score, start, tick, bonus, lose, click, win; Kenney laser, explosion, boom, powerup, coins, sword, punch, door, zap, step, error, confirm, jingle-nes…; 8-bit retro-jump, retro-coin, retro-laser, retro-explosion, retro-powerup, retro-win… game.music('boss').
+- Sprites (image: name): animated characters adventurer, explorer, robot, zombie, woman, man (walk/jump/fall automatically, face right); pixel alien-green, slime, bat, knight, wizard, orc, skeleton, ghost, spider; tiles grass, dirt, crate, plank, spikes, coin, gem, heart, flag, door, key; space ship-blue, ufo-red, enemy-red, meteor, laser-blue, powerup-star; animals panda, penguin, rabbit, monkey, pig.
+- Upgrades: game.choose([{ icon, title, text, apply }]).then(card => card.apply()). Quiz: quiz: { questions: [{ text, answer, wrong: [...] }] } and game.ask().then(ok => ...).
+- Physics (physics: { walls: true, drag: true }): game.add({ ..., body: true | 'static', bodyShape: 'box', restitution }); game.velocity(obj, vx, vy); game.onCollide('a', 'b', fn); game.link(a, b).
+- 3D (mode: '3d'): game.add3d({ shape: 'box'|'sphere'|'plane'|'emoji', emoji, x, y, z, size, vz, gravity, color, tag }); game.follow(hero, { offset: { x: 0, y: 3.5, z: 7 } }).
+- Helpers: game.rand(a, b), game.randInt(a, b), game.pick(list), game.chance(p), game.clamp(v, a, b), game.dist(a, b).
 
-Если ссылки не открываются, вот главное:
-- HTML — ровно эти 3 строки:
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/arcade.css">
-<script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@1.1.0/arcade.js"></script>
-<div id="game"></div>
-- CSS — почти пустой, можно свой цвет кнопок: .arc-root { --arc-accent: #ff4d6d; }
-- JS: сначала const LAB = { ... } — 6–10 настроек для детей с комментариями (название, герой-эмодзи, скорость, жизни…), потом
-  Arcade.create({ title, emoji, subtitle, help, world, worlds: true, lives, buttons: ['left', 'right', 'action'], quiz, physics, mode, setup(game) { ... }, update(game, dt) { ... } })
-  и ниже свои функции. Свои переменные храни в game.data. Меню, настройки, отсчёт, пауза, «Игра окончена», рекорд, панель очков и жизней уже есть — не пиши их.
-- Объекты: const hero = game.add({ emoji: '🐱', x, y, size: 60, vx, vy, gravity, tag: 'hero', inside: true }); враги и предметы — с tag и removeOffscreen: true.
-  Свойства: x, y (центр), size или w, h, emoji / image / text / shape: 'rect' | 'circle', color, vx, vy, gravity, spin, angle, flip, bounce, wrap, inside, life, blink, hitbox.
-- obj.remove(), game.all('tag'), game.first('tag'), game.count('tag'), game.hit(a, b), game.hitAny(a, 'tag'), game.collide(a, 'ground') — твёрдые платформы (a.onGround), game.follow(hero) — камера.
-- Управление: game.key.left / right / up / down / action — зажато; game.pressed('action') — нажато сейчас (пробел, касание); game.pressed('left') — стрелка или свайп; game.pointer.x / y / down — мышь и палец.
-- game.addScore(10, x, y), game.loseLife(), game.addLife(), game.nextLevel(), game.over(), game.win(), game.message('Текст'), game.hud('⏱', 30).
-- game.every(1.5, fn), game.after(2, fn) — таймеры; game.burst(x, y, { emoji: '✨' }), game.popup(x, y, '+10'), game.shake().
-- Звуки: game.sound('coin') — jump, coin, crash, flap, hit, score, start, tick, bonus, lose, click, win; звуки Kenney — laser, explosion, boom, powerup, coins, sword, punch, door, zap, step, error, confirm, jingle-nes…; 8-битные — retro-jump, retro-coin, retro-laser, retro-explosion, retro-powerup, retro-win… Фоновая музыка: music: 'adventure' (action, boss, calm, menu) в Arcade.create.
-- Графика: эмодзи (emoji: '🐱', рисуются картинками) или готовые спрайты (image: 'knight'). Персонажи с анимацией ходьбы и прыжка: adventurer, explorer, robot, zombie, woman, man; пиксельные: alien-green, slime, bat, knight, wizard, orc, skeleton, ghost; блоки: grass, dirt, crate, plank, spikes, coin, gem, heart, flag, door, key; космос: ship-blue, ufo-red, enemy-red, meteor, laser-blue, powerup-star; животные: panda, penguin, rabbit, monkey, pig. Полный список — в справочнике.
-- game.rand(a, b), game.randInt(a, b), game.pick(list), game.chance(0.3), game.clamp(v, a, b).
-- Вопросы (quiz: true): game.ask().then(ok => { ... }). Выбор улучшения: game.choose([{ icon, title, text, apply }]).then(card => card.apply()).
-- Физика (physics: { walls: true, drag: true }): game.add({ ..., body: true }) или body: 'static'; game.velocity(obj, vx, vy), game.onCollide('a', 'b', fn), game.link(a, b).
-- 3D (mode: '3d'): game.add3d({ shape: 'box' | 'sphere' | 'emoji', emoji, x, y, z, size, vz, gravity, color, tag }), пол — shape: 'plane'; game.follow(hero, { offset: { x: 0, y: 3.5, z: 7 } }).
+QUALITY BAR:
+- The game must run on the first try with no console errors; use only the API above.
+- Fun from the first second: clear goal, rising difficulty, feedback (sounds, particles, popups) on every action.
+- Works on desktop and phones (buttons/swipes); objects leaving the screen use removeOffscreen: true.
+- Readable code with short comments; all tuning values in CONFIG.
 
-Пример игры целиком:
-const LAB = { title: 'Фруктопад', hero: '🧺', speed: 500, lives: 3 };
-Arcade.create({
-  title: LAB.title, emoji: '🍉', subtitle: 'Лови фрукты', world: 'sky', worlds: true, lives: LAB.lives, buttons: ['left', 'right'],
-  setup(game) {
-    game.data.hero = game.add({ emoji: LAB.hero, x: game.width / 2, y: game.height - 60, size: 70, inside: true });
-    game.every(0.7, g => g.add({ emoji: g.pick(['🍎', '🍌', '💣']), x: g.rand(40, g.width - 40), y: -30, size: 48, vy: 220, tag: 'item', removeOffscreen: true }));
-  },
-  update(game, dt) {
-    const hero = game.data.hero;
-    hero.vx = game.key.left ? -LAB.speed : game.key.right ? LAB.speed : 0;
-    if (game.pointer.down) hero.x = game.pointer.x;
-    const item = game.hitAny(hero, 'item');
-    if (item) { item.remove(); if (item.emoji === '💣') game.loseLife(); else { game.addScore(1, item.x, item.y); game.sound('coin'); } }
-  }
-});
-
-Как выдавать код:
-- Сначала одной строкой опиши, какой будет игра. Потом файлы, без долгих рассуждений.
-- По одному файлу за ответ: HTML, после моего «дальше» — CSS, после следующего «дальше» — JS.
-- Перед каждым блоком кода одна строка: «Файл 1 из 3 — HTML. Вставьте в окно HTML и напишите: дальше» (так же для CSS и JS).
-- Комментарии в коде на русском. Код без ошибок, игра работает с первого раза.
-
-Когда игра будет готова, я буду просить изменения. Меняй по возможности только объект LAB в начале JS и отвечай коротко: строка «было» и строка «стало». Если я напишу «настройки», перечисли настройки LAB с номерами.
-
-Начинай.
+ANSWER FORMAT: two or three lines about the game, then the 3 files, then a short list of CONFIG values worth tweaking.
 ````
 
-> **Только для преподавателя.** Здесь нейросеть действительно пишет игру сама, но на нашем движке: ей не нужно писать меню, физику, звуки и экраны, поэтому код короткий и почти всегда работает с первого раза. Если игра не заработала, скопируйте красную ошибку из консоли CodePen и отправьте Qwen: «Исправь ошибку: …».
+## Tips
 
-## Как менять игру на уроке
-
-1. Вставьте промт в Qwen, **не отправляя**, и вместе с учеником перепишите четыре строки «МОЯ ИГРА»: название, идею одним предложением, управление и мир.
-2. Режим Qwen: ❌ без «Web Dev» и «Мышления», ✅ с «Поиском» (чтобы открыть справочник).
-3. Три ответа Qwen вставьте в окна **HTML**, **CSS**, **JS** на [codepen.io/pen](https://codepen.io/pen/).
-4. Идеи для учеников: «рыцарь в подземелье собирает зелья» (спрайты и музыка), «кот ловит рыбок в космосе», «змейка в лесу ест ягоды и отвечает на вопросы по математике», «башня из ящиков, которую надо сбить мячом» (физика), «гонка по 3D-трассе» (3D).
-
-Готовые примеры игр на ArcadeJS: [Фруктопад](https://si0683.github.io/ArcadeJS/examples/starter/) · [Флаппи](https://si0683.github.io/ArcadeJS/examples/flappy/) · [Змейка-умник](https://si0683.github.io/ArcadeJS/examples/snake/) · [Космо-арканоид](https://si0683.github.io/ArcadeJS/examples/breakout/) · [Лисёнок](https://si0683.github.io/ArcadeJS/examples/platformer/) · [Звёздный патруль](https://si0683.github.io/ArcadeJS/examples/shooter/) · [Злые эмодзи](https://si0683.github.io/ArcadeJS/examples/angry/) · [Космо-раннер 3D](https://si0683.github.io/ArcadeJS/examples/runner3d/) · [Приключение](https://si0683.github.io/ArcadeJS/examples/adventure/)
+- **CodePen:** put only the two CDN lines and `<div id="game"></div>` into the HTML panel, `style.css` into CSS, `script.js` into JS.
+- **Iterating:** ask for changes as "change CONFIG.x to …" or "add …, show only the changed functions".
+- **Errors:** paste the console error back to the model: "Fix this error: …".
+- **Pin the version** (`@2.0.0`) in production; new versions never break old links.
