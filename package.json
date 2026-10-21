@@ -1,28 +1,15 @@
 {
-  "name": "gamemonsterjs",
-  "version": "3.0.0",
-  "description": "Tiny framework for fast 2D/3D browser games: menu, HUD, input, sounds, sprites, particles, physics (Matter.js) and 3D (Three.js) out of the box.",
-  "keywords": ["game", "game-engine", "html5-game", "canvas", "2d", "3d", "matter-js", "three", "browser-game", "gamedev", "zzfx", "sprites"],
-  "homepage": "https://si0683.github.io/GameMonsterJS/",
-  "repository": { "type": "git", "url": "git+https://github.com/si0683/GameMonsterJS.git" },
-  "bugs": { "url": "https://github.com/si0683/GameMonsterJS/issues" },
+  "name": "create-gamemonsterjs2d",
+  "version": "4.0.0",
+  "description": "2D browser game starter in one command: Vite + Phaser 4 + Tiled + TypeScript, with a ready platformer level, touch controls and GitHub Pages deploy.",
+  "keywords": ["create", "starter", "template", "phaser", "phaser4", "vite", "tiled", "game", "2d", "platformer", "html5-game"],
+  "homepage": "https://si0683.github.io/GameMonsterJS2D/",
+  "repository": { "type": "git", "url": "git+https://github.com/si0683/GameMonsterJS2D.git" },
+  "bugs": { "url": "https://github.com/si0683/GameMonsterJS2D/issues" },
   "license": "MIT",
   "author": "si0683",
-  "main": "gamemonster.js",
-  "module": "gamemonster.mjs",
-  "types": "gamemonster.d.ts",
-  "style": "gamemonster.css",
-  "unpkg": "gamemonster.js",
-  "jsdelivr": "gamemonster.js",
-  "exports": {
-    ".": {
-      "types": "./gamemonster.d.ts",
-      "import": "./gamemonster.mjs",
-      "default": "./gamemonster.js"
-    },
-    "./gamemonster.css": "./gamemonster.css",
-    "./gamemonster.js": "./gamemonster.js"
-  },
-  "files": ["gamemonster.js", "gamemonster.mjs", "gamemonster.css", "gamemonster.d.ts", "README.md", "README.ru.md", "AI.md", "LICENSE", "THIRD_PARTY.md", "CHANGELOG.md"],
-  "sideEffects": ["gamemonster.js", "gamemonster.mjs", "*.css"]
+  "type": "module",
+  "bin": { "create-gamemonsterjs2d": "bin/create.mjs" },
+  "files": ["bin", "template", "!template/node_modules", "!template/dist", "!template/package-lock.json"],
+  "engines": { "node": ">=20.19.0" }
 }

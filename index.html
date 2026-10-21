@@ -3,539 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GameMonsterJS — пишите правила, получайте игру</title>
-  <meta name="description" content="Маленький JavaScript-фреймворк для браузерных игр: меню, HUD, управление, 99 звуков, музыка, 201 спрайт, частицы, физика Matter.js и 3D на Three.js. Без сборки. Нейросети пишут на нём без ошибок.">
-  <meta name="theme-color" content="#07050f">
-  <meta property="og:title" content="GameMonsterJS — пишите правила, получайте игру">
-  <meta property="og:description" content="Браузерные игры в трёх файлах: меню, HUD, звуки, спрайты, физика и 3D уже внутри.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👾</text></svg>">
+  <title>GameMonsterJS2D — стек для 2D-игры одной командой</title>
+  <meta name="description" content="npm create gamemonsterjs2d — 2D-игра на Vite, Phaser 4 и Tiled со всеми зависимостями и готовым уровнем.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%237c3aed'/><stop offset='.55' stop-color='%23ec4899'/><stop offset='1' stop-color='%23f59e0b'/></linearGradient></defs><rect width='32' height='32' rx='8' fill='url(%23g)'/></svg>">
+  <script>
+    // Theme before the first paint: saved choice, otherwise the system setting
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem('gm-theme'); } catch (e) { /* storage blocked */ }
+      document.documentElement.dataset.theme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
   <style>
-    @property --a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
-
     :root {
-      --bg: #07050f;
-      --bg2: #0e0a1f;
-      --text: #eeeaff;
-      --muted: #a39dc7;
-      --line: rgba(255, 255, 255, 0.09);
-      --pink: #ff2bd6;
-      --violet: #8b5cf6;
-      --cyan: #22e4ff;
-      --lime: #b6ff3b;
-      --amber: #ffb020;
-      --grad: linear-gradient(90deg, var(--pink), var(--violet), var(--cyan), var(--lime), var(--amber), var(--pink));
-      --ring: conic-gradient(from var(--a), var(--pink), var(--violet), var(--cyan), var(--lime), var(--amber), var(--pink));
-      --font-head: 'Unbounded', system-ui, sans-serif;
-      --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
-      --pad: 110px;
+      --c1: #8b5cf6; --c2: #ec4899; --c3: #f59e0b;
+      --bg: #faf8ff; --surface: #ffffff; --text: #1b1530; --muted: #5f5878;
+      --line: rgba(27, 21, 48, 0.1); --term: #17122a;
+      --grad: linear-gradient(90deg, var(--c1), var(--c2), var(--c3));
+      color-scheme: light;
     }
-
+    :root[data-theme="dark"] {
+      --bg: #08060f; --surface: #151027; --text: #f3effd; --muted: #a69fc2;
+      --line: rgba(243, 239, 253, 0.1); --term: #0d0a18;
+      color-scheme: dark;
+    }
     *, *::before, *::after { box-sizing: border-box; }
-    html { scroll-behavior: smooth; scroll-padding-top: 76px; }
-    body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.65 Manrope, system-ui, sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
-    a { color: inherit; text-decoration: none; }
-    img { max-width: 100%; }
-    code { font-family: var(--font-mono); font-size: 0.86em; padding: 2px 7px; border-radius: 6px; background: rgba(139, 92, 246, 0.18); color: #e7dcff; }
-    ::selection { background: var(--pink); color: #fff; }
-    .wrap { width: min(1200px, 100% - 32px); margin-inline: auto; }
-    h1, h2, h3 { font-family: var(--font-head); margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
-    h2 { font-size: clamp(1.75rem, 4.2vw, 3rem); line-height: 1.12; font-weight: 800; }
-    h3 { font-size: 1.08rem; line-height: 1.3; font-weight: 800; }
-    p { margin: 0; }
-
-    /* ---------- background: slow stars and aurora (no mouse effects) ---------- */
-    #stars { position: fixed; inset: 0; z-index: -3; width: 100%; height: 100%; }
-    .aurora { position: fixed; inset: 0; z-index: -4; overflow: hidden; pointer-events: none; }
-    .aurora i { position: absolute; width: 55vmax; height: 55vmax; border-radius: 50%; filter: blur(110px); opacity: 0.26; animation: drift 26s ease-in-out infinite alternate; }
-    .aurora i:nth-child(1) { background: var(--pink); top: -25vmax; left: -15vmax; }
-    .aurora i:nth-child(2) { background: var(--violet); top: 20vh; right: -25vmax; animation-duration: 32s; animation-delay: -6s; }
-    .aurora i:nth-child(3) { background: var(--cyan); bottom: -30vmax; left: 25vw; opacity: 0.16; animation-duration: 36s; animation-delay: -12s; }
-    @keyframes drift { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(8vw, 6vh) scale(1.12); } 100% { transform: translate(-6vw, -4vh) scale(0.95); } }
-    .progress { position: fixed; top: 0; left: 0; z-index: 60; height: 3px; width: 100%; transform-origin: 0 50%; transform: scaleX(var(--p, 0)); background: var(--grad); background-size: 200% 100%; }
-
-    /* ---------- shared ---------- */
-    .grad-text { background: var(--grad); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; animation: flow 7s linear infinite; }
-    @keyframes flow { to { background-position: 200% 0; } }
-    @keyframes spin { to { --a: 360deg; } }
-    @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
-    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.7); } }
-    .pill { display: inline-flex; align-items: center; gap: 10px; padding: 7px 16px; border-radius: 999px; border: 1px solid transparent; background: linear-gradient(var(--bg2), var(--bg2)) padding-box, var(--ring) border-box; animation: spin 5s linear infinite; font: 600 0.8rem var(--font-mono); color: #ddd6ff; }
-    .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 12px var(--lime); animation: pulse 1.6s ease-in-out infinite; }
-
-    .btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 26px; border-radius: 14px; font: 800 1rem Manrope, sans-serif; cursor: pointer; border: 0; transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s; white-space: nowrap; }
-    .btn:hover { transform: translateY(-3px); }
-    .btn-main { color: #12061f; background: var(--grad); background-size: 200% auto; animation: flow 6s linear infinite; box-shadow: 0 10px 32px rgba(255, 43, 214, 0.35); }
-    .btn-main:hover { box-shadow: 0 14px 44px rgba(255, 43, 214, 0.55); }
-    .btn-ghost { color: var(--text); background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.18); }
-    .btn-ghost:hover { border-color: var(--cyan); box-shadow: 0 10px 30px rgba(34, 228, 255, 0.25); }
-    .row { display: flex; flex-wrap: wrap; gap: 12px; }
-
-    .section { position: relative; padding: var(--pad) 0; }
-    .section + .section { padding-top: 0; }
-    .head { max-width: 780px; margin: 0 auto 56px; text-align: center; }
-    .eyebrow { display: inline-block; margin-bottom: 14px; font: 600 0.78rem var(--font-mono); letter-spacing: 0.2em; text-transform: uppercase; }
-    .head p { color: var(--muted); font-size: 1.08rem; margin-top: 16px; }
-
-    .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.8s cubic-bezier(.2, .7, .2, 1), transform 0.8s cubic-bezier(.2, .7, .2, 1); transition-delay: var(--d, 0s); }
-    .reveal.in { opacity: 1; transform: none; }
-
-    /* ---------- nav ---------- */
-    .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; padding: 14px 0; border-bottom: 1px solid transparent; transition: background 0.3s, border-color 0.3s, padding 0.3s; }
-    .nav.scrolled { background: rgba(7, 5, 15, 0.78); backdrop-filter: blur(16px); border-color: var(--line); padding: 8px 0; }
-    .nav .wrap { display: flex; align-items: center; gap: 24px; }
-    .logo { display: flex; align-items: center; gap: 10px; font: 900 1.08rem var(--font-head); white-space: nowrap; }
-    .logo .mon { font-size: 1.6rem; filter: drop-shadow(0 0 10px var(--pink)); }
-    .nav-links { display: flex; gap: 24px; margin-left: auto; font-weight: 700; font-size: 0.95rem; color: var(--muted); }
-    .nav-links a { transition: color 0.2s; }
-    .nav-links a:hover { color: #fff; }
-    .nav .btn { padding: 10px 16px; font-size: 0.9rem; border-radius: 12px; }
-
-    /* ---------- hero ---------- */
-    .hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding: 130px 0 var(--pad); overflow: hidden; }
-    .hero .wrap { display: grid; grid-template-columns: 1.05fr 1fr; gap: 60px; align-items: center; position: relative; z-index: 2; }
-    .hero .wrap > * { min-width: 0; }
-    .hero h1 { font-size: clamp(2.4rem, 5.8vw, 4.8rem); line-height: 1.04; font-weight: 900; margin: 24px 0 22px; }
-    .hero h1 .line { display: block; }
-    .hero .lead { font-size: 1.16rem; color: var(--muted); max-width: 560px; margin-bottom: 32px; }
-    .hero .lead b { color: var(--text); }
-    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 40px; max-width: 560px; }
-    .stat { padding: 14px 10px; border-radius: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line); text-align: center; }
-    .stat b { display: block; font: 900 1.6rem var(--font-head); }
-    .stat span { font-size: 0.78rem; color: var(--muted); }
-
-    .floor-wrap { position: absolute; left: 0; right: 0; bottom: 0; height: 44%; perspective: 340px; overflow: hidden; z-index: 0; -webkit-mask-image: linear-gradient(to top, #000 10%, transparent 95%); mask-image: linear-gradient(to top, #000 10%, transparent 95%); pointer-events: none; }
-    .floor { position: absolute; left: -50%; width: 200%; top: 0; height: 200%; transform-origin: top center; transform: rotateX(72deg); background-image: linear-gradient(rgba(255, 43, 214, 0.6) 2px, transparent 2px), linear-gradient(90deg, rgba(139, 92, 246, 0.5) 2px, transparent 2px); background-size: 70px 70px; animation: floor 1.6s linear infinite; opacity: 0.35; }
-    @keyframes floor { to { background-position: 0 70px; } }
-
-    .stage { position: relative; }
-    .sun { position: absolute; width: 420px; height: 420px; left: 50%; top: 50%; transform: translate(-50%, -54%); border-radius: 50%; background: linear-gradient(180deg, var(--amber), var(--pink) 60%, var(--violet)); opacity: 0.45; -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 22px, transparent 22px 30px); mask-image: repeating-linear-gradient(180deg, #000 0 22px, transparent 22px 30px); z-index: 0; }
-    .console { position: relative; z-index: 1; padding: 3px; border-radius: 24px; background: var(--ring); animation: spin 7s linear infinite; }
-    .console::before { content: ""; position: absolute; inset: -6px; z-index: -1; border-radius: 30px; background: var(--ring); animation: spin 7s linear infinite; filter: blur(34px); opacity: 0.55; }
-    .screen { border-radius: 21px; overflow: hidden; background: #000; }
-    .screen-bar { display: flex; align-items: center; gap: 8px; padding: 11px 16px; background: #0d0a1a; font: 600 0.78rem var(--font-mono); color: var(--muted); }
-    .screen-bar i { width: 11px; height: 11px; border-radius: 50%; flex: none; }
-    .screen-bar i:nth-child(1) { background: #ff5f57; } .screen-bar i:nth-child(2) { background: #febc2e; } .screen-bar i:nth-child(3) { background: #28c840; }
-    .screen-bar .live { margin-left: auto; display: flex; align-items: center; gap: 7px; color: #ff6b8b; letter-spacing: 0.1em; }
-    .screen-bar .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #ff2d55; box-shadow: 0 0 10px #ff2d55; animation: pulse 1.2s infinite; }
-    .screen iframe { display: block; width: 100%; aspect-ratio: 4 / 3; border: 0; background: #000; }
-    .orb { position: absolute; z-index: 3; font-size: 2.6rem; animation: bob 6s ease-in-out infinite; filter: drop-shadow(0 0 14px rgba(255, 43, 214, 0.6)); pointer-events: none; user-select: none; }
-    .orb:nth-of-type(1) { top: -30px; left: -26px; }
-    .orb:nth-of-type(2) { bottom: 40px; right: -30px; animation-delay: -3s; filter: drop-shadow(0 0 14px rgba(34, 228, 255, 0.7)); }
-    .hint { text-align: center; margin-top: 18px; font: 0.82rem var(--font-mono); color: var(--muted); }
-
-    /* ---------- marquee ---------- */
-    .marquee { padding: 30px 0; border-block: 1px solid var(--line); background: rgba(255, 255, 255, 0.015); overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
-    .track { display: flex; gap: 12px; width: max-content; animation: marquee 46s linear infinite; }
-    .track + .track { margin-top: 12px; animation-direction: reverse; animation-duration: 54s; }
-    @keyframes marquee { to { transform: translateX(-50%); } }
-    .chip { display: inline-flex; align-items: center; gap: 9px; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); font-weight: 700; white-space: nowrap; }
-
-    /* ---------- code ---------- */
-    .split { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 52px; align-items: center; }
-    .split > * { min-width: 0; }
-    .steps { list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 14px; }
-    .steps li { display: flex; gap: 16px; align-items: flex-start; padding: 16px 18px; border-radius: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line); }
-    .steps .n { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 11px; font: 900 0.95rem var(--font-head); color: #12061f; background: var(--grad); background-size: 200% auto; }
-    .steps b { display: block; }
-    .steps p { color: var(--muted); font-size: 0.95rem; margin-top: 2px; }
-    .window { border-radius: 20px; background: rgba(13, 10, 26, 0.9); border: 1px solid rgba(139, 92, 246, 0.35); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55); overflow: hidden; }
-    .window-bar { display: flex; align-items: center; gap: 8px; padding: 11px 14px; border-bottom: 1px solid var(--line); }
-    .window-bar > i { width: 11px; height: 11px; border-radius: 50%; flex: none; }
-    .window-bar > i:nth-child(1) { background: #ff5f57; } .window-bar > i:nth-child(2) { background: #febc2e; } .window-bar > i:nth-child(3) { background: #28c840; }
-    .tabs { display: flex; gap: 4px; margin-left: 12px; overflow-x: auto; }
-    .tab { padding: 6px 12px; border-radius: 8px; border: 0; background: none; color: var(--muted); font: 600 0.8rem var(--font-mono); cursor: pointer; white-space: nowrap; }
-    .tab.on { background: rgba(139, 92, 246, 0.22); color: #fff; }
-    .copy { margin-left: auto; flex: none; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04); color: var(--muted); font: 700 0.78rem Manrope, sans-serif; cursor: pointer; }
-    .copy:hover { color: #fff; border-color: var(--cyan); }
-    pre.code { margin: 0; padding: 20px 22px 24px; overflow-x: auto; font: 0.84rem/1.75 var(--font-mono); color: #d9d4f5; min-height: 400px; }
-    pre.code[hidden] { display: none; }
-    pre.code .ln { display: block; opacity: 0; transform: translateX(-10px); }
-    pre.code.play .ln { animation: ln 0.4s forwards; animation-delay: calc(var(--i) * 45ms); }
-    @keyframes ln { to { opacity: 1; transform: none; } }
-    .tk-c { color: #6f6a92; font-style: italic; } .tk-s { color: var(--lime); } .tk-k { color: var(--pink); } .tk-n { color: var(--amber); } .tk-t { color: var(--cyan); } .tk-f { color: #c4a5ff; }
-
-    /* ---------- feature cards ---------- */
-    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-    .card { padding: 28px; border-radius: 20px; background: rgba(255, 255, 255, 0.025); border: 1px solid var(--line); transition: transform 0.3s, border-color 0.3s; }
-    .card:hover { transform: translateY(-5px); border-color: hsl(var(--h) 90% 65% / 0.5); }
-    .ico { width: 54px; height: 54px; display: grid; place-items: center; border-radius: 16px; font-size: 1.65rem; margin-bottom: 18px; background: linear-gradient(135deg, hsl(var(--h) 95% 60% / 0.3), hsl(calc(var(--h) + 50) 95% 60% / 0.1)); box-shadow: inset 0 0 0 1px hsl(var(--h) 95% 70% / 0.4); }
-    .card h3 { margin-bottom: 8px; }
-    .card p { color: var(--muted); font-size: 0.97rem; }
-
-    /* ---------- games ---------- */
-    .games { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
-    .game { display: block; border-radius: 22px; overflow: hidden; border: 1px solid hsl(var(--h) 90% 65% / 0.28); background: linear-gradient(180deg, hsl(var(--h) 90% 55% / 0.12), rgba(255, 255, 255, 0.015)); transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s; }
-    .game:hover { transform: translateY(-6px); border-color: hsl(var(--h) 90% 65% / 0.7); box-shadow: 0 22px 60px hsl(var(--h) 90% 50% / 0.25); }
-    .game .poster { display: grid; place-items: center; aspect-ratio: 16 / 9; border-bottom: 1px solid var(--line); background: radial-gradient(circle at 50% 60%, hsl(var(--h) 90% 55% / 0.35), transparent 65%), repeating-linear-gradient(0deg, transparent 0 34px, hsl(var(--h) 90% 60% / 0.08) 34px 35px), repeating-linear-gradient(90deg, transparent 0 34px, hsl(var(--h) 90% 60% / 0.08) 34px 35px); }
-    .game .poster span { font-size: 4.6rem; line-height: 1; filter: drop-shadow(0 10px 24px hsl(var(--h) 90% 50% / 0.7)); transition: transform 0.4s cubic-bezier(.3, 1.6, .5, 1); }
-    .game:hover .poster span { transform: scale(1.15) rotate(-6deg); }
-    .game .body { padding: 18px 20px 22px; }
-    .game h3 { margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
-    .game p { color: var(--muted); font-size: 0.93rem; }
-    .game .links { display: flex; gap: 16px; margin-top: 14px; font-weight: 700; font-size: 0.9rem; }
-    .game .links span { color: hsl(var(--h) 95% 72%); }
-    .games-note { text-align: center; color: var(--muted); font-size: 0.92rem; margin-top: 26px; }
-
-    /* ---------- AI flow ---------- */
-    .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; max-width: 960px; margin: 0 auto 44px; }
-    .node { text-align: center; padding: 28px 20px; border-radius: 22px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line); }
-    .node .big { font-size: 2.6rem; display: block; margin-bottom: 8px; }
-    .node b { font-family: var(--font-head); display: block; font-size: 0.98rem; }
-    .node small { color: var(--muted); }
-    .wire { position: relative; width: 80px; height: 2px; background: linear-gradient(90deg, rgba(255, 43, 214, 0.35), rgba(34, 228, 255, 0.35)); }
-    .wire::after { content: ""; position: absolute; top: -4px; left: 0; width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 12px var(--cyan); animation: travel 2.2s ease-in-out infinite; }
-    .wire:nth-child(4)::after { animation-delay: -1.1s; }
-    @keyframes travel { from { left: 0; opacity: 0; } 15%, 85% { opacity: 1; } to { left: calc(100% - 10px); opacity: 0; } }
-    @keyframes travel-y { from { top: 0; opacity: 0; } 15%, 85% { opacity: 1; } to { top: calc(100% - 10px); opacity: 0; } }
-
-    /* ---------- final ---------- */
-    .final { position: relative; padding: 72px 40px; border-radius: 30px; text-align: center; overflow: hidden; isolation: isolate; border: 2px solid transparent; background: linear-gradient(rgba(14, 10, 31, 0.94), rgba(14, 10, 31, 0.94)) padding-box, var(--ring) border-box; animation: spin 8s linear infinite; }
-    .final::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(600px circle at 20% 0%, rgba(255, 43, 214, 0.2), transparent 60%), radial-gradient(600px circle at 80% 100%, rgba(34, 228, 255, 0.18), transparent 60%); }
-    .final h2 { font-size: clamp(1.8rem, 4.6vw, 3.4rem); }
-    .final p { color: var(--muted); font-size: 1.1rem; max-width: 600px; margin: 18px auto 32px; }
-    .final .row { justify-content: center; }
-
-    footer { padding: 44px 0 52px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.92rem; }
-    footer .wrap { display: flex; flex-wrap: wrap; gap: 16px 30px; align-items: center; justify-content: space-between; }
-    footer nav { display: flex; flex-wrap: wrap; gap: 8px 20px; }
-    footer a:hover { color: #fff; }
-
-    /* ---------- responsive ---------- */
-    @media (max-width: 1000px) {
-      :root { --pad: 88px; }
-      .hero { min-height: auto; }
-      .hero .wrap, .split { grid-template-columns: 1fr; gap: 40px; }
-      .stage { max-width: 620px; width: 100%; margin: 0 auto; }
-      .cards, .games { grid-template-columns: repeat(2, 1fr); }
-      .nav-links { display: none; }
-      .nav .wrap > .btn { margin-left: auto; }
-    }
-    @media (max-width: 680px) {
-      :root { --pad: 68px; }
-      body { font-size: 16px; }
-      .hero { padding-top: 110px; }
-      .head { margin-bottom: 40px; }
-      .cards, .games { grid-template-columns: 1fr; }
-      .stats { grid-template-columns: repeat(2, 1fr); }
-      .flow { grid-template-columns: 1fr; }
-      .wire { width: 2px; height: 40px; margin: 0 auto; }
-      .wire::after { left: -4px; animation-name: travel-y; }
-      .final { padding: 52px 20px; }
-      .orb { font-size: 2rem; }
-      .orb:nth-of-type(1) { left: -6px; } .orb:nth-of-type(2) { right: -6px; }
-      .sun { width: 280px; height: 280px; }
-      pre.code { min-height: 0; font-size: 0.76rem; }
-      .window-bar > i { display: none; }
-      .tabs { margin-left: 0; }
-      .pill { font-size: 0.72rem; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
-      .reveal { opacity: 1; transform: none; }
-      pre.code .ln { opacity: 1; transform: none; }
-    }
+    html, body { height: 100%; }
+    body { margin: 0; display: grid; place-items: center; font: 400 14px/1.5 Inter, system-ui, sans-serif; color: var(--text); background: var(--bg); }
+    a { color: var(--c1); }
+    main { width: min(980px, 100% - 32px); padding: 20px 0; }
+    .top { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+    .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; letter-spacing: -0.01em; }
+    .logo b { width: 24px; height: 24px; border-radius: 7px; background: var(--grad); }
+    .top .end { margin-left: auto; display: flex; gap: 6px; }
+    .btn { display: grid; place-items: center; height: 30px; padding: 0 11px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font: 600 13px/1 Inter, sans-serif; text-decoration: none; cursor: pointer; }
+    h1 { font-size: clamp(22px, 3.4vw, 30px); line-height: 1.15; font-weight: 700; letter-spacing: -0.025em; margin: 0 0 6px; }
+    .grad { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .lead { color: var(--muted); margin: 0 0 18px; }
+    .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+    h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 8px; }
+    ol { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 12px; }
+    li { counter-increment: s; display: grid; grid-template-columns: 26px 1fr; gap: 4px 10px; min-width: 0; }
+    li::before { content: counter(s); grid-row: span 2; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--grad); color: #fff; font-weight: 700; font-size: 13px; }
+    li b { font-weight: 600; }
+    .cmd { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 4px 4px 4px 12px; border-radius: 9px; background: var(--term); color: #f3effd; }
+    .cmd code { flex: 1; min-width: 0; font: 12.5px/1.5 'JetBrains Mono', monospace; white-space: nowrap; overflow-x: auto; scrollbar-width: none; }
+    .cmd button { flex: none; padding: 6px 10px; border: 0; border-radius: 6px; background: #fff; color: #17122a; font: 600 12px/1 Inter, sans-serif; cursor: pointer; }
+    .note { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
+    code { font: 12.5px 'JetBrains Mono', monospace; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+    td:first-child { width: 128px; font-weight: 600; padding-right: 8px; }
+    td:last-child { color: var(--muted); }
+    table + h2 { margin-top: 16px; }
+    footer { margin-top: 20px; color: var(--muted); font-size: 12.5px; }
+    @media (max-width: 760px) { .cols { grid-template-columns: 1fr; gap: 20px; } }
   </style>
 </head>
 <body>
-
-<canvas id="stars" aria-hidden="true"></canvas>
-<div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
-<div class="progress" aria-hidden="true"></div>
-
-<header class="nav">
-  <div class="wrap">
-    <a class="logo" href="#top"><span class="mon">👾</span><span>Game<span class="grad-text">Monster</span>JS</span></a>
-    <nav class="nav-links">
-      <a href="#start">Как начать</a>
-      <a href="#features">Возможности</a>
-      <a href="#games">Примеры</a>
-      <a href="#ai">Для ИИ</a>
-      <a href="AI.md">Документация</a>
-    </nav>
-    <a class="btn btn-ghost" href="https://github.com/si0683/GameMonsterJS">★ GitHub</a>
-  </div>
-</header>
-
-<main>
-<!-- 1. ГЛАВНЫЙ ЭКРАН -->
-<section class="hero" id="top">
-  <div class="floor-wrap" aria-hidden="true"><div class="floor"></div></div>
-  <div class="wrap">
-    <div>
-      <span class="pill reveal"><span class="dot"></span>версия 3.0 · MIT · без сборки</span>
-      <h1 class="reveal" style="--d:.08s"><span class="line">Пишите правила.</span><span class="line grad-text">Получайте игру.</span></h1>
-      <p class="lead reveal" style="--d:.16s">GameMonsterJS даёт <b>меню, HUD, управление, звуки, музыку, спрайты, частицы, физику и 3D</b>. Ваша игра — 50–150 строк обычного JavaScript, а нейросети пишут на нём без ошибок.</p>
-      <div class="row reveal" style="--d:.24s">
-        <a class="btn btn-main" href="#start">🚀 Начать</a>
-        <a class="btn btn-ghost" href="#games">▶ Играть в примеры</a>
-      </div>
-      <div class="stats reveal" style="--d:.32s">
-        <div class="stat"><b class="grad-text" data-count="7">0</b><span>готовых игр</span></div>
-        <div class="stat"><b class="grad-text" data-count="99">0</b><span>звуков</span></div>
-        <div class="stat"><b class="grad-text" data-count="201">0</b><span>спрайт</span></div>
-        <div class="stat"><b class="grad-text" data-count="5">0</b><span>мелодий</span></div>
+  <main>
+    <div class="top">
+      <span class="logo"><b></b>GameMonsterJS2D</span>
+      <div class="end">
+        <a class="btn" href="https://github.com/si0683/GameMonsterJS2D">GitHub</a>
+        <button class="btn theme" type="button" aria-label="Сменить тему">◐</button>
       </div>
     </div>
-    <div class="stage reveal" style="--d:.2s">
-      <div class="sun" aria-hidden="true"></div>
-      <span class="orb" aria-hidden="true">👾</span>
-      <span class="orb" aria-hidden="true">🚀</span>
-      <div class="console">
-        <div class="screen">
-          <div class="screen-bar"><i></i><i></i><i></i><span>examples/flappybird</span><span class="live">LIVE</span></div>
-          <iframe src="examples/flappybird/" title="Flappy Bird — пример игры, в неё можно сыграть"></iframe>
-        </div>
+
+    <h1>Стек для 2D-игры <span class="grad">одной командой</span></h1>
+    <p class="lead">Vite + Phaser 4 + Tiled — команда создаёт папку с игрой и сама ставит все пакеты. Внутри готовый уровень-платформер.</p>
+
+    <div class="cols">
+      <div>
+        <h2>Как начать</h2>
+        <ol>
+          <li><b>Установите <a href="https://nodejs.org">Node.js</a> 20.19+</b><span class="note" style="margin:0">Проверить: <code>node -v</code></span></li>
+          <li><b>Создайте проект</b><div class="cmd"><code>npm create gamemonsterjs2d@latest my-game</code><button type="button" data-copy>Копировать</button></div></li>
+          <li><b>Запустите</b><div class="cmd"><code>cd my-game &amp;&amp; npm run dev</code><button type="button" data-copy>Копировать</button></div></li>
+        </ol>
+        <p class="note">Откроется на <code>http://localhost:5173</code>. Пока пакета нет в npm, вместо шага 2: <code>npx github:si0683/GameMonsterJS2D my-game</code></p>
       </div>
-      <p class="hint">↑ настоящая игра — нажмите и играйте</p>
-    </div>
-  </div>
-</section>
-
-<div class="marquee" aria-label="Что входит в фреймворк">
-  <div class="track">
-    <span class="chip">🎮 Меню и пауза</span><span class="chip">🕹️ Клавиатура · касания · свайпы</span><span class="chip">🧲 Физика Matter.js</span><span class="chip">🧊 3D на Three.js</span><span class="chip">🔊 8-битные звуки ZzFX</span><span class="chip">🎵 5 мелодий</span><span class="chip">🧙 Анимированные спрайты</span><span class="chip">✨ Частицы</span><span class="chip">🏆 Рекорды</span>
-    <span class="chip">🎮 Меню и пауза</span><span class="chip">🕹️ Клавиатура · касания · свайпы</span><span class="chip">🧲 Физика Matter.js</span><span class="chip">🧊 3D на Three.js</span><span class="chip">🔊 8-битные звуки ZzFX</span><span class="chip">🎵 5 мелодий</span><span class="chip">🧙 Анимированные спрайты</span><span class="chip">✨ Частицы</span><span class="chip">🏆 Рекорды</span>
-  </div>
-  <div class="track">
-    <span class="chip">📷 Камера за героем</span><span class="chip">🗺️ Карты уровней текстом</span><span class="chip">❤️ Жизни и уровни</span><span class="chip">🃏 Выбор улучшений</span><span class="chip">❓ Викторины</span><span class="chip">🌍 Русский и английский</span><span class="chip">🔷 Типы TypeScript</span><span class="chip">🤖 Для нейросетей</span><span class="chip">📦 Без сборки</span>
-    <span class="chip">📷 Камера за героем</span><span class="chip">🗺️ Карты уровней текстом</span><span class="chip">❤️ Жизни и уровни</span><span class="chip">🃏 Выбор улучшений</span><span class="chip">❓ Викторины</span><span class="chip">🌍 Русский и английский</span><span class="chip">🔷 Типы TypeScript</span><span class="chip">🤖 Для нейросетей</span><span class="chip">📦 Без сборки</span>
-  </div>
-</div>
-
-<!-- 2. КАК НАЧАТЬ -->
-<section class="section" id="start">
-  <div class="wrap split">
-    <div class="reveal">
-      <span class="eyebrow grad-text">// как начать</span>
-      <h2>Целая игра <span class="grad-text">в 20 строк</span></h2>
-      <p style="color: var(--muted); font-size: 1.08rem; margin-top: 16px">Меню, настройки, отсчёт, пауза, экран «Игра окончена», рекорд и кнопки для телефона уже готовы. Вы описываете только то, что происходит в вашем мире.</p>
-      <ol class="steps">
-        <li><span class="n">1</span><div><b>Добавьте две строки</b><p>Стили и скрипт с CDN — ничего не нужно устанавливать.</p></div></li>
-        <li><span class="n">2</span><div><b>Опишите правила</b><p><code>setup</code> создаёт мир, <code>update</code> выполняется каждый кадр.</p></div></li>
-        <li><span class="n">3</span><div><b>Играйте где угодно</b><p>Откройте файл, выложите на любой хостинг или вставьте в CodePen.</p></div></li>
-      </ol>
-    </div>
-    <div class="window reveal" style="--d:.12s">
-      <div class="window-bar">
-        <i></i><i></i><i></i>
-        <div class="tabs" role="tablist">
-          <button class="tab on" data-tab="js">game.js</button>
-          <button class="tab" data-tab="html">index.html</button>
-        </div>
-        <button class="copy" type="button">Копировать</button>
-      </div>
-<pre class="code" data-pane="js">// Ловите фрукты — классическая первая игра
-GameMonster.create({
-  title: 'Фруктопад', emoji: '🍉', world: 'sky',
-  lives: 3, buttons: ['left', 'right'], lang: 'ru',
-
-  setup(game) {
-    game.data.hero = game.add({ emoji: '🧺', x: 400, y: 540, size: 70, inside: true });
-    game.every(0.7, g => g.add({
-      emoji: g.pick(['🍎', '🍌', '🍇']),
-      x: g.rand(40, 760), y: -30, vy: 220,
-      tag: 'fruit', removeOffscreen: true
-    }));
-  },
-
-  update(game) {
-    const hero = game.data.hero;
-    hero.vx = game.key.left ? -500 : game.key.right ? 500 : 0;
-    const fruit = game.hitAny(hero, 'fruit');
-    if (fruit) { fruit.remove(); game.addScore(1, fruit.x, fruit.y); game.sound('coin'); }
-  }
-});</pre>
-<pre class="code" data-pane="html" hidden>&lt;!DOCTYPE html&gt;
-&lt;html lang="ru"&gt;
-&lt;head&gt;
-  &lt;meta charset="UTF-8"&gt;
-  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
-  &lt;title&gt;Фруктопад&lt;/title&gt;
-  &lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@3.0.0/gamemonster.css"&gt;
-&lt;/head&gt;
-&lt;body&gt;
-  &lt;div id="game"&gt;&lt;/div&gt;
-
-  &lt;script src="https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@3.0.0/gamemonster.js"&gt;&lt;/script&gt;
-  &lt;script src="game.js"&gt;&lt;/script&gt;
-&lt;/body&gt;
-&lt;/html&gt;</pre>
-    </div>
-  </div>
-</section>
-
-<!-- 3. ВОЗМОЖНОСТИ -->
-<section class="section" id="features">
-  <div class="wrap">
-    <div class="head reveal"><span class="eyebrow grad-text">// возможности</span><h2>Всё вокруг игры <span class="grad-text">уже готово</span></h2><p>Скучные 80% встроены в фреймворк — вечер уходит на интересные 20%.</p></div>
-    <div class="cards">
-      <div class="card reveal" style="--h:320"><div class="ico">🎮</div><h3>Экраны и управление</h3><p>Меню, настройки, отсчёт, пауза, «Игра окончена», рекорд. Клавиатура, мышь, касания, свайпы и экранные кнопки.</p></div>
-      <div class="card reveal" style="--h:190;--d:.08s"><div class="ico">🏃</div><h3>Объекты и камера</h3><p>Эмодзи, спрайты и фигуры со скоростью, гравитацией, столкновениями, платформами и плавной камерой.</p></div>
-      <div class="card reveal" style="--h:80;--d:.16s"><div class="ico">🎵</div><h3>Звук и музыка</h3><p>99 звуков — Kenney, 8-битные ZzFX и встроенные — и 5 фоновых мелодий. Один вызов: <code>game.sound('coin')</code>.</p></div>
-      <div class="card reveal" style="--h:30"><div class="ico">🧙</div><h3>Спрайты</h3><p>201 спрайт Kenney. Персонажи сами анимируют ходьбу и прыжки.</p></div>
-      <div class="card reveal" style="--h:260;--d:.08s"><div class="ico">🧲</div><h3>Физика</h3><p><code>physics: true</code> — тела Matter.js, верёвки, события столкновений, бросок мышью.</p></div>
-      <div class="card reveal" style="--h:170;--d:.16s"><div class="ico">🧊</div><h3>3D</h3><p><code>mode: '3d'</code> — кубы и сферы Three.js, эмодзи-спрайты и камера за героем.</p></div>
-      <div class="card reveal" style="--h:50"><div class="ico">🏆</div><h3>Прогресс</h3><p>Уровни, жизни, выбор улучшений (<code>game.choose</code>) и викторины (<code>game.ask</code>).</p></div>
-      <div class="card reveal" style="--h:140;--d:.08s"><div class="ico">🌍</div><h3>Два языка</h3><p>Интерфейс на русском и английском, любую надпись можно заменить.</p></div>
-      <div class="card reveal" style="--h:220;--d:.16s"><div class="ico">🔷</div><h3>TypeScript</h3><p>Типизированный API, ES-модуль и безопасный импорт при серверном рендеринге в Next.js.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- 4. ПРИМЕРЫ ИГР -->
-<section class="section" id="games">
-  <div class="wrap">
-    <div class="head reveal"><span class="eyebrow grad-text">// примеры</span><h2>Готовые игры <span class="grad-text">в трёх файлах</span></h2><p>HTML, CSS и JavaScript с подробными комментариями на русском. Откройте, сыграйте, посмотрите код.</p></div>
-    <div class="games">
-      <a class="game reveal" style="--h:50" href="examples/flappybird/"><div class="poster"><span>🐤</span></div><div class="body"><h3>🐤 Flappy Bird</h3><p>Классика на одной кнопке: пролетите между трубами как можно дальше.</p><div class="links"><span>▶ Играть</span></div></div></a>
-      <a class="game reveal" style="--h:190;--d:.08s" href="examples/subwaysurf/"><div class="poster"><span>🚇</span></div><div class="body"><h3>🚇 Subway Surf</h3><p>3D-раннер на Three.js: три дорожки, прыжки, монеты и поезда.</p><div class="links"><span>▶ Играть</span></div></div></a>
-      <a class="game reveal" style="--h:280;--d:.16s" href="examples/quizshooter/"><div class="poster"><span>🚀</span></div><div class="body"><h3>🚀 Quiz Shooter</h3><p>Автошутер-рогалик: герой стреляет сам, а улучшения открываются правильными ответами.</p><div class="links"><span>▶ Играть</span></div></div></a>
-      <a class="game reveal" style="--h:120" href="examples/quiztowerdefense/"><div class="poster"><span>🏰</span></div><div class="body"><h3>🏰 Quiz Tower</h3><p>Башенная оборона: стройте и улучшайте башни у дороги и отвечайте на вопросы.</p><div class="links"><span>▶ Играть</span></div></div></a>
-      <a class="game reveal" style="--h:150;--d:.08s" href="examples/quizsnake/"><div class="poster"><span>🐍</span></div><div class="body"><h3>🐍 Quiz Snake</h3><p>Змейка с вопросом над полем: съешьте пузырь с правильным ответом.</p><div class="links"><span>▶ Играть</span></div></div></a>
-      <a class="game reveal" style="--h:30;--d:.16s" href="examples/quizplatformer/"><div class="poster"><span>🦊</span></div><div class="body"><h3>🦊 Quiz Jump</h3><p>Платформер: бегите, прыгайте по платформам, собирайте звёзды и отвечайте на вопросы.</p><div class="links"><span>▶ Играть</span></div></div></a>
-      <a class="game reveal" style="--h:330" href="examples/quizbreakout/"><div class="poster"><span>🧱</span></div><div class="body"><h3>🧱 Quiz Breakout</h3><p>Арканоид: отбивайте шар, разбивайте прочные кирпичи-врагов и проходите квиз.</p><div class="links"><span>▶ Играть</span></div></div></a>
-    </div>
-    <p class="games-note reveal">Исходный код каждой игры — в папке <code>examples</code> на GitHub.</p>
-  </div>
-</section>
-
-<!-- 5. ДЛЯ ИИ -->
-<section class="section" id="ai">
-  <div class="wrap">
-    <div class="head reveal"><span class="eyebrow grad-text">// для нейросетей</span><h2>Пусть игру <span class="grad-text">напишет ИИ</span></h2><p>Вставьте шаблон промта в ChatGPT, Claude, Qwen, GigaChat или DeepSeek, опишите идею — и получите игру из трёх файлов, в которую можно сразу играть.</p></div>
-    <div class="flow reveal">
-      <div class="node"><span class="big">📝</span><b>Промт</b><small>заполните «Моя игра»</small></div>
-      <div class="wire" aria-hidden="true"></div>
-      <div class="node"><span class="big">🤖</span><b>Любая нейросеть</b><small>читает справочник AI.md</small></div>
-      <div class="wire" aria-hidden="true"></div>
-      <div class="node"><span class="big">🎮</span><b>3 файла</b><small>сразу можно играть</small></div>
-    </div>
-    <div class="row reveal" style="justify-content: center">
-      <a class="btn btn-main" href="PROMPT.ru.md">📋 Шаблон промта</a>
-      <a class="btn btn-ghost" href="AI.md">📖 Справочник API</a>
-      <a class="btn btn-ghost" href="PROMPT.md">Prompt in English</a>
-    </div>
-  </div>
-</section>
-
-<!-- 6. ПРИЗЫВ -->
-<section class="section">
-  <div class="wrap">
-    <div class="final reveal">
-      <h2>Ваша первая игра —<br><span class="grad-text">20 строк кода</span></h2>
-      <p>Бесплатно, открытый код под лицензией MIT. Без сборки, установки и регистрации — только тег script.</p>
-      <div class="row">
-        <a class="btn btn-main" href="#start">🚀 Начать</a>
-        <a class="btn btn-ghost" href="https://github.com/si0683/GameMonsterJS">★ GitHub</a>
+      <div>
+        <h2>Что установится</h2>
+        <table>
+        <tr><td>Vite</td><td>сборка и сервер разработки</td></tr>
+        <tr><td>Phaser 4</td><td>сцены, камера, спрайты, ввод, анимации, тайлмапы, звук</td></tr>
+        <tr><td>Физика</td><td>Arcade по умолчанию, Matter.js встроен в Phaser</td></tr>
+        <tr><td>Tiled</td><td>уровень <code>level1.tmj</code>, редактор — <a href="https://www.mapeditor.org">mapeditor.org</a></td></tr>
+        <tr><td>TypeScript</td><td>строгие типы</td></tr>
+        </table>
+        <h2>Команды</h2>
+        <table>
+        <tr><td><code>npm run dev</code></td><td>разработка</td></tr>
+        <tr><td><code>npm run build</code></td><td>готовая игра в <code>dist/</code></td></tr>
+        </table>
       </div>
     </div>
-  </div>
-</section>
-</main>
 
-<footer>
-  <div class="wrap">
-    <div>© <span id="year"></span> GameMonsterJS · лицензия MIT</div>
-    <nav>
-      <a href="https://github.com/si0683/GameMonsterJS">GitHub</a>
-      <a href="README.ru.md">Документация</a>
-      <a href="AI.md">Справочник API</a>
-      <a href="CHANGELOG.md">Изменения</a>
-      <a href="THIRD_PARTY.md">Источники</a>
-      <a href="https://si0683.github.io/LightWebsiteUi/">💡 LightWebsiteUi — для сайтов</a>
-    </nav>
-  </div>
-</footer>
+    <footer>MIT · графика Kenney (CC0) · <a href="https://github.com/si0683/GameMonsterJS2D#readme">README</a> · 3D: <a href="https://si0683.github.io/GameMonsterJS3D/">GameMonsterJS3D</a></footer>
+  </main>
 
-<script>
-(() => {
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  document.getElementById('year').textContent = new Date().getFullYear();
-
-  // ---- slow twinkling stars (no mouse effects) ----
-  const cv = document.getElementById('stars'), cx = cv.getContext('2d');
-  const COLORS = ['#ffffff', '#ff2bd6', '#22e4ff', '#b6ff3b', '#c4a5ff'];
-  let W, H, stars = [];
-  function resize() {
-    const dpr = Math.min(devicePixelRatio || 1, 2);
-    W = innerWidth; H = innerHeight;
-    cv.width = W * dpr; cv.height = H * dpr; cx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    stars = Array.from({ length: Math.min(160, Math.round(W * H / 9000)) }, () => ({
-      x: Math.random() * W, y: Math.random() * H, z: Math.random() * 0.9 + 0.1,
-      r: Math.random() * 1.3 + 0.3, t: Math.random() * 6.28, s: Math.random() * 0.02 + 0.006,
-      c: Math.random() < 0.8 ? '#ffffff' : COLORS[1 + (Math.random() * 4 | 0)]
-    }));
-  }
-  function frame() {
-    cx.clearRect(0, 0, W, H);
-    const scroll = scrollY * 0.1;
-    for (const s of stars) {
-      s.t += s.s;
-      const y = ((s.y - scroll * s.z) % H + H) % H;
-      cx.globalAlpha = 0.3 + Math.sin(s.t) * 0.3 + 0.3 * s.z;
-      cx.fillStyle = s.c;
-      cx.beginPath(); cx.arc(s.x, y, s.r * (0.6 + s.z), 0, 6.28); cx.fill();
-    }
-    cx.globalAlpha = 1;
-    if (!reduce) requestAnimationFrame(frame);
-  }
-  resize(); addEventListener('resize', resize); frame();
-
-  // ---- nav + scroll progress ----
-  const nav = document.querySelector('.nav'), bar = document.querySelector('.progress');
-  function onScroll() {
-    nav.classList.toggle('scrolled', scrollY > 20);
-    bar.style.setProperty('--p', scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight));
-  }
-  addEventListener('scroll', onScroll, { passive: true }); onScroll();
-
-  // ---- reveal on scroll + counters + code lines ----
-  function count(el) {
-    const end = +el.dataset.count, t0 = performance.now();
-    (function step(t) {
-      const k = Math.min(1, (t - t0) / 1500);
-      el.textContent = Math.round(end * (1 - Math.pow(1 - k, 3)));
-      if (k < 1) requestAnimationFrame(step);
-    })(t0);
-  }
-  const io = new IntersectionObserver(entries => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      e.target.classList.add('in');
-      e.target.querySelectorAll('[data-count]').forEach(count);
-      e.target.querySelectorAll('pre.code:not([hidden])').forEach(p => p.classList.add('play'));
-      io.unobserve(e.target);
-    }
-  }, { threshold: 0.12 });
-  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
-
-  // ---- tiny syntax highlighter (JS + HTML) ----
-  const RX = /(\/\/.*$|&lt;!--.*?--&gt;)|('[^']*'|"[^"]*")|(\b(?:const|let|var|if|else|return|true|false|new)\b)|(\b\d+(?:\.\d+)?\b)|(&lt;\/?[\w!-]+|\/?&gt;)|(\b[a-zA-Z_]\w*(?=\())/gm;
-  const CLS = ['', 'tk-c', 'tk-s', 'tk-k', 'tk-n', 'tk-t', 'tk-f'];
-  document.querySelectorAll('pre.code').forEach(pre => {
-    pre.dataset.raw = pre.textContent;
-    const lines = pre.innerHTML.split('\n');
-    pre.innerHTML = lines.map((line, i) => `<span class="ln" style="--i:${i}">${line.replace(RX, (...m) => { for (let k = 1; k <= 6; k++) if (m[k]) return `<span class="${CLS[k]}">${m[k]}</span>`; return m[0]; }) || ' '}</span>`).join('');
-  });
-  document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === tab));
-    document.querySelectorAll('pre.code').forEach(p => {
-      const on = p.dataset.pane === tab.dataset.tab;
-      p.hidden = !on; p.classList.remove('play');
-      if (on) { void p.offsetWidth; p.classList.add('play'); }
+  <script>
+    document.querySelector('.theme').addEventListener('click', function () {
+      var t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = t;
+      try { localStorage.setItem('gm-theme', t); } catch (e) { /* storage blocked */ }
     });
-  }));
-  const copy = document.querySelector('.copy');
-  copy.addEventListener('click', async () => {
-    const pre = document.querySelector('pre.code:not([hidden])');
-    try { await navigator.clipboard.writeText(pre.dataset.raw); copy.textContent = 'Скопировано ✓'; }
-    catch (e) { copy.textContent = 'Выделите и скопируйте'; }
-    setTimeout(() => { copy.textContent = 'Копировать'; }, 1800);
-  });
-})();
-</script>
+    document.querySelectorAll('[data-copy]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        navigator.clipboard.writeText(btn.previousElementSibling.textContent).then(function () {
+          btn.textContent = 'Готово';
+          setTimeout(function () { btn.textContent = 'Копировать'; }, 1500);
+        });
+      });
+    });
+  </script>
 </body>
 </html>
