@@ -4,7 +4,7 @@
 
 Дополнения грузятся по запросу: **физика Matter.js** (`physics: true`) и **3D на Three.js** (`mode: '3d'`).
 
-[Сайт и живые примеры](https://si0683.github.io/ArcadeJS/) · [Справочник API](AI.md) · [Шаблон промта для ИИ](PROMPT.ru.md) · [English](README.md)
+[Сайт и живые примеры](https://si0683.github.io/GameMonsterJS/) · [Справочник API](AI.md) · [Шаблон промта для ИИ](PROMPT.ru.md) · [English](README.md)
 
 ## Подключение
 

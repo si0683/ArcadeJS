@@ -4,13 +4,13 @@
 
 Optional add-ons load on demand: **Matter.js physics** (`physics: true`) and **Three.js 3D** (`mode: '3d'`).
 
-[Website & live demos](https://si0683.github.io/ArcadeJS/) · [API reference](AI.md) · [AI prompt template](PROMPT.md) · [Русский](README.ru.md)
+[Website & live demos](https://si0683.github.io/GameMonsterJS/) · [API reference](AI.md) · [AI prompt template](PROMPT.md) · [Русский](README.ru.md)
 
 | | | |
 |---|---|---|
-| [Fruit Drop](https://si0683.github.io/ArcadeJS/examples/starter/) — 50 lines | [Flappy](https://si0683.github.io/ArcadeJS/examples/flappy/) | [Quiz Snake](https://si0683.github.io/ArcadeJS/examples/snake/) |
-| [Space Breakout](https://si0683.github.io/ArcadeJS/examples/breakout/) | [Little Fox](https://si0683.github.io/ArcadeJS/examples/platformer/) — platformer | [Star Patrol](https://si0683.github.io/ArcadeJS/examples/shooter/) — shooter |
-| [Angry Emoji](https://si0683.github.io/ArcadeJS/examples/angry/) — physics | [Space Runner 3D](https://si0683.github.io/ArcadeJS/examples/runner3d/) — Three.js | [Adventure](https://si0683.github.io/ArcadeJS/examples/adventure/) — sprites & music |
+| [Fruit Drop](https://si0683.github.io/GameMonsterJS/examples/starter/) — 50 lines | [Flappy](https://si0683.github.io/GameMonsterJS/examples/flappy/) | [Quiz Snake](https://si0683.github.io/GameMonsterJS/examples/snake/) |
+| [Space Breakout](https://si0683.github.io/GameMonsterJS/examples/breakout/) | [Little Fox](https://si0683.github.io/GameMonsterJS/examples/platformer/) — platformer | [Star Patrol](https://si0683.github.io/GameMonsterJS/examples/shooter/) — shooter |
+| [Angry Emoji](https://si0683.github.io/GameMonsterJS/examples/angry/) — physics | [Space Runner 3D](https://si0683.github.io/GameMonsterJS/examples/runner3d/) — Three.js | [Adventure](https://si0683.github.io/GameMonsterJS/examples/adventure/) — sprites & music |
 
 ## Install
 
