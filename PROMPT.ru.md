@@ -1,11 +1,11 @@
-# Шаблон промта: любая игра на ArcadeJS
+# Шаблон промта: любая игра на GameMonsterJS
 
 Заполните блок **МОЯ ИГРА** и вставьте весь промт в любую нейросеть (ChatGPT, Claude, Gemini, Qwen, GigaChat, DeepSeek…). Получите готовую игру из 3 файлов, которая работает локально, на любом хостинге или в CodePen. Внутри промта — краткая шпаргалка API, поэтому он работает, даже если нейросеть не открывает ссылки.
 
 English version — [PROMPT.md](PROMPT.md). Полный справочник — [AI.md](AI.md).
 
 ````text
-Ты — опытный разработчик браузерных игр. Сделай готовую игру на фреймворке ArcadeJS.
+Ты — опытный разработчик браузерных игр. Сделай готовую игру на фреймворке GameMonsterJS.
 
 МОЯ ИГРА:
 Название: Космический кот
@@ -17,19 +17,19 @@ English version — [PROMPT.md](PROMPT.md). Полный справочник �
 
 РЕЗУЛЬТАТ — ровно 3 файла, каждый в своём блоке кода с именем файла над ним:
 1) index.html — полный HTML-документ, который подключает
-   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.css">
-   <script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.js"></script>
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@3.0.0/gamemonster.css">
+   <script src="https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@3.0.0/gamemonster.js"></script>
    а также style.css, пустой <div id="game"></div> и script.js в конце <body>;
 2) style.css — обычно почти пустой (можно свой цвет кнопок: .arc-root { --arc-accent: #ff4d6d; });
-3) script.js — чистый JavaScript: объект CONFIG с настройками, затем Arcade.create({...}), ниже свои функции.
+3) script.js — чистый JavaScript: объект CONFIG с настройками, затем GameMonster.create({...}), ниже свои функции.
 Только HTML, CSS и чистый JavaScript: без TypeScript, React, npm, import/export и сборки.
 
-Справочник ArcadeJS (прочитай сначала): https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/AI.md
-Запасная ссылка: https://raw.githubusercontent.com/si0683/ArcadeJS/main/AI.md · Примеры: https://github.com/si0683/ArcadeJS/tree/main/examples
+Справочник GameMonsterJS (прочитай сначала): https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@3.0.0/AI.md
+Запасная ссылка: https://raw.githubusercontent.com/si0683/GameMonsterJS/main/AI.md · Примеры: https://github.com/si0683/GameMonsterJS/tree/main/examples
 
 Если ссылки не открываются, вот главное:
-- В ArcadeJS уже есть: меню, настройки, отсчёт 3-2-1, пауза, «Игра окончена», рекорд, панель очков/жизней/уровня, управление клавиатурой/мышью/касаниями/свайпами, экранные кнопки, звуки, музыка, частицы, спрайты, камера. НЕ пиши свои меню, <canvas>, requestAnimationFrame и setInterval.
-- Arcade.create({ title, emoji, subtitle, help, width: 800, height: 600, world: 'sky'|'space'|'forest'|'ocean'|'night'|'candy'|'desert'|'city', worlds: true, lives: 3, buttons: ['left','right','up','down','action'], music: 'adventure'|'action'|'boss'|'calm'|'menu', lang: 'ru', quiz, difficulty, physics, mode: '3d', setup(game) {...}, update(game, dt) {...}, draw(game, ctx) {...} }). Свои переменные — в game.data.
+- В GameMonsterJS уже есть: меню, настройки, отсчёт 3-2-1, пауза, «Игра окончена», рекорд, панель очков/жизней/уровня, управление клавиатурой/мышью/касаниями/свайпами, экранные кнопки, звуки, музыка, частицы, спрайты, камера. НЕ пиши свои меню, <canvas>, requestAnimationFrame и setInterval.
+- GameMonster.create({ title, emoji, subtitle, help, width: 800, height: 600, world: 'sky'|'space'|'forest'|'ocean'|'night'|'candy'|'desert'|'city', worlds: true, lives: 3, buttons: ['left','right','up','down','action'], music: 'adventure'|'action'|'boss'|'calm'|'menu', lang: 'ru', quiz, difficulty, physics, mode: '3d', setup(game) {...}, update(game, dt) {...}, draw(game, ctx) {...} }). Свои переменные — в game.data.
 - Объекты: game.add({ emoji: '🐱' | image: 'knight' | text | shape: 'rect'|'circle', x, y, size или w/h, color, vx, vy, gravity, spin, angle, flip, tag, bounce, wrap, inside, removeOffscreen: true, life, blink, hitbox, hp }). obj.remove(); game.all(tag); game.first(tag); game.count(tag); game.clear(tag).
 - Столкновения: game.hit(a, b); game.hitAny(a, 'tag') → объект или null; game.collide(a, 'ground') — твёрдые платформы, ставит a.onGround (oneWay: true — сквозь снизу); game.follow(hero) — камера.
 - Управление: game.key.left/right/up/down/action (зажато); game.pressed('action') (нажато сейчас; касание = action); game.pressed('left') срабатывает и на свайп; game.pointer.x/y/down.
@@ -56,4 +56,4 @@ English version — [PROMPT.md](PROMPT.md). Полный справочник �
 - **CodePen:** в окно HTML — только две строки CDN и `<div id="game"></div>`, в CSS — style.css, в JS — script.js.
 - **Доработки:** просите «поменяй CONFIG.x на …» или «добавь …, покажи только изменённые функции».
 - **Ошибки:** вставьте нейросети текст ошибки из консоли: «Исправь ошибку: …».
-- **Фиксируйте версию** (`@2.0.0`) в рабочих проектах: новые версии не ломают старые ссылки.
+- **Фиксируйте версию** (`@3.0.0`) в рабочих проектах: новые версии не ломают старые ссылки.

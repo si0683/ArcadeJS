@@ -16,7 +16,7 @@ const CONFIG = {
   world: 'space'
 };
 
-Arcade.create({
+GameMonster.create({
   title: CONFIG.title,
   emoji: '🧱',
   subtitle: 'Break all the bricks',

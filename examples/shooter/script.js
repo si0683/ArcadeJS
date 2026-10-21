@@ -16,7 +16,7 @@ const CONFIG = {
   bulletColor: '#ffe066'
 };
 
-Arcade.create({
+GameMonster.create({
   title: CONFIG.title,
   emoji: CONFIG.ship,
   subtitle: "Don't let the invaders reach the bottom",

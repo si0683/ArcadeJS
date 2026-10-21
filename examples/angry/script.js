@@ -17,7 +17,7 @@ const CONFIG = {
 
 const SLING = { x: 160, y: 430 }; // where the bird hangs
 
-Arcade.create({
+GameMonster.create({
   title: CONFIG.title,
   emoji: CONFIG.bird,
   subtitle: 'Pull the bird back and let go',

@@ -1,4 +1,4 @@
-# 🕹️ ArcadeJS
+# 👾 GameMonsterJS
 
 **Маленький фреймворк для быстрых браузерных игр.** Две строки в HTML — и у игры уже есть меню, настройки, отсчёт, пауза, экран «Игра окончена», рекорд, панель очков и жизней, управление с клавиатуры, мыши, касаний и свайпов, звуки и музыка, частицы, спрайты и камера. Вы пишете только правила — обычно 50–150 строк.
 
@@ -6,28 +6,30 @@
 
 [Сайт и живые примеры](https://si0683.github.io/GameMonsterJS/) · [Справочник API](AI.md) · [Шаблон промта для ИИ](PROMPT.ru.md) · [English](README.md)
 
+> **Раньше называлась ArcadeJS.** В версии 3.0.0 глобальный объект `Arcade` стал `GameMonster`, файлы `arcade.*` — `gamemonster.*`; API тот же. Старые версии остаются на CDN — см. [CHANGELOG](CHANGELOG.md).
+
 ## Подключение
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.css">
-<script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@3.0.0/gamemonster.css">
+<script src="https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@3.0.0/gamemonster.js"></script>
 <div id="game"></div>
 ```
 
 или
 
 ```bash
-npm install arcadejs
+npm install gamemonsterjs
 ```
 ```js
-import Arcade from 'arcadejs';
-import 'arcadejs/arcade.css';
+import GameMonster from 'gamemonsterjs';
+import 'gamemonsterjs/gamemonster.css';
 ```
 
 ## Игра за 20 строк
 
 ```js
-Arcade.create({
+GameMonster.create({
   title: 'Фруктопад', emoji: '🍉', world: 'sky', lives: 3, buttons: ['left', 'right'], lang: 'ru',
   setup(game) {
     game.data.hero = game.add({ emoji: '🧺', x: 400, y: 540, size: 70, inside: true });
@@ -59,7 +61,7 @@ Arcade.create({
 
 ## Игры с помощью ИИ
 
-ArcadeJS сделан так, чтобы нейросеть (ChatGPT, Claude, Qwen, GigaChat, DeepSeek…) писала целую игру по короткому описанию: [PROMPT.ru.md](PROMPT.ru.md) — готовый шаблон промта, [AI.md](AI.md) — компактный справочник API.
+GameMonsterJS сделан так, чтобы нейросеть (ChatGPT, Claude, Qwen, GigaChat, DeepSeek…) писала целую игру по короткому описанию: [PROMPT.ru.md](PROMPT.ru.md) — готовый шаблон промта, [AI.md](AI.md) — компактный справочник API.
 
 ## Лицензия
 

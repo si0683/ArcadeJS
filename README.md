@@ -1,10 +1,12 @@
-# 🕹️ ArcadeJS
+# 👾 GameMonsterJS
 
 **A tiny framework for fast browser games.** Two lines of HTML and your game already has a menu, settings, countdown, pause, game-over screen, high score, HUD, keyboard / mouse / touch / swipe controls, sounds and music, particles, sprites and a camera. You write only the rules — usually 50–150 lines.
 
 Optional add-ons load on demand: **Matter.js physics** (`physics: true`) and **Three.js 3D** (`mode: '3d'`).
 
 [Website & live demos](https://si0683.github.io/GameMonsterJS/) · [API reference](AI.md) · [AI prompt template](PROMPT.md) · [Русский](README.ru.md)
+
+> **Formerly ArcadeJS.** Version 3.0.0 renamed the global `Arcade` → `GameMonster` and the files `arcade.*` → `gamemonster.*`; the API is unchanged. Old versions stay on the CDN — see [CHANGELOG](CHANGELOG.md).
 
 | | | |
 |---|---|---|
@@ -15,25 +17,25 @@ Optional add-ons load on demand: **Matter.js physics** (`physics: true`) and **T
 ## Install
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.css">
-<script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@3.0.0/gamemonster.css">
+<script src="https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@3.0.0/gamemonster.js"></script>
 <div id="game"></div>
 ```
 
 or
 
 ```bash
-npm install arcadejs
+npm install gamemonsterjs
 ```
 ```js
-import Arcade from 'arcadejs';
-import 'arcadejs/arcade.css';
+import GameMonster from 'gamemonsterjs';
+import 'gamemonsterjs/gamemonster.css';
 ```
 
 ## A game in 20 lines
 
 ```js
-Arcade.create({
+GameMonster.create({
   title: 'Fruit Drop', emoji: '🍉', world: 'sky', lives: 3, buttons: ['left', 'right'],
   setup(game) {
     game.data.hero = game.add({ emoji: '🧺', x: 400, y: 540, size: 70, inside: true });
@@ -65,21 +67,21 @@ Arcade.create({
 
 ## Build games with AI
 
-ArcadeJS is designed so that an LLM (ChatGPT, Claude, Qwen, GigaChat, DeepSeek…) can write a complete game from a short description: [PROMPT.md](PROMPT.md) is a ready-to-use prompt template, [AI.md](AI.md) is a compact API reference the model can read.
+GameMonsterJS is designed so that an LLM (ChatGPT, Claude, Qwen, GigaChat, DeepSeek…) can write a complete game from a short description: [PROMPT.md](PROMPT.md) is a ready-to-use prompt template, [AI.md](AI.md) is a compact API reference the model can read.
 
 ## Repository
 
 ```
-arcade.js / arcade.css   the framework (VERSION constant in arcade.js)
-arcade.mjs / arcade.d.ts ES module entry and TypeScript types
+gamemonster.js / gamemonster.css   the framework (VERSION constant in gamemonster.js)
+gamemonster.mjs / gamemonster.d.ts ES module entry and TypeScript types
 sounds/ sprites/         audio and sprite assets
 examples/<name>/         examples: index.html, style.css, script.js, codepen.html
 AI.md                    API reference
 PROMPT.md, PROMPT.ru.md  prompt templates for LLMs
-tools/build.py           regenerates asset lists, example HTML and arcade.mjs
+tools/build.py           regenerates asset lists, example HTML and gamemonster.mjs
 ```
 
-Release: bump `VERSION` in `arcade.js` and `package.json`, update `@x.y.z` links, run `python tools/build.py`, commit, tag `vX.Y.Z`, `npm publish`. Published versions are never changed — jsDelivr serves every tag forever.
+Release: bump `VERSION` in `gamemonster.js` and `package.json`, update `@x.y.z` links, run `python tools/build.py`, commit, tag `vX.Y.Z`, `npm publish`. Published versions are never changed — jsDelivr serves every tag forever.
 
 ## License
 

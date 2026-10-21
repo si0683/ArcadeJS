@@ -18,7 +18,7 @@ const CONFIG = {
 const CELL = 40, COLS = 20, ROWS = 15; // 20 × 15 grid (800 × 600)
 const TOP = 1;                         // top row is reserved for the HUD
 
-Arcade.create({
+GameMonster.create({
   title: CONFIG.title,
   emoji: CONFIG.head,
   subtitle: 'Eat apples and answer questions ❓',

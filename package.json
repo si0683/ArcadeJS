@@ -1,6 +1,6 @@
 {
-  "name": "arcadejs",
-  "version": "2.0.0",
+  "name": "gamemonsterjs",
+  "version": "3.0.0",
   "description": "Tiny framework for fast 2D/3D browser games: menu, HUD, input, sounds, sprites, particles, physics (Matter.js) and 3D (Three.js) out of the box.",
   "keywords": ["game", "game-engine", "html5-game", "canvas", "2d", "3d", "matter-js", "three", "browser-game", "gamedev", "zzfx", "sprites"],
   "homepage": "https://si0683.github.io/GameMonsterJS/",
@@ -8,21 +8,21 @@
   "bugs": { "url": "https://github.com/si0683/GameMonsterJS/issues" },
   "license": "MIT",
   "author": "si0683",
-  "main": "arcade.js",
-  "module": "arcade.mjs",
-  "types": "arcade.d.ts",
-  "style": "arcade.css",
-  "unpkg": "arcade.js",
-  "jsdelivr": "arcade.js",
+  "main": "gamemonster.js",
+  "module": "gamemonster.mjs",
+  "types": "gamemonster.d.ts",
+  "style": "gamemonster.css",
+  "unpkg": "gamemonster.js",
+  "jsdelivr": "gamemonster.js",
   "exports": {
     ".": {
-      "types": "./arcade.d.ts",
-      "import": "./arcade.mjs",
-      "default": "./arcade.js"
+      "types": "./gamemonster.d.ts",
+      "import": "./gamemonster.mjs",
+      "default": "./gamemonster.js"
     },
-    "./arcade.css": "./arcade.css",
-    "./arcade.js": "./arcade.js"
+    "./gamemonster.css": "./gamemonster.css",
+    "./gamemonster.js": "./gamemonster.js"
   },
-  "files": ["arcade.js", "arcade.mjs", "arcade.css", "arcade.d.ts", "README.md", "README.ru.md", "AI.md", "LICENSE", "THIRD_PARTY.md", "CHANGELOG.md"],
-  "sideEffects": ["arcade.js", "arcade.mjs", "*.css"]
+  "files": ["gamemonster.js", "gamemonster.mjs", "gamemonster.css", "gamemonster.d.ts", "README.md", "README.ru.md", "AI.md", "LICENSE", "THIRD_PARTY.md", "CHANGELOG.md"],
+  "sideEffects": ["gamemonster.js", "gamemonster.mjs", "*.css"]
 }

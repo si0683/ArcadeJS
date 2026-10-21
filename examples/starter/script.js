@@ -1,4 +1,4 @@
-/* Fruit Drop — the smallest ArcadeJS game: catch fruit, dodge bombs.
+/* Fruit Drop — the smallest GameMonsterJS game: catch fruit, dodge bombs.
    A good starting point for your own game. */
 
 // ===== Settings =====
@@ -14,7 +14,7 @@ const CONFIG = {
   world: 'sky'                      // sky, space, forest, ocean, night, candy, desert, city
 };
 
-Arcade.create({
+GameMonster.create({
   title: CONFIG.title,
   emoji: '🍉',
   subtitle: 'Catch the fruit, dodge the bombs',

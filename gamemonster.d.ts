@@ -1,7 +1,7 @@
-// Type definitions for ArcadeJS 2.0.0
-// https://github.com/si0683/ArcadeJS — MIT License
+// Type definitions for GameMonsterJS 3.0.0
+// https://github.com/si0683/GameMonsterJS — MIT License
 
-declare namespace Arcade {
+declare namespace GameMonster {
   type WorldName = 'sky' | 'space' | 'forest' | 'ocean' | 'night' | 'candy' | 'desert' | 'city';
   type KeyName = 'left' | 'right' | 'up' | 'down' | 'action' | 'tap' | (string & {});
   type ButtonName = 'left' | 'right' | 'up' | 'down' | 'action';
@@ -89,7 +89,7 @@ declare namespace Arcade {
     lang?: 'en' | 'ru';
     /** Override any interface text */
     texts?: Partial<Texts>;
-    /** Where sounds/ and sprites/ are served from. Default: next to arcade.js or the CDN */
+    /** Where sounds/ and sprites/ are served from. Default: next to gamemonster.js or the CDN */
     assetsUrl?: string;
     /** Matter.js physics (loaded from CDN on demand) */
     physics?: boolean | PhysicsOptions;
@@ -270,7 +270,7 @@ declare namespace Arcade {
     angleTo(a: { x: number; y: number }, b: { x: number; y: number }): number;
   }
 
-  interface ArcadeStatic {
+  interface GameMonsterStatic {
     readonly version: string;
     create(config: Config): Game;
     /** The game created on this page (handy in the console) */
@@ -292,16 +292,16 @@ declare namespace Arcade {
   }
 }
 
-declare const Arcade: Arcade.ArcadeStatic;
+declare const GameMonster: GameMonster.GameMonsterStatic;
 
-interface Window { Arcade: Arcade.ArcadeStatic; }
+interface Window { GameMonster: GameMonster.GameMonsterStatic; }
 
-declare module 'arcadejs' {
-  const Arcade: Arcade.ArcadeStatic;
-  export default Arcade;
-  export const create: (config: Arcade.Config) => Arcade.Game;
+declare module 'gamemonsterjs' {
+  const GameMonster: GameMonster.GameMonsterStatic;
+  export default GameMonster;
+  export const create: (config: GameMonster.Config) => GameMonster.Game;
   export const version: string;
-  export type Game = Arcade.Game;
-  export type Config = Arcade.Config;
-  export type GameObject = Arcade.GameObject;
+  export type Game = GameMonster.Game;
+  export type Config = GameMonster.Config;
+  export type GameObject = GameMonster.GameObject;
 }

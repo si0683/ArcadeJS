@@ -30,7 +30,7 @@ const MAP = [
 ];
 const TILE = 54;
 
-Arcade.create({
+GameMonster.create({
   title: CONFIG.title,
   emoji: '🗺️',
   subtitle: 'Collect coins and reach the flag',

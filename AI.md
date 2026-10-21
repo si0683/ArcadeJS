@@ -1,24 +1,24 @@
-# ArcadeJS 2.0 — API reference (for developers and LLMs)
+# GameMonsterJS 2.0 — API reference (for developers and LLMs)
 
-ArcadeJS is a small browser game framework. A game is **3 files — HTML, CSS, JS** (plain JavaScript, no build step). The framework already provides: menu, settings, 3-2-1 countdown, pause, game-over screen, high score, HUD (score, lives, level), keyboard / mouse / touch / swipe input, on-screen buttons for phones, sounds and music, particles, sprites, camera, timers, quiz and upgrade picker, optional physics (Matter.js) and 3D (Three.js). **Do not re-implement these** — write only the rules of your game.
+GameMonsterJS is a small browser game framework. A game is **3 files — HTML, CSS, JS** (plain JavaScript, no build step). The framework already provides: menu, settings, 3-2-1 countdown, pause, game-over screen, high score, HUD (score, lives, level), keyboard / mouse / touch / swipe input, on-screen buttons for phones, sounds and music, particles, sprites, camera, timers, quiz and upgrade picker, optional physics (Matter.js) and 3D (Three.js). **Do not re-implement these** — write only the rules of your game.
 
 ## 1. Install
 
 **CDN (CodePen, plain HTML):**
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.css">
-<script src="https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@2.0.0/arcade.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@3.0.0/gamemonster.css">
+<script src="https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@3.0.0/gamemonster.js"></script>
 <div id="game"></div>
 ```
 
 **npm (Vite, webpack, Next.js client components):**
 ```bash
-npm install arcadejs
+npm install gamemonsterjs
 ```
 ```js
-import Arcade from 'arcadejs';
-import 'arcadejs/arcade.css';
-Arcade.create({ /* ... */ });
+import GameMonster from 'gamemonsterjs';
+import 'gamemonsterjs/gamemonster.css';
+GameMonster.create({ /* ... */ });
 ```
 TypeScript types are included. Importing on the server is safe (does nothing); create the game in the browser (e.g. inside `useEffect`).
 
@@ -27,7 +27,7 @@ TypeScript types are included. Importing on the server is safe (does nothing); c
 ```js
 const CONFIG = { title: 'My game', hero: '🐸', speed: 400, lives: 3, world: 'sky' }; // your tweakable settings
 
-Arcade.create({
+GameMonster.create({
   title: CONFIG.title,          // menu title
   emoji: CONFIG.hero,           // big emoji in the menu
   subtitle: 'Goal of the game', // line under the title
@@ -57,7 +57,7 @@ Arcade.create({
 });
 ```
 
-Keep your variables in `game.data` (reset every round): `game.data.hero = game.add({...})`. Put helper functions below `Arcade.create` and pass `game` to them.
+Keep your variables in `game.data` (reset every round): `game.data.hero = game.add({...})`. Put helper functions below `GameMonster.create` and pass `game` to them.
 
 ## 3. Objects
 
@@ -157,12 +157,12 @@ game.add({ image: 'https://example.com/hero.png', x, y, size: 80 });   // your o
 | Space | ship-blue, ship-green, ship-red, ship-orange, ufo-red, ufo-green, ufo-blue, ufo-yellow, enemy-black, enemy-blue, enemy-green, enemy-red, meteor-big, meteor, meteor-small, meteor-grey, laser-blue, laser-red, laser-green, powerup-shield, powerup-bolt, powerup-star, pill, star-gold |
 | Animals (round) | elephant, giraffe, hippo, monkey, panda, parrot, penguin, pig, rabbit, snake |
 
-Sprites fit `size` (or `w × h`) without distortion; pixel art stays crisp. Characters face right (`flip: true` — left); emoji face left. All names: `Arcade.sprites`.
+Sprites fit `size` (or `w × h`) without distortion; pixel art stays crisp. Characters face right (`flip: true` — left); emoji face left. All names: `GameMonster.sprites`.
 
 ## 8. Quiz and upgrade picker
 
 ```js
-// quiz: { questions: [...] } in Arcade.create — your own questions (any language)
+// quiz: { questions: [...] } in GameMonster.create — your own questions (any language)
 quiz: { questions: [{ text: 'Capital of France?', answer: 'Paris', wrong: ['Rome', 'Berlin', 'Madrid'] }] }
 
 game.ask().then(ok => { if (ok) game.addScore(10); else game.loseLife(); });   // pauses the game
@@ -182,7 +182,7 @@ Built-in subjects: generated math (every language); with `lang: 'ru'` also Russi
 For games where things fall, roll, stack and topple (Angry Birds-like). Matter.js loads automatically.
 
 ```js
-Arcade.create({
+GameMonster.create({
   physics: { gravity: 1, walls: true, drag: 'ball' }, // walls: invisible walls and floor; drag: which objects can be dragged (true = any)
   setup(game) {
     game.add({ x: 400, y: 585, w: 800, h: 30, color: '#6ab04c', body: 'static' });                  // fixed ground
@@ -210,7 +210,7 @@ Physics objects update `x, y, angle, vx, vy` themselves — change velocity with
 Menu, HUD, sounds, score, lives, `game.key`, `game.pressed`, `game.every`, `game.hit` work as in 2D. Three.js loads automatically. Axes: x right, y up, z toward the camera (far away is negative z).
 
 ```js
-Arcade.create({
+GameMonster.create({
   mode: '3d', world: 'space', buttons: ['left', 'right', 'action'],
   setup(game) {
     game.add3d({ shape: 'plane', w: 10, d: 200, z: -90, color: '#2b2d42' });                 // floor
@@ -242,7 +242,7 @@ Arcade.create({
 ```js
 const CONFIG = { title: 'Fruit Drop', hero: '🧺', speed: 500, lives: 3 };
 
-Arcade.create({
+GameMonster.create({
   title: CONFIG.title, emoji: '🍉', subtitle: 'Catch the fruit, dodge the bombs',
   world: 'sky', worlds: true, lives: CONFIG.lives, buttons: ['left', 'right'],
   setup(game) {
@@ -269,12 +269,12 @@ function drop(game) {
 }
 ```
 
-More examples (3 files each): https://github.com/si0683/ArcadeJS/tree/main/examples — `starter` (catch game), `flappy`, `snake` (draw hook, timers, quiz), `breakout` (upgrade picker), `platformer` (text map, camera, platforms), `shooter` (auto-fire, difficulty), `angry` (Matter.js physics), `runner3d` (Three.js), `adventure` (Kenney sprites, sounds and music).
+More examples (3 files each): https://github.com/si0683/GameMonsterJS/tree/main/examples — `starter` (catch game), `flappy`, `snake` (draw hook, timers, quiz), `breakout` (upgrade picker), `platformer` (text map, camera, platforms), `shooter` (auto-fire, difficulty), `angry` (Matter.js physics), `runner3d` (Three.js), `adventure` (Kenney sprites, sounds and music).
 
 ## Rules for generated code
 
-- Start the JS with a `CONFIG` object of tweakable settings, then `Arcade.create`, then helper functions.
-- Don't use `requestAnimationFrame`, `setInterval`, your own menus or your own `<canvas>` — ArcadeJS does this. Use `game.every` for repeats.
+- Start the JS with a `CONFIG` object of tweakable settings, then `GameMonster.create`, then helper functions.
+- Don't use `requestAnimationFrame`, `setInterval`, your own menus or your own `<canvas>` — GameMonsterJS does this. Use `game.every` for repeats.
 - Give objects that fly off screen `removeOffscreen: true`.
 - Graphics: emoji, built-in sprites (`image`) and shapes; no external images are required.
 - Interface texts follow `lang`; for a single-language game set `lang` explicitly.

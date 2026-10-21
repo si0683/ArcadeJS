@@ -1,12 +1,12 @@
-"""Build helper for ArcadeJS. Run from the repository root after changing the engine or examples:
+"""Build helper for GameMonsterJS. Run from the repository root after changing the engine or examples:
 
     python tools/build.py
 
 What it does:
-0. Writes the Kenney sound list (sounds/kenney) and sprite list (tools/sprites.json) into arcade.js.
+0. Writes the Kenney sound list (sounds/kenney) and sprite list (tools/sprites.json) into gamemonster.js.
 1. Writes examples/<name>/index.html (and style.css if missing) from one template.
 2. Writes examples/<name>/codepen.html — the part for CodePen's HTML panel.
-3. Writes arcade.mjs — the ES module entry for npm / bundlers.
+3. Writes gamemonster.mjs — the ES module entry for npm / bundlers.
 4. Checks that the platformer map rows have equal length.
 """
 import json
@@ -17,8 +17,8 @@ from pathlib import Path
 sys.stdout.reconfigure(encoding='utf-8')
 
 ROOT = Path(__file__).resolve().parent.parent
-VERSION = re.search(r"VERSION = '([\d.]+)'", (ROOT / 'arcade.js').read_text(encoding='utf-8')).group(1)
-CDN = f'https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@{VERSION}'
+VERSION = re.search(r"VERSION = '([\d.]+)'", (ROOT / 'gamemonster.js').read_text(encoding='utf-8')).group(1)
+CDN = f'https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@{VERSION}'
 
 EXAMPLES = {
     'starter': 'Fruit Drop',
@@ -32,26 +32,26 @@ EXAMPLES = {
     'adventure': 'Adventure',
 }
 
-CODEPEN = f'''<!-- ArcadeJS: styles and engine -->
-<link rel="stylesheet" href="{CDN}/arcade.css">
-<script src="{CDN}/arcade.js"></script>
+CODEPEN = f'''<!-- GameMonsterJS: styles and engine -->
+<link rel="stylesheet" href="{CDN}/gamemonster.css">
+<script src="{CDN}/gamemonster.js"></script>
 
-<!-- ArcadeJS adds the game here: canvas, menu, HUD -->
+<!-- GameMonsterJS adds the game here: canvas, menu, HUD -->
 <div id="game"></div>'''
 
-STYLE = '''/* Your own styles. Everything else is in arcade.css.
+STYLE = '''/* Your own styles. Everything else is in gamemonster.css.
    Example — custom button and title colour:
    .arc-root { --arc-accent: #ff4d6d; } */
 '''
 
-ESM = f'''/*! ArcadeJS {VERSION} — ES module entry. MIT License. https://github.com/si0683/ArcadeJS */
-// The engine is a browser script that defines window.Arcade; this file re-exports it.
+ESM = f'''/*! GameMonsterJS {VERSION} — ES module entry. MIT License. https://github.com/si0683/GameMonsterJS */
+// The engine is a browser script that defines window.GameMonster; this file re-exports it.
 // Sounds and sprites load from the CDN (or from config.assetsUrl).
-import './arcade.js';
+import './gamemonster.js';
 
-const Arcade = typeof window !== 'undefined' ? window.Arcade : undefined;
-export default Arcade;
-export const create = (config) => Arcade.create(config);
+const GameMonster = typeof window !== 'undefined' ? window.GameMonster : undefined;
+export default GameMonster;
+export const create = (config) => GameMonster.create(config);
 export const version = '{VERSION}';
 '''
 
@@ -62,7 +62,7 @@ def index_html(title):
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{title} — ArcadeJS</title>
+  <title>{title} — GameMonsterJS</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -93,8 +93,8 @@ def replace_block(js, mark, block):
 
 
 def inject_assets():
-    """Write the Kenney sound list and the sprite catalogue into arcade.js."""
-    js_path = ROOT / 'arcade.js'
+    """Write the Kenney sound list and the sprite catalogue into gamemonster.js."""
+    js_path = ROOT / 'gamemonster.js'
     js = js_path.read_text(encoding='utf-8')
     names = sorted(f.stem for f in (ROOT / 'sounds' / 'kenney').glob('*.wav'))
     js = replace_block(js, 'KENNEY', '  const KENNEY_SOUNDS = [' + ', '.join(repr(n) for n in names) + '];')
@@ -102,7 +102,7 @@ def inject_assets():
     anims = json.dumps(data['anims'], ensure_ascii=False, separators=(',', ':'))
     js = replace_block(js, 'SPRITES', '  const SPRITE_NAMES = ' + json.dumps(data['images']) + ';\n  const SPRITE_ANIMS = ' + anims + ';')
     js_path.write_text(js, encoding='utf-8', newline='\n')
-    print(f'arcade.js: {len(names)} Kenney sounds, {len(data["images"])} sprites, {len(data["anims"])} animations')
+    print(f'gamemonster.js: {len(names)} Kenney sounds, {len(data["images"])} sprites, {len(data["anims"])} animations')
 
 
 if __name__ == '__main__':
@@ -114,6 +114,6 @@ if __name__ == '__main__':
         if not (d / 'style.css').exists():
             (d / 'style.css').write_text(STYLE, encoding='utf-8', newline='\n')
         print(f'examples/{folder}: ok')
-    (ROOT / 'arcade.mjs').write_text(ESM, encoding='utf-8', newline='\n')
-    print('arcade.mjs: ok')
+    (ROOT / 'gamemonster.mjs').write_text(ESM, encoding='utf-8', newline='\n')
+    print('gamemonster.mjs: ok')
     check_platformer_map()

@@ -17,7 +17,7 @@ const CONFIG = {
 
 const LANES = [-3, 0, 3]; // three lanes
 
-Arcade.create({
+GameMonster.create({
   title: CONFIG.title,
   emoji: CONFIG.ship,
   subtitle: 'Fly the track, grab the coins',

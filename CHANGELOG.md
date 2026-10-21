@@ -1,6 +1,18 @@
 # Changelog
 
-All versions stay available on the CDN: `https://cdn.jsdelivr.net/gh/si0683/ArcadeJS@<version>/arcade.js`.
+All versions stay available on the CDN: `https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@<version>/gamemonster.js` (3.x) and `https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@<version>/arcade.js` (1.x–2.x, published as ArcadeJS).
+
+## 3.0.0
+
+The library is renamed from **ArcadeJS** to **GameMonsterJS**. The API is the same; only names change.
+
+- Breaking: the global is `window.GameMonster` (was `window.Arcade`): `GameMonster.create({...})`, `GameMonster.game`, `GameMonster.languages`.
+- Breaking: files are `gamemonster.js`, `gamemonster.css`, `gamemonster.mjs`, `gamemonster.d.ts` (were `arcade.*`).
+- Breaking: the npm package is `gamemonsterjs` (`arcadejs` was never published).
+- High scores are stored under `gamemonster-<title>` keys, so scores saved by 2.x start from zero.
+- CSS classes and variables keep the `arc-` prefix.
+- Repository: https://github.com/si0683/GameMonsterJS, new landing page.
+- Migrating from 2.x: replace `ArcadeJS@2.0.0/arcade.` with `GameMonsterJS@3.0.0/gamemonster.` in the two CDN links and `Arcade.` with `GameMonster.` in your script.
 
 ## 2.0.0
 

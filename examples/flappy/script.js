@@ -15,7 +15,7 @@ const CONFIG = {
   world: 'sky'
 };
 
-Arcade.create({
+GameMonster.create({
   title: CONFIG.title,
   emoji: CONFIG.bird,
   subtitle: 'Fly between the pipes',

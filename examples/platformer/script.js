@@ -34,7 +34,7 @@ const MAP = [
 ];
 const TILE = 48;
 
-Arcade.create({
+GameMonster.create({
   title: CONFIG.title,
   emoji: CONFIG.hero,
   subtitle: 'Reach the flag 🏁',
