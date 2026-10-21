@@ -6,6 +6,14 @@
 
 [Сайт и живые примеры](https://si0683.github.io/GameMonsterJS/) · [Справочник API](AI.md) · [Шаблон промта для ИИ](PROMPT.ru.md) · [English](README.md)
 
+Примеры игр — готовые браузерные игры в трёх файлах (HTML, CSS, JavaScript) с подробными комментариями:
+
+| | | |
+|---|---|---|
+| [Flappy Bird](https://si0683.github.io/GameMonsterJS/examples/flappybird/) | [Subway Surf](https://si0683.github.io/GameMonsterJS/examples/subwaysurf/) — 3D-раннер на Three.js | [Quiz Shooter](https://si0683.github.io/GameMonsterJS/examples/quizshooter/) |
+| [Quiz Tower](https://si0683.github.io/GameMonsterJS/examples/quiztowerdefense/) — башенная оборона | [Quiz Snake](https://si0683.github.io/GameMonsterJS/examples/quizsnake/) | [Quiz Jump](https://si0683.github.io/GameMonsterJS/examples/quizplatformer/) — платформер |
+| [Quiz Breakout](https://si0683.github.io/GameMonsterJS/examples/quizbreakout/) | | |
+
 > **Раньше называлась ArcadeJS.** В версии 3.0.0 глобальный объект `Arcade` стал `GameMonster`, файлы `arcade.*` — `gamemonster.*`; API тот же. Старые версии остаются на CDN — см. [CHANGELOG](CHANGELOG.md).
 
 ## Подключение

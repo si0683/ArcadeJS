@@ -269,8 +269,6 @@ function drop(game) {
 }
 ```
 
-More examples (3 files each): https://github.com/si0683/GameMonsterJS/tree/main/examples — `starter` (catch game), `flappy`, `snake` (draw hook, timers, quiz), `breakout` (upgrade picker), `platformer` (text map, camera, platforms), `shooter` (auto-fire, difficulty), `angry` (Matter.js physics), `runner3d` (Three.js), `adventure` (Kenney sprites, sounds and music).
-
 ## Rules for generated code
 
 - Start the JS with a `CONFIG` object of tweakable settings, then `GameMonster.create`, then helper functions.

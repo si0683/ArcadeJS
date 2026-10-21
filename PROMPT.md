@@ -25,7 +25,7 @@ OUTPUT — exactly 3 files, each in its own code block with the file name above 
 Plain HTML/CSS/JavaScript only: no TypeScript, React, npm, import/export, no build step.
 
 GameMonsterJS reference (read it first): https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@3.0.0/AI.md
-Backup: https://raw.githubusercontent.com/si0683/GameMonsterJS/main/AI.md · Examples: https://github.com/si0683/GameMonsterJS/tree/main/examples
+Backup: https://raw.githubusercontent.com/si0683/GameMonsterJS/main/AI.md
 
 If you cannot open the links, use this summary:
 - GameMonsterJS already has: menu, settings, 3-2-1 countdown, pause, game over, high score, HUD (score/lives/level), keyboard/mouse/touch/swipe input, on-screen buttons, sounds, music, particles, sprites, camera. Do NOT write your own menus, canvas, requestAnimationFrame or setInterval.

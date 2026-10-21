@@ -8,11 +8,13 @@ Optional add-ons load on demand: **Matter.js physics** (`physics: true`) and **T
 
 > **Formerly ArcadeJS.** Version 3.0.0 renamed the global `Arcade` → `GameMonster` and the files `arcade.*` → `gamemonster.*`; the API is unchanged. Old versions stay on the CDN — see [CHANGELOG](CHANGELOG.md).
 
+Example games — finished browser games in three files (HTML, CSS, JavaScript) with detailed comments in Russian:
+
 | | | |
 |---|---|---|
-| [Fruit Drop](https://si0683.github.io/GameMonsterJS/examples/starter/) — 50 lines | [Flappy](https://si0683.github.io/GameMonsterJS/examples/flappy/) | [Quiz Snake](https://si0683.github.io/GameMonsterJS/examples/snake/) |
-| [Space Breakout](https://si0683.github.io/GameMonsterJS/examples/breakout/) | [Little Fox](https://si0683.github.io/GameMonsterJS/examples/platformer/) — platformer | [Star Patrol](https://si0683.github.io/GameMonsterJS/examples/shooter/) — shooter |
-| [Angry Emoji](https://si0683.github.io/GameMonsterJS/examples/angry/) — physics | [Space Runner 3D](https://si0683.github.io/GameMonsterJS/examples/runner3d/) — Three.js | [Adventure](https://si0683.github.io/GameMonsterJS/examples/adventure/) — sprites & music |
+| [Flappy Bird](https://si0683.github.io/GameMonsterJS/examples/flappybird/) | [Subway Surf](https://si0683.github.io/GameMonsterJS/examples/subwaysurf/) — 3D runner, Three.js | [Quiz Shooter](https://si0683.github.io/GameMonsterJS/examples/quizshooter/) |
+| [Quiz Tower](https://si0683.github.io/GameMonsterJS/examples/quiztowerdefense/) — tower defense | [Quiz Snake](https://si0683.github.io/GameMonsterJS/examples/quizsnake/) | [Quiz Jump](https://si0683.github.io/GameMonsterJS/examples/quizplatformer/) — platformer |
+| [Quiz Breakout](https://si0683.github.io/GameMonsterJS/examples/quizbreakout/) | | |
 
 ## Install
 
@@ -75,10 +77,10 @@ GameMonsterJS is designed so that an LLM (ChatGPT, Claude, Qwen, GigaChat, DeepS
 gamemonster.js / gamemonster.css   the framework (VERSION constant in gamemonster.js)
 gamemonster.mjs / gamemonster.d.ts ES module entry and TypeScript types
 sounds/ sprites/         audio and sprite assets
-examples/<name>/         examples: index.html, style.css, script.js, codepen.html
+examples/<name>/         example games, copied as is from their own repositories
 AI.md                    API reference
 PROMPT.md, PROMPT.ru.md  prompt templates for LLMs
-tools/build.py           regenerates asset lists, example HTML and gamemonster.mjs
+tools/build.py           regenerates asset lists and gamemonster.mjs
 ```
 
 Release: bump `VERSION` in `gamemonster.js` and `package.json`, update `@x.y.z` links, run `python tools/build.py`, commit, tag `vX.Y.Z`, `npm publish`. Published versions are never changed — jsDelivr serves every tag forever.

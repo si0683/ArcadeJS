@@ -25,7 +25,7 @@ English version — [PROMPT.md](PROMPT.md). Полный справочник �
 Только HTML, CSS и чистый JavaScript: без TypeScript, React, npm, import/export и сборки.
 
 Справочник GameMonsterJS (прочитай сначала): https://cdn.jsdelivr.net/gh/si0683/GameMonsterJS@3.0.0/AI.md
-Запасная ссылка: https://raw.githubusercontent.com/si0683/GameMonsterJS/main/AI.md · Примеры: https://github.com/si0683/GameMonsterJS/tree/main/examples
+Запасная ссылка: https://raw.githubusercontent.com/si0683/GameMonsterJS/main/AI.md
 
 Если ссылки не открываются, вот главное:
 - В GameMonsterJS уже есть: меню, настройки, отсчёт 3-2-1, пауза, «Игра окончена», рекорд, панель очков/жизней/уровня, управление клавиатурой/мышью/касаниями/свайпами, экранные кнопки, звуки, музыка, частицы, спрайты, камера. НЕ пиши свои меню, <canvas>, requestAnimationFrame и setInterval.

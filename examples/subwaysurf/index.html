@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Subway Surf</title>
+  <!-- Подключаем файл с оформлением.
+       ?v=1 — номер версии: меняем его при каждом обновлении игры,
+       чтобы браузер не брал старый файл из кэша -->
+  <link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+
+<!-- ↓↓↓ Для CodePen копируйте в окно HTML всё, что ниже этой строки ↓↓↓
+     Только эту часть! CodePen сам подключает style.css и script.js.
+     Если скопировать строки <link> или <script src>, игра загрузится дважды
+     и появится ошибка «Identifier ... has already been declared». -->
+
+<!-- «Сцена» — весь экран игры. Внутрь JavaScript добавит 3D-холст (canvas) -->
+<div class="stage" id="stage">
+
+  <!-- Панель во время игры: очки, монетки, скорость, пауза -->
+  <div class="hud hidden" id="hud">
+    <div class="hud-box">
+      <span class="hud-label">Очки</span>
+      <b id="score">0</b>
+    </div>
+    <div class="hud-box hud-coins">
+      <span class="coin-icon"></span>
+      <b id="coins">0</b>
+    </div>
+    <div class="hud-right">
+      <div class="hud-box">
+        <span class="hud-label">Скорость</span>
+        <b><span id="speed">0</span> км/ч</b>
+      </div>
+      <button class="icon-btn" id="pauseButton" type="button" aria-label="Пауза">
+        <svg viewBox="0 0 24 24" width="22" height="22"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Обратный отсчёт 3 - 2 - 1 -->
+  <div class="countdown hidden" id="countdown"></div>
+
+  <!-- Всплывающая надпись («Быстрее!», «Новый рекорд!») -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ЭКРАН 1. Стартовое меню с инструкцией -->
+  <section class="screen" id="menuScreen">
+    <div class="card">
+      <h1 class="title">
+        <span class="title-top">Subway</span>
+        <span class="title-bottom">Surf</span>
+      </h1>
+      <p class="subtitle" id="worldTagline">Беги, прыгай и собирай монетки!</p>
+      <div class="best">🏆 Рекорд: <b id="menuBest">0</b></div>
+      <div class="buttons">
+        <button class="btn" id="startButton" type="button">Начать</button>
+        <button class="btn btn-secondary" id="settingsButton" type="button">Настройки</button>
+      </div>
+      <div class="howto">
+        <div><kbd>←</kbd> <kbd>→</kbd> или <kbd>A</kbd> <kbd>D</kbd> — сменить полосу</div>
+        <div><kbd>Пробел</kbd> или <kbd>↑</kbd> — прыжок</div>
+        <div>📱 Свайп влево / вправо / вверх</div>
+        <div><kbd>Esc</kbd> — пауза</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ЭКРАН 2. Настройки (кнопки выбора создаёт JavaScript) -->
+  <section class="screen screen-settings hidden" id="settingsScreen">
+    <div class="settings-panel">
+      <div class="settings-header">
+        <h2>Настройки</h2>
+        <button class="icon-btn" id="settingsClose" type="button" aria-label="Закрыть">✕</button>
+      </div>
+
+      <div class="setting">
+        <h3>Мир</h3>
+        <div class="options options-worlds" id="worldOptions"></div>
+      </div>
+
+      <div class="setting">
+        <h3>Цвет героя</h3>
+        <div class="options" id="heroOptions"></div>
+      </div>
+
+      <div class="setting">
+        <h3>Сложность</h3>
+        <div class="options options-segmented" id="difficultyOptions"></div>
+      </div>
+
+      <div class="setting">
+        <h3>Звук</h3>
+        <div class="row">
+          <label class="switch">
+            <input type="checkbox" id="soundToggle">
+            <span class="switch-slider"></span>
+          </label>
+          <input class="volume" type="range" id="volumeRange" min="0" max="100" step="5" aria-label="Громкость">
+        </div>
+      </div>
+
+      <div class="settings-footer">
+        <button class="btn btn-ghost btn-small" id="resetBestButton" type="button">Сбросить рекорд</button>
+        <button class="btn btn-small" id="settingsDone" type="button">Готово</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ЭКРАН 3. Пауза -->
+  <section class="screen hidden" id="pauseScreen">
+    <div class="card">
+      <h2 class="screen-title">Пауза</h2>
+      <div class="buttons">
+        <button class="btn" id="resumeButton" type="button">Продолжить</button>
+        <button class="btn btn-secondary" id="pauseMenuButton" type="button">В меню</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ЭКРАН 4. Игра окончена -->
+  <section class="screen screen-over hidden" id="gameOverScreen">
+    <div class="card">
+      <h2 class="over-title" id="overTitle">Subway Surf</h2>
+      <p class="over-subtitle">Игра окончена</p>
+      <div class="new-record hidden" id="newRecord">Новый рекорд!</div>
+      <div class="stats">
+        <div class="stat"><span>Очки</span><b id="finalScore">0</b></div>
+        <div class="stat"><span>Монетки</span><b id="finalCoins">0</b></div>
+        <div class="stat"><span>Рекорд</span><b id="finalBest">0</b></div>
+      </div>
+      <p class="blink">Нажми ПРОБЕЛ или тапни для рестарта</p>
+      <div class="buttons buttons-row">
+        <button class="btn" id="restartButton" type="button">Ещё раз</button>
+        <button class="btn btn-secondary" id="overMenuButton" type="button">В меню</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ↑↑↑ Для CodePen копируйте до этой строки (строку <script> ниже — НЕ копировать) ↑↑↑ -->
+
+<!-- Подключаем файл с логикой игры (номер версии — как у style.css).
+     Библиотеку Three.js для 3D скрипт загрузит сам -->
+<script src="script.js?v=1"></script>
+</body>
+</html>
