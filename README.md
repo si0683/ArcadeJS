@@ -6,6 +6,10 @@
 
 **Примеры:** [Фруктопад](https://si0683.github.io/ArcadeJS/examples/starter/) · [Флаппи](https://si0683.github.io/ArcadeJS/examples/flappy/) · [Змейка-умник](https://si0683.github.io/ArcadeJS/examples/snake/) · [Космо-арканоид](https://si0683.github.io/ArcadeJS/examples/breakout/) · [Лисёнок](https://si0683.github.io/ArcadeJS/examples/platformer/) · [Звёздный патруль](https://si0683.github.io/ArcadeJS/examples/shooter/) · [Злые эмодзи](https://si0683.github.io/ArcadeJS/examples/angry/) (физика) · [Космо-раннер 3D](https://si0683.github.io/ArcadeJS/examples/runner3d/)
 
+## 🚀 Быстрый старт с нейросетью
+
+Готовый шаблон промта — **[PROMPT.md](PROMPT.md)**: поменяйте строки «МОЯ ИГРА» (название, идея, управление, мир) и отправьте в Qwen, ChatGPT или GigaChat — получите игру в 3 файлах для CodePen.
+
 ## Подключение
 
 ```html
