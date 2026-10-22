@@ -57,6 +57,8 @@
     table { width: 100%; border-collapse: collapse; }
     td { padding: 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
     td:first-child { width: 128px; font-weight: 600; padding-right: 8px; }
+    td:first-child a { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--c1) 45%, transparent); text-underline-offset: 3px; transition: color 0.2s, text-decoration-color 0.2s; }
+    td:first-child a:hover { color: var(--c1); text-decoration-color: currentColor; }
     td:last-child { color: var(--muted); }
     table + h2 { margin-top: 16px; }
     footer { margin-top: 20px; color: var(--muted); font-size: 12.5px; }
@@ -89,12 +91,12 @@
       <div>
         <h2>Что установится</h2>
         <table>
-        <tr><td>Vite</td><td>сборка и сервер разработки</td></tr>
-        <tr><td>Phaser 4</td><td>сцены, камера, спрайты, ввод, анимации, тайлмапы, звук</td></tr>
-        <tr><td>Физика</td><td>Arcade по умолчанию, Matter.js встроен в Phaser</td></tr>
-        <tr><td>Tiled</td><td>уровень <code>level1.tmj</code>, редактор — <a href="https://www.mapeditor.org">mapeditor.org</a></td></tr>
-        <tr><td>TypeScript</td><td>строгие типы</td></tr>
-        <tr><td>SDK</td><td>без SDK или Яндекс Игры (<code>--sdk=yandex</code>)</td></tr>
+        <tr><td><a href="https://github.com/vitejs/vite" target="_blank" rel="noopener">Vite</a></td><td>сборка и сервер разработки</td></tr>
+        <tr><td><a href="https://github.com/phaserjs/phaser" target="_blank" rel="noopener">Phaser 4</a></td><td>сцены, камера, спрайты, ввод, анимации, тайлмапы, звук</td></tr>
+        <tr><td><a href="https://github.com/liabru/matter-js" target="_blank" rel="noopener">Физика</a></td><td>Arcade по умолчанию, Matter.js встроен в Phaser</td></tr>
+        <tr><td><a href="https://github.com/mapeditor/tiled" target="_blank" rel="noopener">Tiled</a></td><td>уровень <code>level1.tmj</code>, редактор — <a href="https://www.mapeditor.org">mapeditor.org</a></td></tr>
+        <tr><td><a href="https://github.com/microsoft/TypeScript" target="_blank" rel="noopener">TypeScript</a></td><td>строгие типы</td></tr>
+        <tr><td><a href="https://yandex.ru/dev/games/doc/ru/sdk/sdk-about" target="_blank" rel="noopener">SDK</a></td><td>без SDK или Яндекс Игры (<code>--sdk=yandex</code>)</td></tr>
         </table>
         <h2>Команды</h2>
         <table>
