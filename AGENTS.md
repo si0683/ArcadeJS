@@ -12,3 +12,4 @@ GameMonsterJS2D (since 4.0.0) is a **project starter**: the npm package `create-
 - Versions: `version` in package.json + CHANGELOG.md + tag `vX.Y.Z`; published tags are never changed.
 - `index.html` in the root is the GitHub Pages page: only a short install guide, Inter font, light/dark theme.
 - Tags v1.0.0–v3.0.0 hold the former CDN library (ArcadeJS / GameMonsterJS). Lesson repos pin them through jsDelivr — never delete those tags.
+- `PROMT.md` (Russian fill-in brief for AI assistants) lives in the root for download and as `template/PROMT.md` in every new project — keep both copies identical and in sync with the template (stack, scripts, file names).

@@ -26,6 +26,10 @@ Plus a playable platformer (run, jump, coins, slimes, spikes, water, flag), menu
 
 Matter.js and Howler.js are deliberately not separate packages: Phaser already contains Matter.js and its own sound manager.
 
+## Build it with AI
+
+[PROMT.md](https://raw.githubusercontent.com/si0683/GameMonsterJS2D/main/PROMT.md) is a fill-in brief for AI assistants (Claude Code, Cursor, Codex…): describe your 2D game — genre, controls, mechanics, levels, art — then tell the assistant in the project folder: *"Read PROMT.md and AGENTS.md and build the game from the «Промт» section. Start with a plan and questions."* The file is also copied into every new project. (The brief is in Russian.)
+
 ## Developing this repository
 
 ```bash

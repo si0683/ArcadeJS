@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.1.0 — 2026-10-22
+
+- `PROMT.md`: a fill-in brief (in Russian) for building a 2D game with an AI assistant — type, structure, features, design, quality rules, work stages and acceptance checklist. In the repository root for download and in every new project.
+
 ## 4.0.0 — 2026-10-22
 
 GameMonsterJS2D is now a project starter instead of the CDN library GameMonsterJS.

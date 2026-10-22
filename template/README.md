@@ -63,3 +63,9 @@ physics: { default: "matter", matter: { gravity: { x: 0, y: 1 } } }
 
 - Phaser: https://docs.phaser.io и примеры https://phaser.io/examples
 - Справка для нейросетей: `node_modules/phaser/skills/` и `AGENTS.md`
+
+## Через ИИ
+
+Заполните `PROMT.md` (техническое задание: жанр, механики, уровни, графика) и напишите ИИ-ассистенту в этой папке:
+
+> Прочитай PROMT.md и AGENTS.md и сделай игру по разделу «Промт». Начни с плана и вопросов.
