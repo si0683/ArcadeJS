@@ -1,6 +1,7 @@
 import Phaser from "phaser"
 
 import { TEXT_STYLE } from "../config"
+import { t } from "../i18n"
 
 // Runs on top of GameScene without camera zoom: score, lives and touch buttons.
 export class HudScene extends Phaser.Scene {
@@ -17,7 +18,7 @@ export class HudScene extends Phaser.Scene {
     const hearts = this.add.group()
 
     const render = () => {
-      score.setText(`Монеты: ${this.registry.get("score")}`)
+      score.setText(`${t("coins")}: ${this.registry.get("score")}`)
       hearts.clear(true, true)
       for (let i = 0; i < this.registry.get("lives"); i++) {
         hearts.add(this.add.image(this.scale.width - 30 - i * 40, 34, "heart").setScale(2))

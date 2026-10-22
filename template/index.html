@@ -7,11 +7,13 @@
     <link rel="icon" type="image/png" href="./assets/sprites/coin.png" />
     <style>
       html, body { margin: 0; height: 100%; background: #1d1630; overflow: hidden; }
+      /* Game portals require: no page scroll or pull-to-refresh, no text selection, no long-tap menu */
+      html, body { overscroll-behavior: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
       #game { width: 100%; height: 100%; }
       canvas { display: block; touch-action: none; }
     </style>
   </head>
-  <body>
+  <body oncontextmenu="return false">
     <div id="game"></div>
     <script type="module" src="./src/main.ts"></script>
   </body>

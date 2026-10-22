@@ -1,6 +1,8 @@
 import Phaser from "phaser"
 
 import { JUMP_SPEED, LIVES, PLAYER_SPEED, SLIME_SPEED, ZOOM } from "../config"
+import { t } from "../i18n"
+import { platform } from "../platform"
 import type { HudScene } from "./HudScene"
 
 type Body = Phaser.Physics.Arcade.Body
@@ -86,6 +88,7 @@ export class GameScene extends Phaser.Scene {
     this.sound.stopAll()
     this.sound.play("music", { loop: true, volume: 0.35 })
     this.scene.launch("hud")
+    platform.gameplayStart()
   }
 
   update(time: number) {
@@ -148,14 +151,14 @@ export class GameScene extends Phaser.Scene {
     this.sound.play("hurt", { volume: 0.5 })
     this.registry.inc("lives", -1)
     this.cameras.main.shake(200, 0.01)
-    if (this.registry.get("lives") <= 0) return this.finish("Игра окончена")
+    if (this.registry.get("lives") <= 0) return this.finish(t("gameOver"))
     if (respawn) this.player.setPosition(this.spawn.x, this.spawn.y).setVelocity(0, 0)
     else this.player.setVelocityY(-JUMP_SPEED * 0.5)
   }
 
   private win() {
     this.sound.play("win", { volume: 0.6 })
-    this.finish("Победа!")
+    this.finish(t("win"))
   }
 
   private finish(title: string) {
@@ -163,9 +166,21 @@ export class GameScene extends Phaser.Scene {
     this.finished = true
     this.physics.pause()
     this.sound.stopByKey("music")
-    this.time.delayedCall(1200, () => {
+    platform.gameplayStop()
+
+    // Best result: save it and send it to the leaderboard
+    const score = this.registry.get("score") as number
+    if (score > (this.registry.get("best") as number)) {
+      this.registry.set("best", score)
+      void platform.saveData({ best: score })
+    }
+    void platform.submitScore(score)
+
+    this.time.delayedCall(1200, async () => {
+      // Interstitial ad between rounds (Yandex SDK; without an SDK it resolves at once)
+      await platform.showFullscreenAd()
       this.scene.stop("hud")
-      this.scene.start("menu", { title, subtitle: `Монеты: ${this.registry.get("score")}` })
+      this.scene.start("menu", { title, subtitle: `${t("coins")}: ${score}` })
     })
   }
 }

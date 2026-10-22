@@ -1,5 +1,7 @@
 import Phaser from "phaser"
 
+import { platform } from "../platform"
+
 // Loads every asset once and builds the animations, then opens the menu.
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -30,7 +32,7 @@ export class PreloadScene extends Phaser.Scene {
     this.load.audio("music", "sounds/music.mp3")
   }
 
-  create() {
+  async create() {
     this.anims.create({
       key: "player-walk",
       frames: this.anims.generateFrameNumbers("player", { start: 0, end: 1 }),
@@ -43,6 +45,12 @@ export class PreloadScene extends Phaser.Scene {
       frameRate: 4,
       repeat: -1,
     })
+    // Saved progress (Yandex: player cloud data, otherwise localStorage)
+    const data = await platform.loadData()
+    this.registry.set("best", Number(data.best) || 0)
+
+    // Everything is loaded and the menu is about to show: tell the platform (Yandex: Game Ready)
+    platform.ready()
     this.scene.start("menu")
   }
 }

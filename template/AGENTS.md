@@ -26,6 +26,7 @@ Phaser ships its own skills: `node_modules/phaser/skills/<topic>/SKILL.md` (scen
 - Controls must work with keyboard and touch (`HudScene.touch`).
 - Asset paths are relative (`base: "./"` in vite.config.ts), so the build runs from any folder and GitHub Pages.
 - In dev mode `window.game` is the Phaser.Game: test with `game.scene.getScene("game")`.
+- Platform: game code never calls a portal SDK directly — only `platform` from `src/platform` (`init`, `ready` after loading, `gameplayStart`/`gameplayStop` around actual play, `showFullscreenAd` only at logical pauses, `showRewardedAd`, `loadData`/`saveData`, `submitScore`, `lang`, `onPause`/`onResume`). This project uses `none.ts` (localStorage, browser language, no ads). Player texts live in `src/i18n.ts` and follow `platform.lang`. `npm run zip` packs `dist/` into `game.zip` for game portals.
 - Texts for players in Russian by default; code comments in English.
 
 ## Check before finishing

@@ -1,9 +1,13 @@
 import Phaser from "phaser"
 
+import { platform } from "./platform"
 import { GameScene } from "./scenes/GameScene"
 import { HudScene } from "./scenes/HudScene"
 import { MenuScene } from "./scenes/MenuScene"
 import { PreloadScene } from "./scenes/PreloadScene"
+
+// The platform (SDK) first: it sets the language and may need to load its script
+await platform.init()
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -29,5 +33,15 @@ const game = new Phaser.Game({
   scene: [PreloadScene, MenuScene, GameScene, HudScene],
 })
 
+// Ads, purchase windows and hidden tabs: silence and freeze the game
+platform.onPause(() => {
+  game.sound.mute = true
+  game.pause()
+})
+platform.onResume(() => {
+  game.sound.mute = false
+  game.resume()
+})
+
 // In dev mode the game is reachable from the browser console: game.scene.getScene("game")
-if (import.meta.env.DEV) Object.assign(window, { game })
+if (import.meta.env.DEV) Object.assign(window, { game, platform })

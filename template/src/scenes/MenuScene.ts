@@ -1,6 +1,7 @@
 import Phaser from "phaser"
 
 import { TEXT_STYLE } from "../config"
+import { t } from "../i18n"
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -12,17 +13,18 @@ export class MenuScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor("#1d1630")
 
     this.add
-      .text(width / 2, height / 2 - 70, data.title ?? "Моя игра", { ...TEXT_STYLE, fontSize: "56px" })
+      .text(width / 2, height / 2 - 70, data.title ?? t("title"), { ...TEXT_STYLE, fontSize: "56px" })
       .setOrigin(0.5)
-    if (data.subtitle) {
-      this.add.text(width / 2, height / 2 - 10, data.subtitle, TEXT_STYLE).setOrigin(0.5)
-    }
+    const best = `${t("best")}: ${this.registry.get("best") ?? 0}`
+    this.add
+      .text(width / 2, height / 2 - 10, data.subtitle ? `${data.subtitle} · ${best}` : best, TEXT_STYLE)
+      .setOrigin(0.5)
     const hint = this.add
-      .text(width / 2, height / 2 + 60, "Нажмите, чтобы играть", { ...TEXT_STYLE, color: "#f59e0b" })
+      .text(width / 2, height / 2 + 60, t("play"), { ...TEXT_STYLE, color: "#f59e0b" })
       .setOrigin(0.5)
     this.tweens.add({ targets: hint, alpha: 0.3, duration: 700, yoyo: true, repeat: -1 })
     this.add
-      .text(width / 2, height - 40, "← → или A D — бег, ↑ / W / пробел — прыжок", {
+      .text(width / 2, height - 40, t("controls"), {
         ...TEXT_STYLE,
         fontSize: "18px",
         color: "#a69fc2",

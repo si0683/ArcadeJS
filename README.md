@@ -26,6 +26,17 @@ Plus a playable platformer (run, jump, coins, slimes, spikes, water, flag), menu
 
 Matter.js and Howler.js are deliberately not separate packages: Phaser already contains Matter.js and its own sound manager.
 
+## Platform SDK
+
+The installer asks which SDK to build for (or pass `--sdk`):
+
+```bash
+npm create gamemonsterjs2d@latest my-game -- --sdk=none     # plain web build (default)
+npm create gamemonsterjs2d@latest my-game -- --sdk=yandex   # Yandex Games SDK
+```
+
+The game talks to one interface, `platform` in `src/platform/` (init, game ready, gameplay start/stop, fullscreen and rewarded ads, saves, leaderboard, language, pause/resume). Without an SDK it uses localStorage and the browser; with `yandex` the same calls go to the [Yandex Games SDK](https://yandex.ru/dev/games/doc/ru/sdk/sdk-about), plus `npm run yandex` (test with the real SDK through `@yandex-games/sdk-dev-proxy`) and `YANDEX.md` with publishing steps and the moderation checklist. Every project gets `npm run zip` → `game.zip` with `index.html` at the root for game portals.
+
 ## Build it with AI
 
 [PROMT.md](https://raw.githubusercontent.com/si0683/GameMonsterJS2D/main/PROMT.md) is a fill-in brief for AI assistants (Claude Code, Cursor, Codex…): describe your 2D game — genre, controls, mechanics, levels, art — then tell the assistant in the project folder: *"Read PROMT.md and build the project from it."* The whole file is the prompt, so it can also be copied (Ctrl+A) into any AI chat; unfilled fields are fine, the AI asks about them. The file is also copied into every new project. (The brief is in Russian.)
