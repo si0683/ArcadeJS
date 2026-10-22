@@ -1,6 +1,6 @@
 {
   "name": "create-gamemonsterjs2d",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "2D browser game starter in one command: Vite + Phaser 4 + Tiled + TypeScript, with a ready platformer level, touch controls and GitHub Pages deploy.",
   "keywords": ["create", "starter", "template", "phaser", "phaser4", "vite", "tiled", "game", "2d", "platformer", "html5-game"],
   "homepage": "https://si0683.github.io/GameMonsterJS2D/",

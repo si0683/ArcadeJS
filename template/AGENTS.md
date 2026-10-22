@@ -6,7 +6,7 @@
 
 Phaser ships its own skills: `node_modules/phaser/skills/<topic>/SKILL.md` (scenes, sprites-and-images, animations, physics-arcade, physics-matter, tilemaps, input-keyboard-mouse-touch, audio-and-sound, cameras, tweens, particles, v3-to-v4-migration…). Read the relevant one before writing Phaser code. This is **Phaser 4**: no `setTintFill` (use `setTint().setTintMode(Phaser.TintModes.FILL)`), FX and masks are filters, `roundPixels` defaults to false. Do not copy Phaser 3 snippets blindly.
 
-If `PROMT.md` is filled in, it is the user's game design document: follow its «Промт» section (plan and questions first, then stages), while the rules below stay in force. An unfilled template (only `«…»` placeholders) is not a task.
+`PROMT.md` is the user's game design document; the whole file is the prompt. When the user asks to build from it, follow it: plan and questions first (including every unfilled `«…»` field), then stages; the rules below stay in force.
 
 ## Structure
 
