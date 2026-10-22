@@ -1,8 +1,11 @@
 import Phaser from "phaser"
 
-import { JUMP_SPEED, LIVES, PLAYER_SPEED, SLIME_SPEED, ZOOM } from "../config"
+import { playMusic, playSfx } from "../audio"
+import { COIN_POINTS, JUMP_SPEED, LIVES, PLAYER_SPEED, SLIME_SPEED, STOMP_POINTS, ZOOM } from "../config"
 import { t } from "../i18n"
 import { platform } from "../platform"
+import { isRecord, isStomp, loseLife } from "../rules"
+import { save } from "../save"
 import type { HudScene } from "./HudScene"
 
 type Body = Phaser.Physics.Arcade.Body
@@ -66,27 +69,30 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.slimes, this.ground)
     this.physics.add.overlap(this.player, coins, (_p, coin) => {
       ;(coin as Phaser.Physics.Arcade.Image).destroy()
-      this.sound.play("coin", { volume: 0.5 })
-      this.registry.inc("score", 1)
+      playSfx(this, "coin", 0.5)
+      this.registry.inc("score", COIN_POINTS)
     })
     this.physics.add.overlap(this.player, this.slimes, (_p, slime) => this.touchSlime(slime as Sprite))
     if (flag) this.physics.add.overlap(this.player, flag, () => this.win())
 
     // ---------- camera ----------
-    this.cameras.main
-      .setBounds(0, 0, worldWidth, worldHeight)
-      .setZoom(ZOOM)
-      .startFollow(this.player, true, 0.12, 0.12)
+    this.cameras.main.setBounds(0, 0, worldWidth, worldHeight).setZoom(ZOOM).startFollow(this.player, true, 0.12, 0.12)
 
     // ---------- input ----------
     const K = Phaser.Input.Keyboard.KeyCodes
     this.keys = this.input.keyboard!.addKeys({
-      left: K.LEFT, right: K.RIGHT, up: K.UP, a: K.A, d: K.D, w: K.W, space: K.SPACE,
+      left: K.LEFT,
+      right: K.RIGHT,
+      up: K.UP,
+      a: K.A,
+      d: K.D,
+      w: K.W,
+      space: K.SPACE,
     }) as typeof this.keys
 
     // ---------- sound + HUD ----------
     this.sound.stopAll()
-    this.sound.play("music", { loop: true, volume: 0.35 })
+    playMusic(this, "music", 0.35)
     this.scene.launch("hud")
     platform.gameplayStart()
   }
@@ -106,7 +112,7 @@ export class GameScene extends Phaser.Scene {
 
     if (jump && onFloor) {
       this.player.setVelocityY(-JUMP_SPEED)
-      this.sound.play("jump", { volume: 0.4 })
+      playSfx(this, "jump", 0.4)
     }
 
     if (!onFloor) this.player.anims.stop()
@@ -135,11 +141,11 @@ export class GameScene extends Phaser.Scene {
   private touchSlime(slime: Sprite) {
     const body = this.player.body as Body
     // Landing on top squashes the slime
-    if (body.velocity.y > 0 && this.player.y < slime.y - 6) {
+    if (isStomp(body.velocity.y, this.player.y, slime.y)) {
       slime.destroy()
       this.player.setVelocityY(-JUMP_SPEED * 0.6)
-      this.sound.play("coin", { volume: 0.5 })
-      this.registry.inc("score", 5)
+      playSfx(this, "coin", 0.5)
+      this.registry.inc("score", STOMP_POINTS)
     } else {
       this.hurt(this.time.now, false)
     }
@@ -148,16 +154,17 @@ export class GameScene extends Phaser.Scene {
   private hurt(time: number, respawn: boolean) {
     if (time < this.hurtUntil && !respawn) return
     this.hurtUntil = time + 1500
-    this.sound.play("hurt", { volume: 0.5 })
-    this.registry.inc("lives", -1)
+    playSfx(this, "hurt", 0.5)
+    const { lives, gameOver } = loseLife(this.registry.get("lives") as number)
+    this.registry.set("lives", lives)
     this.cameras.main.shake(200, 0.01)
-    if (this.registry.get("lives") <= 0) return this.finish(t("gameOver"))
+    if (gameOver) return this.finish(t("gameOver"))
     if (respawn) this.player.setPosition(this.spawn.x, this.spawn.y).setVelocity(0, 0)
     else this.player.setVelocityY(-JUMP_SPEED * 0.5)
   }
 
   private win() {
-    this.sound.play("win", { volume: 0.6 })
+    playSfx(this, "win", 0.6)
     this.finish(t("win"))
   }
 
@@ -170,10 +177,7 @@ export class GameScene extends Phaser.Scene {
 
     // Best result: save it and send it to the leaderboard
     const score = this.registry.get("score") as number
-    if (score > (this.registry.get("best") as number)) {
-      this.registry.set("best", score)
-      void platform.saveData({ best: score })
-    }
+    if (isRecord(score, save.get().best)) save.update({ best: score })
     void platform.submitScore(score)
 
     this.time.delayedCall(1200, async () => {

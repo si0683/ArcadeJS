@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.3.0 — 2026-10-22
+
+- Quality toolchain in the template: ESLint 10 + typescript-eslint, Prettier, Vitest unit tests (`npm test`), Playwright browser check (`npm run test:e2e`, `e2e/game.spec.ts`) and `npm run check` (lint + types + tests + build); the GitHub Pages workflow runs `npm run check` before deploying.
+- `src/platform/guard.ts`: every platform is wrapped — SDK errors are logged, hanging calls end after a time limit, failed rewarded ads return `false`, broken saves load as empty. Yandex: a failing `YaGames.init` falls back to no SDK, an ad error after opening still resumes the game.
+- `src/save.ts`: one save record (best + volume settings) with `parseSave` (old saves keep loading) and `save.update()` (merges; optional delay groups writes for portal limits); flushed on `pagehide`.
+- Sound and music volume in the menu (S / M keys or clicks, `src/audio.ts` `playSfx`/`playMusic`).
+- `src/rules.ts`: game rules as plain tested functions; `RECIPES.md`: step-by-step recipes (new enemy, level, sound, save field, screen, language, assets, accessibility, performance).
+
 ## 4.2.0 — 2026-10-22
 
 - Platform SDK choice in the installer: `--sdk=none` (default) or `--sdk=yandex`, or an interactive question. SDKs live in `sdks/<name>/` and are applied over the template.

@@ -1,0 +1,99 @@
+# Рецепты: как развивать игру
+
+Пошаговые инструкции для частых задач. Каждый рецепт заканчивается проверкой: `npm run check` (линтер, типы, тесты, сборка) и `npm run test:e2e` (игра в браузере).
+
+## Новый враг
+
+Пример — летучая мышь, которая летает влево-вправо.
+
+1. **Картинка.** Положите `public/assets/sprites/bat.png` (кадры 24×24 в одну строку). Автора и лицензию допишите в `public/assets/CREDITS.md`.
+2. **Загрузка и анимация** в `src/scenes/PreloadScene.ts`:
+   ```ts
+   this.load.spritesheet("bat", "sprites/bat.png", { frameWidth: 24, frameHeight: 24 })
+   // в create():
+   this.anims.create({ key: "bat-fly", frames: this.anims.generateFrameNumbers("bat", { start: 0, end: 1 }), frameRate: 8, repeat: -1 })
+   ```
+3. **Числа** — в `src/config.ts`: `export const BAT_SPEED = 60`, `export const BAT_POINTS = 10`.
+4. **Расстановка** — в Tiled: точки с именем `bat` в слое `objects`. В `GameScene.create()` рядом со слизнями:
+   ```ts
+   if (obj.name === "bat") {
+     const bat = this.bats.create(x, y - 12, "bat") as Sprite
+     bat.play("bat-fly").setVelocityX(-BAT_SPEED)
+     bat.body.setAllowGravity(false)
+   }
+   ```
+   Группу объявите как `slimes`, коллизию с землёй и `overlap` с игроком — так же.
+5. **Правило** (когда враг погибает, сколько даёт очков) — функцией в `src/rules.ts` и тестом в `src/rules.test.ts`.
+6. **Проверка в браузере** — шаг в `e2e/game.spec.ts`, если враг меняет основной цикл игры.
+
+## Новый уровень
+
+1. В Tiled: «Файл → Сохранить как…» → `public/assets/maps/level2.tmj`. Имена слоёв (`decor`, `ground`, `objects`) и точек не меняйте.
+2. `PreloadScene`: `this.load.tilemapTiledJSON("level2", "maps/level2.tmj")`.
+3. `GameScene`: номер уровня передаётся в сцену — `this.scene.start("game", { level: 2 })`, в `create(data)` — `` this.make.tilemap({ key: `level${data.level ?? 1}` }) ``.
+4. Победа на уровне N запускает уровень N + 1; после последнего — экран победы. Открытые уровни храните в сохранении (см. «Новое поле в сохранении»).
+
+## Новый звук
+
+1. Файл — в `public/assets/sounds/` (короткие эффекты — `.wav` или `.ogg`, музыка — `.mp3`). Автора — в `CREDITS.md`.
+2. `PreloadScene`: `this.load.audio("shoot", "sounds/shoot.wav")`.
+3. Воспроизведение — **только** через `src/audio.ts`, тогда работают настройки громкости:
+   ```ts
+   playSfx(this, "shoot", 0.5) // эффект: 0.5 — собственная громкость звука
+   playMusic(this, "boss", 0.3) // музыка: зацикленная
+   ```
+
+## Новое поле в сохранении
+
+Сохранение одно на игрока — `src/save.ts`. Пример: открытые уровни.
+
+1. Добавьте поле в `Save` и в `DEFAULT_SAVE`: `levels: 1`.
+2. В `parseSave()` — проверку: `levels: toNumber(data.levels, 1, 1, 99)`. Старые сохранения без поля получат значение по умолчанию.
+3. Сохраняйте через `save.update({ levels: 3 })` — остальные поля сохранятся сами.
+4. Тест в `src/save.test.ts`: старое сохранение без поля читается.
+
+Порталы ограничивают частоту сохранений (Яндекс: 100 раз за 5 минут). Сохраняйте в конце уровня, а не в каждом кадре; для частых изменений — `save.update(patch, 1000)`.
+
+## Новый экран (пауза, магазин, выбор уровня)
+
+1. Сцена `src/scenes/PauseScene.ts` (`class PauseScene extends Phaser.Scene`, ключ `"pause"`), добавьте её в список `scene` в `src/main.ts`.
+2. Открыть поверх игры: `this.scene.launch("pause"); this.scene.pause()`; закрыть: `this.scene.stop(); this.scene.resume("game")`.
+3. Во время паузы — `platform.gameplayStop()`, при возврате — `platform.gameplayStart()` (требование порталов).
+4. Управление: и мышью/тапом, и с клавиатуры (Esc — пауза, Enter — выбор).
+
+## Новый язык
+
+1. В `src/i18n.ts` добавьте набор `tr: { … }` с теми же ключами, что у `ru`. Тест `i18n.test.ts` проверит, что ничего не пропущено.
+2. В `pickLanguage()` верните `"tr"` для `lang === "tr"`.
+3. Тексты в коде — только через `t("ключ")`, без строк в сценах.
+
+## Реклама за награду
+
+```ts
+const rewarded = await platform.showRewardedAd()
+if (rewarded) this.registry.inc("lives", 1) // только если досмотрел
+```
+
+Показывайте только по кнопке игрока («+1 жизнь за рекламу»), никогда во время игры. Если реклама не загрузилась, `showRewardedAd()` вернёт `false` — игра продолжится без награды.
+
+## Ассеты
+
+- **Структура:** `public/assets/sprites`, `sounds`, `maps`; авторы — `CREDITS.md`.
+- **Спрайты:** кадры одной анимации — в одной картинке (spritesheet). Когда спрайтов много — атлас (бесплатный [Free Texture Packer](https://free-tex-packer.com), формат Phaser 3) и `this.load.atlas()`. Атлас — один запрос вместо десятков.
+- **Размер:** картинки — PNG, сжатие без потерь через [Squoosh](https://squoosh.app) или `oxipng`; музыка — MP3 96–128 кбит/с; эффекты — короткие WAV/OGG. Порталы ограничивают размер игры и время первой загрузки.
+- **Пиксель-арт:** `pixelArt: true` уже включён; размеры кадров — кратные тайлу.
+
+## Доступность и удобство
+
+- Всё управление дублируется: клавиатура + тач (`HudScene.touch`).
+- Громкость звука и музыки — в меню (S и M); новые звуки — только через `src/audio.ts`.
+- Без резких вспышек на весь экран: тряска камеры и мигание — короткие (до 0,5 с).
+- Важное не передавайте только цветом: враг отличается формой, не только оттенком.
+- Текст на экране — не мельче 16 px при ширине 960.
+
+## Производительность
+
+- Цель — **60 FPS на среднем телефоне**. Проверка: Chrome → DevTools → Performance, режим «4× slowdown».
+- Пули, частицы, враги, которые появляются часто, — через пул: `group.get(x, y)` и `setActive(false).setVisible(false)` вместо `destroy()`.
+- Не создавайте объекты в `update()` (векторы, массивы, строки текста) — переиспользуйте.
+- Тексты, которые меняются каждый кадр, обновляйте только при изменении значения (как HUD через `changedata`).

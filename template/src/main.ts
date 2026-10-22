@@ -1,6 +1,7 @@
 import Phaser from "phaser"
 
 import { platform } from "./platform"
+import { save } from "./save"
 import { GameScene } from "./scenes/GameScene"
 import { HudScene } from "./scenes/HudScene"
 import { MenuScene } from "./scenes/MenuScene"
@@ -43,5 +44,8 @@ platform.onResume(() => {
   game.resume()
 })
 
+// A settings change waits up to a second before saving: write it if the page is closed sooner
+addEventListener("pagehide", () => void save.flush())
+
 // In dev mode the game is reachable from the browser console: game.scene.getScene("game")
-if (import.meta.env.DEV) Object.assign(window, { game, platform })
+if (import.meta.env.DEV) Object.assign(window, { game, platform, save })

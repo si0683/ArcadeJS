@@ -26,6 +26,13 @@ Plus a playable platformer (run, jump, coins, slimes, spikes, water, flag), menu
 
 Matter.js and Howler.js are deliberately not separate packages: Phaser already contains Matter.js and its own sound manager.
 
+## Quality built in
+
+- **Checks:** ESLint + Prettier, strict TypeScript, [Vitest](https://vitest.dev) unit tests (game rules, saves, platform) and a [Playwright](https://playwright.dev) browser check: the game loads without errors, the menu works, the level starts, the player moves. All at once: `npm run check`; GitHub Actions runs it before every deploy.
+- **Reliable platform layer:** portal SDK errors and hangs never break the game — calls have time limits, a failed ad gives no reward and never freezes the game.
+- **Saves:** the record and the settings in one record, old saves keep loading; sound and music volume in the menu.
+- **RECIPES.md:** step by step — a new enemy, level, sound, screen, language; assets, accessibility, performance (in Russian).
+
 ## Platform SDK
 
 The installer asks which SDK to build for (or pass `--sdk`):

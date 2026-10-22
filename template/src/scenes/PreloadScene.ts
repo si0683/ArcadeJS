@@ -1,6 +1,7 @@
 import Phaser from "phaser"
 
 import { platform } from "../platform"
+import { save } from "../save"
 
 // Loads every asset once and builds the animations, then opens the menu.
 export class PreloadScene extends Phaser.Scene {
@@ -45,9 +46,8 @@ export class PreloadScene extends Phaser.Scene {
       frameRate: 4,
       repeat: -1,
     })
-    // Saved progress (Yandex: player cloud data, otherwise localStorage)
-    const data = await platform.loadData()
-    this.registry.set("best", Number(data.best) || 0)
+    // Saved progress and settings (Yandex: player cloud data, otherwise localStorage)
+    await save.load()
 
     // Everything is loaded and the menu is about to show: tell the platform (Yandex: Game Ready)
     platform.ready()

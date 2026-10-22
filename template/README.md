@@ -10,22 +10,33 @@ npm run dev      # игра на http://localhost:5173, правки видны 
 npm run build    # готовая игра в папке dist/ — загрузите на любой хостинг
 npm run preview  # посмотреть собранную dist/
 npm run zip      # game.zip (index.html в корне) для игровых порталов
+npm run check     # перед коммитом: линтер, типы, тесты, сборка
+npm test          # модульные тесты (Vitest): правила, сохранения, платформа
+npm run test:e2e  # игра в браузере (Playwright); первый раз: npx playwright install chromium
+npm run lint      # ESLint; npm run format — Prettier
 ```
+
+Как добавить врага, уровень, звук, экран, язык — пошагово в [RECIPES.md](RECIPES.md).
 
 ## Где что лежит
 
 ```
 src/main.ts              настройки игры: размер, физика, сцены
-src/config.ts            баланс: скорость, прыжок, жизни, зум
+src/config.ts            баланс: скорость, прыжок, жизни, зум, очки
+src/rules.ts             правила игры (тесты — rules.test.ts)
+src/save.ts              сохранение: рекорд и настройки громкости
+src/audio.ts             playSfx / playMusic с учётом громкости
+src/i18n.ts              тексты на русском и английском
 src/scenes/
   PreloadScene.ts        загрузка картинок, звуков, карты
-  MenuScene.ts           меню и экран «Победа / Игра окончена»
+  MenuScene.ts           меню, экран «Победа / Игра окончена», громкость (S, M)
   GameScene.ts           уровень: игрок, монеты, враги, флаг
   HudScene.ts            счёт, жизни, кнопки для телефона
 public/assets/
   maps/level1.tmj        уровень из Tiled
   maps/tiles.png         тайлы 18×18
   sprites/  sounds/      картинки и звуки (CREDITS.md — авторы)
+e2e/game.spec.ts         проверка игры в браузере (Playwright)
 ```
 
 ## Уровни в Tiled
@@ -52,7 +63,7 @@ physics: { default: "matter", matter: { gravity: { x: 0, y: 1 } } }
 ## Звук
 
 Встроенный звук Phaser: `this.load.audio("jump", "sounds/jump.wav")` в PreloadScene,
-`this.sound.play("jump")` в игре. Музыка включается после первого нажатия — так требуют браузеры.
+`playSfx(this, "jump", 0.4)` в игре (из `src/audio.ts` — учитывает громкость из меню). Музыка включается после первого нажатия — так требуют браузеры.
 
 ## Платформа (SDK)
 
