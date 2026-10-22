@@ -2,6 +2,7 @@ import Phaser from "phaser"
 
 import { platform } from "./platform"
 import { save } from "./save"
+import { shop } from "./shop"
 import { GameScene } from "./scenes/GameScene"
 import { HudScene } from "./scenes/HudScene"
 import { MenuScene } from "./scenes/MenuScene"
@@ -48,4 +49,4 @@ platform.onResume(() => {
 addEventListener("pagehide", () => void save.flush())
 
 // In dev mode the game is reachable from the browser console: game.scene.getScene("game")
-if (import.meta.env.DEV) Object.assign(window, { game, platform, save })
+if (import.meta.env.DEV) Object.assign(window, { game, platform, save, shop })

@@ -6,6 +6,7 @@ import { t } from "../i18n"
 import { platform } from "../platform"
 import { isRecord, isStomp, loseLife } from "../rules"
 import { save } from "../save"
+import { PRODUCTS, shop } from "../shop"
 import type { HudScene } from "./HudScene"
 
 type Body = Phaser.Physics.Arcade.Body
@@ -182,7 +183,7 @@ export class GameScene extends Phaser.Scene {
 
     this.time.delayedCall(1200, async () => {
       // Interstitial ad between rounds (Yandex SDK; without an SDK it resolves at once)
-      await platform.showFullscreenAd()
+      if (!shop.has(PRODUCTS.noAds)) await platform.showFullscreenAd()
       this.scene.stop("hud")
       this.scene.start("menu", { title, subtitle: `${t("coins")}: ${score}` })
     })

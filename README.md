@@ -35,14 +35,31 @@ Matter.js and Howler.js are deliberately not separate packages: Phaser already c
 
 ## Platform SDK
 
-The installer asks which SDK to build for (or pass `--sdk`):
+The installer asks which portal to build for (or pass `--sdk`):
 
 ```bash
-npm create gamemonsterjs2d@latest my-game -- --sdk=none     # plain web build (default)
-npm create gamemonsterjs2d@latest my-game -- --sdk=yandex   # Yandex Games SDK
+npm create gamemonsterjs2d@latest my-game -- --sdk=none         # plain web build (default)
+npm create gamemonsterjs2d@latest my-game -- --sdk=yandex       # Yandex Games
+npm create gamemonsterjs2d@latest my-game -- --sdk=vk           # VK Games (vk.com/games)
+npm create gamemonsterjs2d@latest my-game -- --sdk=crazygames   # CrazyGames
+npm create gamemonsterjs2d@latest my-game -- --sdk=poki         # Poki
 ```
 
-The game talks to one interface, `platform` in `src/platform/` (init, game ready, gameplay start/stop, fullscreen and rewarded ads, saves, leaderboard, language, pause/resume). Without an SDK it uses localStorage and the browser; with `yandex` the same calls go to the [Yandex Games SDK](https://yandex.ru/dev/games/doc/ru/sdk/sdk-about), plus `npm run yandex` (test with the real SDK through `@yandex-games/sdk-dev-proxy`) and `YANDEX.md` with publishing steps and the moderation checklist. Every project gets `npm run zip` → `game.zip` with `index.html` at the root for game portals.
+The game talks to one interface, `platform` in `src/platform/` (init, game ready, gameplay start/stop, fullscreen and rewarded ads, saves, leaderboard, purchases, language, pause/resume). The SDK only swaps the implementation; `guard()` keeps SDK errors and hangs from breaking the game.
+
+| SDK | Ads | Purchases | Cloud saves | Leaderboard | Guide |
+|---|---|---|---|---|---|
+| `none` | — | `npm run dev` only (test) | localStorage | — | — |
+| `yandex` | ✔ | ✔ | ✔ | ✔ | `YANDEX.md` |
+| `vk` | ✔ | needs your server | ✔ | — | `VK.md` |
+| `crazygames` | ✔ | Xsolla, approved games | ✔ | — | `CRAZYGAMES.md` |
+| `poki` | ✔ | — | localStorage | — | `POKI.md` |
+
+**Purchases** go through `src/shop.ts`: owned products are restored on every start, permanent and consumable products are supported. The template sells "Remove ads" in the menu wherever the portal allows purchases.
+
+VK Play (vkplay.ru) has no public JS SDK for HTML5 games (partner integration with a server only), so the VK option targets VK Games.
+
+Every project gets `npm run zip` → `game.zip` with `index.html` at the root for game portals.
 
 ## Build it with AI
 

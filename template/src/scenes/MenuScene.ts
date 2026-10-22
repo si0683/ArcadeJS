@@ -3,6 +3,7 @@ import Phaser from "phaser"
 import { TEXT_STYLE } from "../config"
 import { t, volumeLabel } from "../i18n"
 import { nextVolume, save, type Settings } from "../save"
+import { PRODUCTS, shop } from "../shop"
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -51,6 +52,23 @@ export class MenuScene extends Phaser.Scene {
       return { change, code: `Key${shortcut}` }
     }
     const settings = [button(16, "sound", "S"), button(46, "music", "M")]
+
+    // ---------- shop: "Remove ads" while it is sold here and not bought yet (click or B) ----------
+    if (shop.available && !shop.has(PRODUCTS.noAds)) {
+      const label = `${t("noAds")} · ${shop.product(PRODUCTS.noAds).price}  [B]`
+      const offer = this.add.text(20, 16, label, { ...small, color: "#f59e0b" }).setInteractive({ useHandCursor: true })
+      let buying = false
+      const buyNoAds = async () => {
+        if (buying || shop.has(PRODUCTS.noAds)) return
+        buying = true
+        // The payment window pauses the game through platform.onPause. After a purchase the offer
+        // just disappears: the menu is not restarted, so a quick Enter cannot race with it
+        if ((await shop.buy(PRODUCTS.noAds)) && offer.scene) offer.destroy()
+        buying = false
+      }
+      offer.on("pointerdown", buyNoAds)
+      settings.push({ change: () => void buyNoAds(), code: "KeyB" })
+    }
 
     // Browsers allow sound only after a click or key press, so the game starts on input
     let started = false

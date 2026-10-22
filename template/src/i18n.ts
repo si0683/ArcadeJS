@@ -14,6 +14,7 @@ export const texts = {
     sound: "Звук",
     music: "Музыка",
     off: "выкл",
+    noAds: "Убрать рекламу",
   },
   en: {
     title: "My Game",
@@ -26,6 +27,7 @@ export const texts = {
     sound: "Sound",
     music: "Music",
     off: "off",
+    noAds: "Remove ads",
   },
 }
 

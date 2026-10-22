@@ -2,6 +2,7 @@ import Phaser from "phaser"
 
 import { platform } from "../platform"
 import { save } from "../save"
+import { shop } from "../shop"
 
 // Loads every asset once and builds the animations, then opens the menu.
 export class PreloadScene extends Phaser.Scene {
@@ -48,6 +49,8 @@ export class PreloadScene extends Phaser.Scene {
     })
     // Saved progress and settings (Yandex: player cloud data, otherwise localStorage)
     await save.load()
+    // Bought products (Yandex: player purchases); also delivers ones paid but not given last time
+    await shop.restore()
 
     // Everything is loaded and the menu is about to show: tell the platform (Yandex: Game Ready)
     platform.ready()
