@@ -5,6 +5,7 @@ GameMonsterJS2D (since 4.0.0) is a **project starter**: the npm package `create-
 - `bin/create.mjs` — the CLI, Node ≥ 20.19, no dependencies. The template keeps `.gitignore` as `template/_gitignore` (npm never publishes `.gitignore`); the CLI renames it.
 - `template/` — a working game. Work on it in place: `cd template && npm install && npm run dev`. `template/AGENTS.md` is the guide for agents in the user's project — keep it in sync.
 - Stack decisions: Matter.js is used through Phaser (`physics.default = "matter"`), never as a separate package; sound goes through Phaser's sound manager, no Howler.
+- Template dev dependencies beyond the toolchain: Tweakpane (dev tools, `src/debug/`, loaded only behind `import.meta.env.DEV` so it never reaches `dist/`), `maxrects-packer` + `pngjs` for `scripts/atlas.mjs` (pure JS, no native builds). Runtime dependency stays Phaser only — check `npm run size` after changes.
 - Level: `template/public/assets/maps/level1.tmj` (Tiled JSON, embedded tileset `tiles`, 18 px tiles). Keep layer names `decor`, `ground`, `objects` and object names `player`, `coin`, `slime`, `flag` in sync with `GameScene.ts`.
 - Assets: only CC0 or own work; list every file in `template/public/assets/CREDITS.md`.
 - Player texts Russian, code comments English.

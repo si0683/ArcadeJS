@@ -12,12 +12,14 @@ describe("parseSave", () => {
   it("keeps valid values and clamps the rest", () => {
     expect(parseSave({ best: 42, settings: { sound: 0.5, music: 0 } })).toEqual({
       best: 42,
-      settings: { sound: 0.5, music: 0 },
+      settings: { sound: 0.5, music: 0, effects: true },
     })
     expect(parseSave({ best: -5, settings: { sound: 3, music: -1 } })).toEqual({
       best: 0,
-      settings: { sound: 1, music: 0 },
+      settings: { sound: 1, music: 0, effects: true },
     })
+    expect(parseSave({ settings: { effects: false } }).settings.effects).toBe(false)
+    expect(parseSave({ settings: { effects: "no" } }).settings.effects).toBe(true)
   })
 
   it("reads saves of the old format ({ best } only)", () => {
@@ -57,7 +59,7 @@ describe("createSaveStore", () => {
     const store = createSaveStore(target)
     await store.load()
     store.update({ best: 10 })
-    expect(target.saveData).toHaveBeenLastCalledWith({ best: 10, settings: { sound: 0.25, music: 0 } })
+    expect(target.saveData).toHaveBeenLastCalledWith({ best: 10, settings: { sound: 0.25, music: 0, effects: true } })
   })
 
   it("groups quick settings changes into one write", async () => {
@@ -70,7 +72,7 @@ describe("createSaveStore", () => {
     expect(target.saveData).not.toHaveBeenCalled()
     vi.advanceTimersByTime(1000)
     expect(target.saveData).toHaveBeenCalledTimes(1)
-    expect(target.saveData).toHaveBeenCalledWith({ best: 0, settings: { sound: 0.5, music: 0 } })
+    expect(target.saveData).toHaveBeenCalledWith({ best: 0, settings: { sound: 0.5, music: 0, effects: true } })
   })
 
   it("flush writes a delayed change at once", async () => {

@@ -1,5 +1,6 @@
 import Phaser from "phaser"
 
+import { makeFxTextures } from "../fx"
 import { platform } from "../platform"
 import { save } from "../save"
 import { shop } from "../shop"
@@ -35,6 +36,8 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   async create() {
+    // Particle textures are drawn in code: no files to load
+    makeFxTextures(this)
     this.anims.create({
       key: "player-walk",
       frames: this.anims.generateFrameNumbers("player", { start: 0, end: 1 }),

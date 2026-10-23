@@ -33,8 +33,14 @@ test("the game loads, starts and the player moves", async ({ page }) => {
 
   // Settings shortcut: M lowers the music volume and does not start the game
   await page.keyboard.press("KeyM")
-  expect(await inGame(page, (w) => w.save.get().settings.music)).toBe(0.75)
+  // Phaser handles keys on its next frame: poll instead of reading at once
+  await expect.poll(() => inGame(page, (w) => w.save.get().settings.music)).toBe(0.75)
   expect(await inGame(page, (w) => w.game.scene.isActive("menu"))).toBe(true)
+  // E switches the screen effects off and back on
+  await page.keyboard.press("KeyE")
+  await expect.poll(() => inGame(page, (w) => w.save.get().settings.effects)).toBe(false)
+  await page.keyboard.press("KeyE")
+  await expect.poll(() => inGame(page, (w) => w.save.get().settings.effects)).toBe(true)
 
   // Shop: where purchases work (dev mode without an SDK, Yandex), B buys "Remove ads"
   if (await inGame(page, (w) => w.platform.features.purchases)) {
@@ -61,9 +67,34 @@ test("the game loads, starts and the player moves", async ({ page }) => {
   await page.keyboard.up("ArrowRight")
   expect(await playerX()).toBeGreaterThan(before + 20)
 
+  // Jump: Space lifts the player off the ground
+  const playerY = () =>
+    page.evaluate(() => {
+      const scene = (window as unknown as GameWindow).game.scene.getScene("game") as unknown as {
+        player: { y: number }
+      }
+      return scene.player.y
+    })
+  await page.waitForTimeout(300)
+  const ground = await playerY()
+  await page.keyboard.down("Space")
+  await page.waitForTimeout(200)
+  expect(await playerY()).toBeLessThan(ground - 10)
+  await page.keyboard.up("Space")
+  await page.waitForTimeout(800)
+
+  // Pause: Esc opens the pause screen and freezes the level, Esc again resumes
+  await page.keyboard.press("Escape")
+  await activeScene(page, "pause")
+  expect(await inGame(page, (w) => w.game.scene.isPaused("game"))).toBe(true)
+  await page.screenshot({ path: "test-results/pause.png" })
+  await page.keyboard.press("Escape")
+  await activeScene(page, "game")
+  expect(await inGame(page, (w) => w.game.scene.isActive("pause"))).toBe(false)
+
   // With a portal SDK the game reports loading and play (moderation checks these)
   const calls = await sdkCalls(page)
-  if (calls) expect(calls).toEqual(expect.arrayContaining(["ready", "gameplayStart"]))
+  if (calls) expect(calls).toEqual(expect.arrayContaining(["ready", "gameplayStart", "gameplayStop"]))
 
   expect(errors).toEqual([])
 })

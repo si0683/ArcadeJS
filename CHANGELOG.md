@@ -1,5 +1,23 @@
 # Changelog
 
+## 4.5.0 — 2026-10-23
+
+Game feel and professional tooling in the template.
+
+- Movement: `src/movement.ts` — acceleration/deceleration, air control, coyote time, jump buffer, variable jump height, fall gravity and max fall speed as plain tested functions; numbers in `PLAYER` (`src/config.ts`).
+- Structure: entities `src/entities/Player.ts` and `Slime.ts`; `src/fsm.ts` state machine (player animation states); `config.ts` holds objects (`PLAYER`, `CAMERA`, `FX`, `GRAVITY`) instead of loose constants (`PLAYER_SPEED`, `JUMP_SPEED`, `ZOOM` are gone).
+- Input: `src/input.ts` `Controls` — actions from keyboard, gamepad (enabled in the config) and HUD touch buttons with `justPressed`/`isDown`/`justReleased`/`axisX`.
+- Juice: `src/fx.ts` — dust, sparks, floating "+1", squash and stretch, hit flash, freeze frames, camera shake; HUD score pops; camera dead zone and look-ahead.
+- Look: `src/look.ts` — Phaser 4 camera filters (vignette, colour grade) and a glow layer for coins and sparks; `src/transition.ts` scene fades.
+- Pause screen (`PauseScene`: Esc / P / gamepad Start / HUD "II" button) with resume, volume, effects, main menu; `src/ui.ts` `MenuList` for keyboard/gamepad/pointer menus with visible focus.
+- "Effects" setting (menu key E, pause menu) saved with the settings: turns off shake, flashes, freeze frames and filters.
+- Dev tools under `npm run dev` only (`src/debug/`): F1 overlay, F2 Tweakpane live tuning with "copy values for config.ts", F3 hitboxes, F4 god mode, F6 win the level.
+- Analytics: `src/telemetry.ts` — `track()` events (level start/complete, game over, deaths with cause and position, quit), `captureErrors()`, `beaconSink()`.
+- Assets: `npm run atlas` (`scripts/atlas.mjs`, pure JS: `art/atlas/<name>/*.png` → atlas PNG + Phaser JSON with padding and extrusion); `npm run size` (`scripts/size.mjs`) — size budget, part of `npm run check`.
+- Fixes: menu toggles no longer flip twice when Phaser re-delivers a key event; a key or touch tap shorter than a frame is no longer lost (touch jump, pause button); keys released during a pause do not stay "held".
+- Tests: movement, state machine, telemetry, the effects setting; the browser check now jumps, pauses and resumes.
+- `RECIPES.md`: juice, filters, Aseprite, atlas, controls and gamepad, live tuning, state machine, analytics, libraries per genre; enemy and screen recipes use entities, `MenuList` and fades.
+
 ## 4.4.0 — 2026-10-22
 
 - In-game purchases in the `Platform` interface: `features` (ads / purchases / leaderboard), `getProducts`, `purchase`, `getPurchases`, `consumePurchase`; `guard()` covers them (a payment window that never answers ends as a failed purchase, broken catalogs are filtered).

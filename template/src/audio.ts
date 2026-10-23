@@ -11,9 +11,21 @@ export function playSfx(scene: Phaser.Scene, key: string, volume = 1) {
   if (level > 0) scene.sound.play(key, { volume: level })
 }
 
+/** Own loudness of every music track that is playing, to re-apply the setting when it changes */
+const musicVolume = new WeakMap<Phaser.Sound.BaseSound, number>()
+
 /** Looped music; returns the sound so the caller can stop it */
 export function playMusic(scene: Phaser.Scene, key: string, volume = 1) {
   const music = scene.sound.add(key, { loop: true, volume: volume * save.get().settings.music })
+  musicVolume.set(music, volume)
   music.play()
   return music
+}
+
+/** The music setting changed (pause menu): apply it to the music already playing */
+export function updateMusicVolume(scene: Phaser.Scene) {
+  for (const sound of scene.sound.getAllPlaying()) {
+    const volume = musicVolume.get(sound)
+    if (volume !== undefined) (sound as Phaser.Sound.WebAudioSound).setVolume(volume * save.get().settings.music)
+  }
 }

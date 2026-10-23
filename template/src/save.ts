@@ -8,6 +8,8 @@ export interface Settings {
   sound: number
   /** Music volume, 0…1 (0 — off) */
   music: number
+  /** Screen shake, flashes, freeze frames and filters (off — calmer picture, weaker devices) */
+  effects: boolean
 }
 
 export interface Save {
@@ -19,7 +21,7 @@ export interface Save {
 /** Volume levels a settings button cycles through */
 export const VOLUME_STEPS = [1, 0.75, 0.5, 0.25, 0]
 
-export const DEFAULT_SAVE: Save = { best: 0, settings: { sound: 1, music: 1 } }
+export const DEFAULT_SAVE: Save = { best: 0, settings: { sound: 1, music: 1, effects: true } }
 
 const toNumber = (value: unknown, fallback: number, min: number, max: number) =>
   typeof value === "number" && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback
@@ -33,6 +35,7 @@ export function parseSave(raw: unknown): Save {
     settings: {
       sound: toNumber(settings.sound, DEFAULT_SAVE.settings.sound, 0, 1),
       music: toNumber(settings.music, DEFAULT_SAVE.settings.music, 0, 1),
+      effects: typeof settings.effects === "boolean" ? settings.effects : DEFAULT_SAVE.settings.effects,
     },
   }
 }

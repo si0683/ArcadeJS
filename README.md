@@ -26,12 +26,23 @@ Plus a playable platformer (run, jump, coins, slimes, spikes, water, flag), menu
 
 Matter.js and Howler.js are deliberately not separate packages: Phaser already contains Matter.js and its own sound manager.
 
+## Game feel and pro tools
+
+- **Movement that forgives:** acceleration, coyote time, jump buffer, variable jump height, faster fall — plain tested math in `src/movement.ts`, numbers in `src/config.ts`.
+- **Juice:** dust, sparks, floating "+1", squash and stretch, hit flash, freeze frames, camera shake, look-ahead camera (`src/fx.ts`).
+- **Phaser 4 filters:** vignette, colour grade and a glow layer for pickups (`src/look.ts`); fades between scenes. An "Effects" setting turns screen effects off (accessibility, weak devices).
+- **Input by action:** keyboard, gamepad and touch through one `Controls` (`src/input.ts`); pause screen and menus navigable by any of them.
+- **Structure for bigger games:** entities in `src/entities/`, a `StateMachine` for player and enemy modes.
+- **Dev tools in `npm run dev`:** F1 overlay (FPS, player state, events), F2 live tuning panel ([Tweakpane](https://tweakpane.github.io/docs/)) that copies values back into the config, F3 hitboxes, F4 god mode, F6 win — never shipped to players.
+- **Assets and budget:** `npm run atlas` packs sprites into a texture atlas, Aseprite animations load directly, `npm run size` keeps the build within a size budget.
+- **Analytics:** `track()` events (level start/complete, deaths with position, quits) and error capture with pluggable sinks (`src/telemetry.ts`).
+
 ## Quality built in
 
-- **Checks:** ESLint + Prettier, strict TypeScript, [Vitest](https://vitest.dev) unit tests (game rules, saves, platform) and a [Playwright](https://playwright.dev) browser check: the game loads without errors, the menu works, the level starts, the player moves. All at once: `npm run check`; GitHub Actions runs it before every deploy.
+- **Checks:** ESLint + Prettier, strict TypeScript, [Vitest](https://vitest.dev) unit tests (game rules, saves, platform) and a [Playwright](https://playwright.dev) browser check: the game loads without errors, the menu works, the level starts, the player runs, jumps and pauses. All at once: `npm run check`; GitHub Actions runs it before every deploy.
 - **Reliable platform layer:** portal SDK errors and hangs never break the game — calls have time limits, a failed ad gives no reward and never freezes the game.
 - **Saves:** the record and the settings in one record, old saves keep loading; sound and music volume in the menu.
-- **RECIPES.md:** step by step — a new enemy, level, sound, screen, language; assets, accessibility, performance (in Russian).
+- **RECIPES.md:** step by step — a new enemy, level, sound, screen, language, purchase; juice, filters, Aseprite, atlases, gamepad, live tuning, state machines, analytics, libraries per genre; assets, accessibility, performance (in Russian).
 
 ## Platform SDK
 

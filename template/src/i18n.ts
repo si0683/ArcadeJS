@@ -6,7 +6,7 @@ export const texts = {
   ru: {
     title: "Моя игра",
     play: "Нажмите, чтобы играть",
-    controls: "← → или A D — бег, ↑ / W / пробел — прыжок",
+    controls: "← → или A D — бег, ↑ / W / пробел — прыжок, Esc — пауза. Геймпад тоже работает",
     coins: "Монеты",
     best: "Рекорд",
     win: "Победа!",
@@ -14,12 +14,17 @@ export const texts = {
     sound: "Звук",
     music: "Музыка",
     off: "выкл",
+    on: "вкл",
+    effects: "Эффекты",
+    paused: "Пауза",
+    resume: "Продолжить",
+    toMenu: "В меню",
     noAds: "Убрать рекламу",
   },
   en: {
     title: "My Game",
     play: "Tap or press any key to play",
-    controls: "← → or A D — run, ↑ / W / space — jump",
+    controls: "← → or A D — run, ↑ / W / space — jump, Esc — pause. Gamepads work too",
     coins: "Coins",
     best: "Best",
     win: "You win!",
@@ -27,6 +32,11 @@ export const texts = {
     sound: "Sound",
     music: "Music",
     off: "off",
+    on: "on",
+    effects: "Effects",
+    paused: "Paused",
+    resume: "Resume",
+    toMenu: "Main menu",
     noAds: "Remove ads",
   },
 }
@@ -48,4 +58,9 @@ export function t(key: Key): string {
 /** "Звук: 75%" / "Звук: выкл" */
 export function volumeLabel(key: "sound" | "music", volume: number): string {
   return `${t(key)}: ${volume > 0 ? `${Math.round(volume * 100)}%` : t("off")}`
+}
+
+/** "Эффекты: вкл" / "Effects: off" */
+export function effectsLabel(on: boolean): string {
+  return `${t("effects")}: ${t(on ? "on" : "off")}`
 }

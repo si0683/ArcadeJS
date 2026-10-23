@@ -1,25 +1,32 @@
 import Phaser from "phaser"
 
 import { playMusic, playSfx } from "../audio"
-import { COIN_POINTS, JUMP_SPEED, LIVES, PLAYER_SPEED, SLIME_SPEED, STOMP_POINTS, ZOOM } from "../config"
+import { cheats } from "../cheats"
+import { CAMERA, COIN_POINTS, FX, LIVES, PLAYER, STOMP_POINTS } from "../config"
+import { Player } from "../entities/Player"
+import { Slime } from "../entities/Slime"
+import { Fx } from "../fx"
 import { t } from "../i18n"
+import { Controls } from "../input"
+import { Look } from "../look"
 import { platform } from "../platform"
 import { isRecord, isStomp, loseLife } from "../rules"
 import { save } from "../save"
 import { PRODUCTS, shop } from "../shop"
+import { track } from "../telemetry"
+import { fadeIn, goTo } from "../transition"
 import type { HudScene } from "./HudScene"
 
-type Body = Phaser.Physics.Arcade.Body
-type Sprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
-
 export class GameScene extends Phaser.Scene {
-  private player!: Sprite
+  player!: Player
+  fx!: Fx
+  look!: Look
+  private controls!: Controls
   private ground!: Phaser.Tilemaps.TilemapLayer
   private slimes!: Phaser.Physics.Arcade.Group
-  private keys!: Record<"left" | "right" | "up" | "a" | "d" | "w" | "space", Phaser.Input.Keyboard.Key>
   private spawn = new Phaser.Math.Vector2()
-  private hurtUntil = 0
   private finished = false
+  private startedAt = 0
 
   constructor() {
     super("game")
@@ -27,7 +34,10 @@ export class GameScene extends Phaser.Scene {
 
   create() {
     this.finished = false
+    this.startedAt = this.time.now
     this.registry.set({ score: 0, lives: LIVES })
+    this.fx = new Fx(this)
+    this.look = new Look(this.cameras.main)
 
     // ---------- level from Tiled ----------
     const map = this.make.tilemap({ key: "level1" })
@@ -44,6 +54,9 @@ export class GameScene extends Phaser.Scene {
     this.physics.world.setBoundsCollision(true, true, true, false) // the bottom stays open: you can fall
 
     // ---------- objects placed in Tiled (layer "objects", by name) ----------
+    // Coins and sparks glow: one filter on a layer instead of one per object
+    const glow = this.look.glowLayer().setDepth(4)
+    glow.add(this.fx.sparkEmitter)
     const coins = this.physics.add.staticGroup()
     this.slimes = this.physics.add.group()
     let flag: Phaser.Types.Physics.Arcade.ImageWithStaticBody | undefined
@@ -52,124 +65,129 @@ export class GameScene extends Phaser.Scene {
       const x = obj.x ?? 0
       const y = obj.y ?? 0
       if (obj.name === "player") this.spawn.set(x, y - 12)
-      if (obj.name === "coin") coins.create(x, y - 9, "coin")
+      if (obj.name === "coin") glow.add(coins.create(x, y - 9, "coin"))
       if (obj.name === "flag") flag = this.physics.add.staticImage(x, y - 9, "flag")
       if (obj.name === "slime") {
-        const slime = this.slimes.create(x, y - 12, "slime") as Sprite
-        slime.play("slime-walk").setVelocityX(-SLIME_SPEED).setCollideWorldBounds(true)
-        slime.body.setSize(18, 14).setOffset(3, 10)
+        const slime = new Slime(this, x, y - 12)
+        this.slimes.add(slime)
+        slime.start()
       }
     }
 
     // ---------- player ----------
-    this.player = this.physics.add.sprite(this.spawn.x, this.spawn.y, "player", 0)
-    this.player.setCollideWorldBounds(true)
-    this.player.body.setSize(14, 20).setOffset(5, 4)
+    this.player = new Player(this, this.spawn.x, this.spawn.y, this.fx)
 
     this.physics.add.collider(this.player, this.ground)
     this.physics.add.collider(this.slimes, this.ground)
-    this.physics.add.overlap(this.player, coins, (_p, coin) => {
-      ;(coin as Phaser.Physics.Arcade.Image).destroy()
+    this.physics.add.overlap(this.player, coins, (_p, obj) => {
+      const coin = obj as Phaser.Physics.Arcade.Image
+      this.fx.sparks(coin.x, coin.y)
+      this.fx.popText(coin.x, coin.y - 6, `+${COIN_POINTS}`)
+      coin.destroy()
       playSfx(this, "coin", 0.5)
       this.registry.inc("score", COIN_POINTS)
     })
-    this.physics.add.overlap(this.player, this.slimes, (_p, slime) => this.touchSlime(slime as Sprite))
+    this.physics.add.overlap(this.player, this.slimes, (_p, slime) => this.touchSlime(slime as Slime))
     if (flag) this.physics.add.overlap(this.player, flag, () => this.win())
 
-    // ---------- camera ----------
-    this.cameras.main.setBounds(0, 0, worldWidth, worldHeight).setZoom(ZOOM).startFollow(this.player, true, 0.12, 0.12)
+    // ---------- camera: smooth follow, a dead zone and a look-ahead in the run direction ----------
+    const camera = this.cameras.main
+    camera.setBounds(0, 0, worldWidth, worldHeight).setZoom(CAMERA.zoom)
+    camera.startFollow(this.player, true, CAMERA.lerp, CAMERA.lerp)
+    camera.setDeadzone(24, 40)
+    camera.followOffset.set(0, 0)
+    fadeIn(this)
 
-    // ---------- input ----------
-    const K = Phaser.Input.Keyboard.KeyCodes
-    this.keys = this.input.keyboard!.addKeys({
-      left: K.LEFT,
-      right: K.RIGHT,
-      up: K.UP,
-      a: K.A,
-      d: K.D,
-      w: K.W,
-      space: K.SPACE,
-    }) as typeof this.keys
+    // ---------- input: keyboard, gamepad and the HUD touch buttons ----------
+    const hud = () => this.scene.get("hud") as HudScene
+    this.controls = new Controls(this, () => hud().touch)
+    // Back from the pause screen: keys and touches released during the pause must not stay "held"
+    const resume = () => this.controls.reset()
+    this.events.on("resume", resume)
+    this.events.once("shutdown", () => this.events.off("resume", resume))
 
     // ---------- sound + HUD ----------
     this.sound.stopAll()
     playMusic(this, "music", 0.35)
     this.scene.launch("hud")
     platform.gameplayStart()
+    track("level_start", { level: 1 })
   }
 
-  update(time: number) {
+  update(time: number, delta: number) {
     if (this.finished) return
-    const touch = (this.scene.get("hud") as HudScene).touch
-    const body = this.player.body
-    const left = this.keys.left.isDown || this.keys.a.isDown || touch.left
-    const right = this.keys.right.isDown || this.keys.d.isDown || touch.right
-    const jump = this.keys.up.isDown || this.keys.w.isDown || this.keys.space.isDown || touch.jump
-    const onFloor = body.blocked.down
+    // A long frame (tab switch, debugger) must not throw the player through the floor
+    const dt = Math.min(delta, 50)
+    this.controls.update()
+    if (this.controls.justPressed("pause")) return this.pause()
 
-    if (left) this.player.setVelocityX(-PLAYER_SPEED).setFlipX(true)
-    else if (right) this.player.setVelocityX(PLAYER_SPEED).setFlipX(false)
-    else this.player.setVelocityX(0)
+    this.player.step(this.controls, time, dt)
+    for (const slime of this.slimes.getChildren() as Slime[]) slime.step(this.ground)
 
-    if (jump && onFloor) {
-      this.player.setVelocityY(-JUMP_SPEED)
-      playSfx(this, "jump", 0.4)
-    }
-
-    if (!onFloor) this.player.anims.stop()
-    else if (left || right) this.player.anims.play("player-walk", true)
-    else this.player.anims.stop()
-
-    // Slimes patrol: turn around at walls and at platform edges
-    for (const s of this.slimes.getChildren() as Sprite[]) {
-      const dir = Math.sign(s.body.velocity.x) || -1
-      const ahead = this.ground.getTileAtWorldXY(s.x + dir * 10, s.y + 14)
-      if (s.body.blocked.left || s.body.blocked.right || (s.body.blocked.down && !ahead?.collides)) {
-        s.setVelocityX(-dir * SLIME_SPEED)
-      }
-      s.setFlipX(s.body.velocity.x > 0)
-    }
+    // Look-ahead: shift the view towards the run direction, smoothly
+    const camera = this.cameras.main
+    const vx = this.player.body.velocity.x
+    const ahead = Math.abs(vx) < 20 ? 0 : -Math.sign(vx) * CAMERA.lookAhead
+    camera.followOffset.x += (ahead - camera.followOffset.x) * 0.04
 
     // Hazard tiles (property hazard = true in Tiled): spikes and water
     const tile = this.ground.getTileAtWorldXY(this.player.x, this.player.y + 8)
-    if (tile?.properties?.hazard || this.player.y > this.physics.world.bounds.height - 150) {
-      this.hurt(time, true)
-    }
-
-    this.player.setAlpha(time < this.hurtUntil && Math.floor(time / 80) % 2 ? 0.3 : 1)
+    if (tile?.properties?.hazard) this.hurt(time, true, "hazard")
+    else if (this.player.y > this.physics.world.bounds.height - 150) this.hurt(time, true, "fall")
   }
 
-  private touchSlime(slime: Sprite) {
-    const body = this.player.body as Body
+  /** Open the pause screen over the level (Esc / P / Start / the HUD pause button) */
+  pause() {
+    if (this.finished || this.scene.isActive("pause")) return
+    this.scene.launch("pause")
+    this.scene.pause()
+    this.scene.pause("hud")
+    platform.gameplayStop()
+  }
+
+  private touchSlime(slime: Slime) {
     // Landing on top squashes the slime
-    if (isStomp(body.velocity.y, this.player.y, slime.y)) {
+    if (isStomp(this.player.body.velocity.y, this.player.y, slime.y)) {
+      this.fx.sparks(slime.x, slime.y, 0x8be04e, 16)
+      this.fx.popText(slime.x, slime.y - 10, `+${STOMP_POINTS}`)
+      this.fx.hitstop()
+      this.fx.shake(FX.shake / 2, 100)
       slime.destroy()
-      this.player.setVelocityY(-JUMP_SPEED * 0.6)
+      this.player.bounce(PLAYER.jumpSpeed * 0.6)
       playSfx(this, "coin", 0.5)
       this.registry.inc("score", STOMP_POINTS)
     } else {
-      this.hurt(this.time.now, false)
+      this.hurt(this.time.now, false, "slime")
     }
   }
 
-  private hurt(time: number, respawn: boolean) {
-    if (time < this.hurtUntil && !respawn) return
-    this.hurtUntil = time + 1500
+  private hurt(time: number, respawn: boolean, cause: string) {
+    if (this.player.isInvulnerable(time) && !respawn) return
+    if (cheats.god) {
+      if (respawn) this.player.respawn(this.spawn.x, this.spawn.y)
+      return
+    }
     playSfx(this, "hurt", 0.5)
+    // A hit freezes a little longer than a stomp: it should feel bad
+    this.fx.hitstop(FX.hitstop * 1.5)
+    this.fx.shake()
+    this.player.hurt(time, PLAYER.jumpSpeed * 0.5)
+    track("death", { cause, x: Math.round(this.player.x), y: Math.round(this.player.y) })
+
     const { lives, gameOver } = loseLife(this.registry.get("lives") as number)
     this.registry.set("lives", lives)
-    this.cameras.main.shake(200, 0.01)
-    if (gameOver) return this.finish(t("gameOver"))
-    if (respawn) this.player.setPosition(this.spawn.x, this.spawn.y).setVelocity(0, 0)
-    else this.player.setVelocityY(-JUMP_SPEED * 0.5)
+    if (gameOver) return this.finish(t("gameOver"), false)
+    if (respawn) this.player.respawn(this.spawn.x, this.spawn.y)
   }
 
-  private win() {
+  /** The flag is reached (the dev tools call it to skip a level) */
+  win() {
     playSfx(this, "win", 0.6)
-    this.finish(t("win"))
+    this.fx.sparks(this.player.x, this.player.y - 10, 0xffffff, 30)
+    this.finish(t("win"), true)
   }
 
-  private finish(title: string) {
+  private finish(title: string, won: boolean) {
     if (this.finished) return
     this.finished = true
     this.physics.pause()
@@ -180,12 +198,17 @@ export class GameScene extends Phaser.Scene {
     const score = this.registry.get("score") as number
     if (isRecord(score, save.get().best)) save.update({ best: score })
     void platform.submitScore(score)
+    track(won ? "level_complete" : "game_over", {
+      level: 1,
+      score,
+      seconds: Math.round((this.time.now - this.startedAt) / 1000),
+    })
 
     this.time.delayedCall(1200, async () => {
       // Interstitial ad between rounds (Yandex SDK; without an SDK it resolves at once)
       if (!shop.has(PRODUCTS.noAds)) await platform.showFullscreenAd()
       this.scene.stop("hud")
-      this.scene.start("menu", { title, subtitle: `${t("coins")}: ${score}` })
+      goTo(this, "menu", { title, subtitle: `${t("coins")}: ${score}` })
     })
   }
 }

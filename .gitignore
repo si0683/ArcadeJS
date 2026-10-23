@@ -4,3 +4,5 @@ dist/
 template/package-lock.json
 *.tgz
 template/game.zip
+template/test-results/
+template/playwright-report/

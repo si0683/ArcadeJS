@@ -1,11 +1,16 @@
 import Phaser from "phaser"
 
 import { TEXT_STYLE } from "../config"
-import { t, volumeLabel } from "../i18n"
-import { nextVolume, save, type Settings } from "../save"
+import { effectsLabel, t, volumeLabel } from "../i18n"
+import { Controls } from "../input"
+import { nextVolume, save } from "../save"
 import { PRODUCTS, shop } from "../shop"
+import { fadeIn, goTo } from "../transition"
 
 export class MenuScene extends Phaser.Scene {
+  private controls!: Controls
+  private start = () => {}
+
   constructor() {
     super("menu")
   }
@@ -13,6 +18,7 @@ export class MenuScene extends Phaser.Scene {
   create(data: { title?: string; subtitle?: string }) {
     const { width, height } = this.scale
     this.cameras.main.setBackgroundColor("#1d1630")
+    fadeIn(this)
 
     this.add
       .text(width / 2, height / 2 - 70, data.title ?? t("title"), { ...TEXT_STYLE, fontSize: "56px" })
@@ -33,17 +39,20 @@ export class MenuScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
 
-    // ---------- settings: click a button or press S / M ----------
+    // ---------- settings: click a button or press S / M / E ----------
     const small = { ...TEXT_STYLE, fontSize: "18px", strokeThickness: 4 }
-    const button = (y: number, key: keyof Settings, shortcut: string) => {
-      const label = () => `${volumeLabel(key, save.get().settings[key])}  [${shortcut}]`
+    const button = (y: number, key: "sound" | "music" | "effects", shortcut: string) => {
+      const value = () => save.get().settings[key]
+      const label = () =>
+        `${key === "effects" ? effectsLabel(save.get().settings.effects) : volumeLabel(key, save.get().settings[key])}  [${shortcut}]`
       const text = this.add
         .text(width - 20, y, label(), small)
         .setOrigin(1, 0)
         .setInteractive({ useHandCursor: true })
       const change = () => {
         // Settings save after a second of quiet: clicking through the levels is one write
-        save.update({ settings: { [key]: nextVolume(save.get().settings[key]) } }, 1000)
+        const next = key === "effects" ? !value() : nextVolume(value() as number)
+        save.update({ settings: { [key]: next } }, 1000)
         text.setText(label())
       }
       text.on("pointerdown", change)
@@ -51,7 +60,7 @@ export class MenuScene extends Phaser.Scene {
       text.on("pointerout", () => text.setColor("#ffffff"))
       return { change, code: `Key${shortcut}` }
     }
-    const settings = [button(16, "sound", "S"), button(46, "music", "M")]
+    const settings = [button(16, "sound", "S"), button(46, "music", "M"), button(76, "effects", "E")]
 
     // ---------- shop: "Remove ads" while it is sold here and not bought yet (click or B) ----------
     if (shop.available && !shop.has(PRODUCTS.noAds)) {
@@ -75,16 +84,29 @@ export class MenuScene extends Phaser.Scene {
     const start = () => {
       if (started) return
       started = true
-      this.scene.start("game")
+      goTo(this, "game")
     }
+    this.start = start
+    // Gamepad: A or Start begins the game (keys and taps are handled by the listeners below)
+    this.controls = new Controls(this)
     // A click outside the settings buttons, or any key except the settings shortcuts
     this.input.on("pointerdown", (_pointer: Phaser.Input.Pointer, over: Phaser.GameObjects.GameObject[]) => {
       if (over.length === 0) start()
     })
+    // Phaser may hand the same event over twice when several keys arrive in one frame:
+    // a toggle (Effects) would flip back. Handle every real key press once
+    const handled = new WeakSet<KeyboardEvent>()
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      if (handled.has(event)) return
+      handled.add(event)
       const setting = settings.find((s) => s.code === event.code)
       if (setting) setting.change()
       else start()
     })
+  }
+
+  update() {
+    this.controls.update()
+    if (this.controls.justPressed("confirm")) this.start()
   }
 }
