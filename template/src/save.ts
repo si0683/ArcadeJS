@@ -1,3 +1,4 @@
+import { cloudStorage } from "./backend"
 import { parseProgress, type Progress } from "./levels"
 import { platform, type Platform } from "./platform"
 
@@ -18,7 +19,20 @@ export interface Settings {
   touch: "buttons" | "joystick"
   /** Keys the player re-assigned in the settings: action → key names (see src/input.ts) */
   keys: Record<string, string[]>
+  /** Colour filter for colour blindness or low vision (src/accessibility.ts) */
+  colors: ColorMode
+  /** Captions for sound effects: "[прыжок]" at the bottom of the screen */
+  captions: boolean
+  /** Game speed: 1, 0.8 or 0.6 — slower for players who need more time to react */
+  gameSpeed: number
+  /** Help: two extra lives and "Skip level" in the pause menu */
+  assist: boolean
 }
+
+export const COLOR_MODES = ["normal", "contrast", "protan", "deutan", "tritan"] as const
+export type ColorMode = (typeof COLOR_MODES)[number]
+/** Game speeds the settings button cycles through */
+export const GAME_SPEEDS = [1, 0.8, 0.6]
 
 export interface Daily {
   /** Last day the reward was taken, "YYYY-MM-DD" ("" — never) */
@@ -49,6 +63,10 @@ export const DEFAULT_SETTINGS: Settings = {
   lang: "",
   touch: "buttons",
   keys: {},
+  colors: "normal",
+  captions: false,
+  gameSpeed: 1,
+  assist: false,
 }
 
 export const DEFAULT_SAVE: Save = {
@@ -96,6 +114,10 @@ export function parseSave(raw: unknown): Save {
       lang: typeof settings.lang === "string" && settings.lang.length <= 5 ? settings.lang : "",
       touch: settings.touch === "joystick" ? "joystick" : "buttons",
       keys: parseKeys(settings.keys),
+      colors: COLOR_MODES.includes(settings.colors as ColorMode) ? (settings.colors as ColorMode) : "normal",
+      captions: settings.captions === true,
+      gameSpeed: GAME_SPEEDS.includes(settings.gameSpeed as number) ? (settings.gameSpeed as number) : 1,
+      assist: settings.assist === true,
     },
   }
 }
@@ -146,4 +168,5 @@ export function createSaveStore(storage: Storage) {
   }
 }
 
-export const save = createSaveStore(platform)
+// On your own site with the game server (VITE_BACKEND_URL) saves also go to the server (src/backend.ts)
+export const save = createSaveStore(cloudStorage(platform))

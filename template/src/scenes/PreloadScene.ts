@@ -1,5 +1,6 @@
 import Phaser from "phaser"
 
+import { makeBitmapFont } from "../bitmapFont"
 import { makeFxTextures } from "../fx"
 import { installRotatePrompt } from "../orientation"
 import { makeLevelTextures } from "../parallax"
@@ -44,6 +45,8 @@ export class PreloadScene extends Phaser.Scene {
     // Particle textures are drawn in code: no files to load
     makeFxTextures(this)
     makeLevelTextures(this)
+    // The HUD score changes all the time: a bitmap font, drawn here from the system font (src/bitmapFont.ts)
+    makeBitmapFont(this, "hud", { size: 26 })
     this.anims.create({
       key: "player-walk",
       frames: this.anims.generateFrameNumbers("player", { start: 0, end: 1 }),

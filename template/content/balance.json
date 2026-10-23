@@ -1,0 +1,24 @@
+{
+  "WORLD": {
+    "gravity": 900,
+    "lives": 3,
+    "slimeSpeed": 40,
+    "springSpeed": 620,
+    "platformSpeed": 40
+  },
+  "PLAYER": {
+    "speed": 160,
+    "accel": 1400,
+    "decel": 1800,
+    "airControl": 0.7,
+    "jumpSpeed": 400,
+    "jumpCut": 0.45,
+    "coyoteMs": 90,
+    "bufferMs": 120,
+    "fallGravity": 1.5,
+    "maxFall": 520
+  },
+  "CAMERA": { "zoom": 2.5, "lerp": 0.12, "lookAhead": 36 },
+  "FX": { "hitstop": 70, "shake": 0.008, "squash": 0.22 },
+  "POINTS": { "coin": 1, "stomp": 5, "stompMargin": 6 }
+}

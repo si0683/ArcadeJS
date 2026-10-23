@@ -79,8 +79,10 @@ export class Fx {
     const now = this.scene.time.now
     if (this.freezeUntil > now) return
     this.freezeUntil = now + ms
+    // Back to the scale it had: the "game speed" setting slows the world down too
+    const before = world.timeScale
     world.timeScale = 1000
-    this.scene.time.delayedCall(ms, () => (world.timeScale = 1))
+    this.scene.time.delayedCall(ms, () => (world.timeScale = before))
   }
 
   /** The sprite turns solid white for a moment: it was hit */

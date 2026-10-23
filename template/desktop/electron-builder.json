@@ -1,0 +1,10 @@
+{
+  "appId": "com.example.mygame",
+  "productName": "My Game",
+  "directories": { "output": "release" },
+  "files": ["dist/**/*", "desktop/*.cjs", "desktop/steam_appid.txt", "package.json", "!node_modules/phaser{,/**/*}"],
+  "asarUnpack": ["node_modules/steamworks.js/**/*"],
+  "win": { "target": "dir" },
+  "mac": { "target": "dir" },
+  "linux": { "target": "dir" }
+}

@@ -51,9 +51,11 @@ test("the game loads, starts and the player moves", async ({ page }) => {
     await page.waitForFunction(() => (window as unknown as GameWindow).shop.has("no_ads"))
   }
 
-  // Any other key opens the level select; the second level is closed, Enter starts the first
+  // Any other key opens the level select; the second level is closed, Enter starts the first.
+  // A key pressed while the screen is still fading in can be lost on a busy machine (parallel tests): wait it out
   await page.keyboard.press("Enter")
   await activeScene(page, "levels")
+  await page.waitForTimeout(300)
   await page.keyboard.press("Enter")
   await activeScene(page, "game")
   expect(await inGame(page, (w) => w.game.registry.get("level"))).toBe(0)
@@ -192,4 +194,52 @@ test("replay: a recorded run plays back the same way", async ({ page }) => {
   // Play back with no keys pressed: the player runs by the recording
   await page.waitForFunction(() => !(window as unknown as GameWindow).replay.isPlaying, null, { timeout: 10_000 })
   expect(Math.abs((await playerX()) - recordedX)).toBeLessThan(16)
+})
+
+test("accessibility: help, game speed, colours and sound captions", async ({ page }) => {
+  await page.goto("/")
+  await activeScene(page, "menu")
+  await page.evaluate(() =>
+    (window as unknown as GameWindow).save.update({
+      settings: { assist: true, gameSpeed: 0.6, colors: "deutan", captions: true },
+    }),
+  )
+  await page.evaluate(() => (window as unknown as GameWindow).game.scene.getScene("menu").scene.start("game"))
+  await activeScene(page, "hud")
+  // Help: two more lives; speed: the world runs at 60%
+  expect(await inGame(page, (w) => w.game.registry.get("lives"))).toBe(5)
+  const timeScale = await page.evaluate(
+    () =>
+      (
+        (window as unknown as GameWindow).game.scene.getScene("game") as unknown as {
+          physics: { world: { timeScale: number } }
+        }
+      ).physics.world.timeScale,
+  )
+  expect(timeScale).toBeCloseTo(1 / 0.6)
+  // Captions: a jump shows "[прыжок]"
+  await page.waitForTimeout(500)
+  await page.keyboard.press("Space")
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const hud = (window as unknown as GameWindow).game.scene.getScene("hud")
+        return hud.children.list
+          .filter((o) => o.type === "Text")
+          .map((o) => o as unknown as { text: string; alpha: number })
+          .some((o) => o.text.includes("[") && o.alpha > 0)
+      }),
+    )
+    .toBe(true)
+  // Pause → "Skip level" (6th item) opens level 2 without stars
+  await page.keyboard.press("Escape")
+  await activeScene(page, "pause")
+  for (let i = 0; i < 5; i++) {
+    await page.keyboard.press("ArrowDown")
+    await page.waitForTimeout(60)
+  }
+  await page.keyboard.press("Enter")
+  await activeScene(page, "levels")
+  const progress = await inGame(page, (w) => w.save.get().levels)
+  expect(progress.level1).toEqual({ stars: 0, best: 0 })
 })

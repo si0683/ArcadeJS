@@ -1,41 +1,30 @@
 import type Phaser from "phaser"
 
+import BALANCE from "../content/balance.json"
 import type { MoveTuning } from "./movement"
 
-// Game balance: tweak the numbers here. In `npm run dev` press F2 to tune them live
-// (the dev panel changes these objects; copy the values you like back into this file).
+// Game balance lives in content/balance.json — a designer changes numbers there without touching code;
+// content/schema.ts says what every number means and its allowed range, and `npm run dev` / `npm run check`
+// stop with a clear message when a value is wrong. In `npm run dev` press F2 to tune them live
+// (the dev panel changes these objects; "Copy" gives JSON to paste back into content/balance.json).
+// The objects are copies: the dev panel and the remote config (src/remote.ts) change them at run time.
+
+export { BALANCE }
 
 /** World gravity, px/s² */
-export const GRAVITY = 900
+export const GRAVITY = BALANCE.WORLD.gravity
 
 /** How the player moves: see src/movement.ts for what every number does */
-export const PLAYER: MoveTuning = {
-  speed: 160,
-  accel: 1400,
-  decel: 1800,
-  airControl: 0.7,
-  jumpSpeed: 400,
-  jumpCut: 0.45,
-  coyoteMs: 90,
-  bufferMs: 120,
-  fallGravity: 1.5,
-  maxFall: 520,
-}
+export const PLAYER: MoveTuning = { ...BALANCE.PLAYER }
 
-export const SLIME_SPEED = 40
-export const LIVES = 3
+export const SLIME_SPEED = BALANCE.WORLD.slimeSpeed
+export const LIVES = BALANCE.WORLD.lives
 
 /** Camera: zoom, follow smoothing (0…1), how far it looks ahead in the run direction (px) */
-export const CAMERA = { zoom: 2.5, lerp: 0.12, lookAhead: 36 }
+export const CAMERA = { ...BALANCE.CAMERA }
 
 /** "Juice": strength of the screen effects. The menu setting "Effects" turns shake, flashes and filters off */
-export const FX = {
-  /** Freeze frames on a hit, ms */
-  hitstop: 70,
-  shake: 0.008,
-  /** Landing squash: how much the sprite flattens (0.2 = 20%) */
-  squash: 0.22,
-}
+export const FX = { ...BALANCE.FX }
 
 /**
  * Optional systems: switch off what your game does not need — the code stays, the feature disappears.
@@ -61,14 +50,14 @@ export const FEATURES = {
 }
 
 /** Springs and moving platforms (Tiled objects "spring", "platform") */
-export const SPRING_SPEED = 620
-export const PLATFORM_SPEED = 40
+export const SPRING_SPEED = BALANCE.WORLD.springSpeed
+export const PLATFORM_SPEED = BALANCE.WORLD.platformSpeed
 
 // Points and rules (used by src/rules.ts)
-export const COIN_POINTS = 1
-export const STOMP_POINTS = 5
+export const COIN_POINTS = BALANCE.POINTS.coin
+export const STOMP_POINTS = BALANCE.POINTS.stomp
 /** How many pixels above the enemy's centre the player must be to squash it */
-export const STOMP_MARGIN = 6
+export const STOMP_MARGIN = BALANCE.POINTS.stompMargin
 
 export const TEXT_STYLE: Phaser.Types.GameObjects.Text.TextStyle = {
   fontFamily: "system-ui, sans-serif",

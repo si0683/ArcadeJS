@@ -17,7 +17,7 @@
 | Сохранения | поле игрока `save` (строка с JSON) + `gp.player.sync()` | `save.update()` из `src/save.ts` |
 | Лидерборд | поле игрока `score` | `platform.submitScore()` в конце уровня — только если результат лучше |
 | Покупки | `gp.payments.purchase/consume/products/purchases` по **тегу** товара | `shop` из `src/shop.ts` |
-| Язык | `gp.language` | `src/i18n.ts` |
+| Язык | `gp.language` | `content/i18n/*.json` |
 
 Без ключей проекта или если SDK не загрузился, игра работает как без SDK: localStorage, без рекламы. Поэтому `npm run dev` работает сразу.
 

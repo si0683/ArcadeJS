@@ -1,23 +1,27 @@
 import Phaser from "phaser"
 
+import { applyColorMode, applyGameSpeed, startLives } from "../accessibility"
+import { loadLevel } from "../assets"
 import { playMusic, playSfx, stopMusic } from "../audio"
 import { cheats } from "../cheats"
-import { CAMERA, COIN_POINTS, FEATURES, FX, LIVES, PLAYER, SLIME_SPEED, SPRING_SPEED, STOMP_POINTS } from "../config"
+import { CAMERA, COIN_POINTS, FEATURES, FX, PLAYER, SLIME_SPEED, SPRING_SPEED, STOMP_POINTS } from "../config"
 import { MovingPlatform } from "../entities/MovingPlatform"
 import { Player } from "../entities/Player"
 import { Slime } from "../entities/Slime"
+import { gameEvents } from "../events"
 import { Fx } from "../fx"
 import { t, type Key } from "../i18n"
 import { Controls } from "../input"
 import { LEVELS, recordResult, starsFor } from "../levels"
+import { addLevelLight } from "../lighting"
 import { Look } from "../look"
 import { unlockAchievements } from "../meta"
 import { addParallax } from "../parallax"
 import { platform } from "../platform"
+import { rng } from "../random"
 import { isRecord, isStomp, loseLife } from "../rules"
 import { save } from "../save"
 import { PRODUCTS, shop } from "../shop"
-import { track } from "../telemetry"
 import { prop } from "../tiled"
 import { fadeIn, goTo } from "../transition"
 import type { HudScene } from "./HudScene"
@@ -56,21 +60,25 @@ export class GameScene extends Phaser.Scene {
     this.level = Phaser.Math.Clamp(data.level ?? 0, 0, LEVELS.length - 1)
   }
 
-  // Maps load when their level starts: the first screen does not wait for every level
+  // The map and the level's own assets load when it starts: the first screen does not wait for every level
   preload() {
-    const level = LEVELS[this.level]
-    if (!this.cache.tilemap.exists(level.key)) this.load.setPath("assets").tilemapTiledJSON(level.key, level.file)
+    loadLevel(this, LEVELS[this.level])
   }
 
   create() {
     this.finished = false
     this.startedAt = this.time.now
+    // Gameplay randomness repeats for the same level and input (replays, golden runs)
+    rng.seed(this.level + 1)
     this.coinsTotal = this.coinsTaken = this.damage = 0
     this.platforms = []
     this.hints = []
-    this.registry.set({ score: 0, lives: LIVES, level: this.level, genre: "platformer" })
+    // Help (settings → accessibility) adds lives; the game speed setting slows the whole level
+    this.registry.set({ score: 0, lives: startLives(), level: this.level, genre: "platformer" })
+    applyGameSpeed(this)
     this.fx = new Fx(this)
     this.look = new Look(this.cameras.main)
+    applyColorMode(this.cameras.main)
 
     // ---------- level from Tiled ----------
     const map = this.make.tilemap({ key: LEVELS[this.level].key })
@@ -187,11 +195,15 @@ export class GameScene extends Phaser.Scene {
     this.events.on("resume", resume)
     this.events.once("shutdown", () => this.events.off("resume", resume))
 
+    // A dark level (content/levels.json → "light"): light follows the player
+    addLevelLight(this, LEVELS[this.level].light, this.player)
+
     // ---------- sound + HUD ----------
     playMusic(this, "music", 0.35)
     this.scene.launch("hud")
     platform.gameplayStart()
-    track("level_start", { level: this.level + 1 })
+    // Analytics, the game server and the rest follow the level through its events (src/systems.ts)
+    gameEvents.emit("levelStart", { level: this.level, time: this.time.now })
   }
 
   update(time: number, delta: number) {
@@ -271,7 +283,7 @@ export class GameScene extends Phaser.Scene {
     this.fx.sparks(point.x, point.y - 6, 0xffffff, 16)
     this.fx.popText(point.x, point.y - 18, t("checkpoint"), "#ffffff")
     playSfx(this, "coin", 0.5, { variation: 0 })
-    track("checkpoint", { level: this.level + 1, x: Math.round(point.x) })
+    gameEvents.emit("checkpoint", { level: this.level, x: point.x })
   }
 
   private touchSlime(slime: Slime) {
@@ -302,7 +314,7 @@ export class GameScene extends Phaser.Scene {
     this.fx.shake()
     this.player.hurt(time, PLAYER.jumpSpeed * 0.5)
     this.damage++
-    track("death", { level: this.level + 1, cause, x: Math.round(this.player.x), y: Math.round(this.player.y) })
+    gameEvents.emit("death", { level: this.level, cause, x: this.player.x, y: this.player.y })
 
     const { lives, gameOver } = loseLife(this.registry.get("lives") as number)
     this.registry.set("lives", lives)
@@ -335,11 +347,13 @@ export class GameScene extends Phaser.Scene {
     })
     void platform.submitScore(save.get().best)
     unlockAchievements(this.game, { won, damage: this.damage })
-    track(won ? "level_complete" : "game_over", {
-      level: this.level + 1,
+    gameEvents.emit("levelEnd", {
+      level: this.level,
+      won,
       score,
       stars,
       seconds: Math.round((this.time.now - this.startedAt) / 1000),
+      time: this.time.now,
     })
 
     const result: LevelResultData = { level: this.level, won, score, stars }

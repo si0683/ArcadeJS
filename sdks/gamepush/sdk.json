@@ -4,6 +4,7 @@
   "append": [
     "AGENTS.md",
     "README.md",
-    "PROMT.md"
+    "PROMT.md",
+    ".env.example"
   ]
 }

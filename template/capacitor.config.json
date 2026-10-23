@@ -1,0 +1,7 @@
+{
+  "appId": "com.example.mygame",
+  "appName": "Моя игра",
+  "webDir": "dist",
+  "android": { "backgroundColor": "#1d1630" },
+  "ios": { "backgroundColor": "#1d1630" }
+}

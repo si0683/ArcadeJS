@@ -1,9 +1,11 @@
 import Phaser from "phaser"
 
+import { backendOn, backendSink } from "./backend"
 import { GRAVITY } from "./config"
 import { platform } from "./platform"
 import { save } from "./save"
 import { shop } from "./shop"
+import { connectSystems } from "./systems"
 import { GameScene } from "./scenes/GameScene"
 import { loadRemoteConfig } from "./remote"
 import { replay } from "./replay"
@@ -14,11 +16,18 @@ import { PauseScene } from "./scenes/PauseScene"
 import { PreloadScene } from "./scenes/PreloadScene"
 import { SettingsScene } from "./scenes/SettingsScene"
 import { ToastScene } from "./scenes/ToastScene"
-import { addSink, captureErrors } from "./telemetry"
+import { addSink, captureErrors, metricaSink, sentrySink } from "./telemetry"
 
-// Errors and analytics events: printed in dev; in production add a sink (RECIPES.md → "Аналитика")
+// Errors and analytics events: printed in dev; in production the services from .env receive them
+// (.env.example; RECIPES.md → «Аналитика»). Nothing is sent when the keys are empty
 captureErrors()
 if (import.meta.env.DEV) addSink((e) => console.debug("[track]", e.name, e.data))
+const env = import.meta.env
+if (env.VITE_SENTRY_DSN) addSink(sentrySink(env.VITE_SENTRY_DSN, { release: __APP_VERSION__, environment: env.MODE }))
+if (env.VITE_METRICA_ID) addSink(metricaSink(Number(env.VITE_METRICA_ID)))
+if (backendOn) addSink(backendSink())
+// Analytics and the game server listen to the levels' events
+connectSystems()
 
 // The platform (SDK) first: it sets the language and may need to load its script.
 // Remote balance overrides (FEATURES.remoteConfigUrl) load at the same time

@@ -17,7 +17,7 @@
 | Сохранения | `player.getData()` / `setData()` | рекорд в облаке игрока (+ копия в localStorage) |
 | Лидерборд | `leaderboards.setScore()` | рекорд в конце игры, лидерборд `score` |
 | Покупки | `getPayments()`: `getCatalog`, `purchase`, `getPurchases`, `consumePurchase` | `src/shop.ts`: кнопка «Убрать рекламу» в меню |
-| Язык | `environment.i18n.lang` | `src/i18n.ts` — русский или английский |
+| Язык | `environment.i18n.lang` | `content/i18n/*.json` — русский или английский |
 
 ## Проверка
 

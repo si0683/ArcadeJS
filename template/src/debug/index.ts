@@ -2,19 +2,21 @@ import type Phaser from "phaser"
 import { Pane } from "tweakpane"
 
 import { cheats } from "../cheats"
-import { CAMERA, FX, GRAVITY } from "../config"
+import { BALANCE, CAMERA, FX, GRAVITY, PLAYER } from "../config"
 import { GENRE } from "../genre"
 import { LOOK } from "../look"
 import { parseReplay, replay } from "../replay"
 import type { GameScene } from "../scenes/GameScene"
 import { recent } from "../telemetry"
+import { createHeatmap } from "./heatmap"
 
 // Dev tools, loaded only by `npm run dev` (see src/main.ts). Never shipped to players.
 //   F1 — overlay: FPS, scenes, player state, movement timers, latest analytics events
 //   F2 — tuning panel: speed, jump, gravity, camera, effects — live; "Copy" puts the values
-//        on the clipboard to paste into src/config.ts
+//        on the clipboard to paste into content/balance.json
 //   F3 — physics hitboxes   F4 — god mode   F6 — win the level
 //   F7 — record input from the level start / stop and download replay.json   F8 — play a replay file
+//   F9 — death heat map on the level (src/debug/heatmap.ts)   Shift+F9 — add players' deaths from a file
 
 export function installDebug(game: Phaser.Game) {
   const level = () => {
@@ -67,7 +69,10 @@ export function installDebug(game: Phaser.Game) {
       )
     }
     const rec = replay.isRecording ? "REC ●" : replay.isPlaying ? "REPLAY ▶" : "off"
-    lines.push(`god ${cheats.god ? "ON" : "off"}   hitboxes ${hitboxes ? "ON" : "off"}   replay ${rec}`, "— events —")
+    lines.push(
+      `god ${cheats.god ? "ON" : "off"}   hitboxes ${hitboxes ? "ON" : "off"}   replay ${rec}   ${heatmap.label()}`,
+      "— events —",
+    )
     for (const e of recent.slice(-6)) lines.push(`${(e.time / 1000).toFixed(1)}s ${e.name} ${JSON.stringify(e.data)}`)
     overlay.textContent = lines.join("\n")
   }
@@ -104,15 +109,12 @@ export function installDebug(game: Phaser.Game) {
   juice.addBinding(LOOK, "vignetteStrength", { min: 0, max: 0.4, step: 0.01, label: "vignette ↻" })
   juice.addBinding(LOOK, "saturation", { min: -1, max: 1, step: 0.05, label: "saturation ↻" })
   pane.addButton({ title: "Restart level" }).on("click", () => level()?.scene.restart())
-  pane.addButton({ title: "Copy values for config.ts" }).on("click", () => {
+  pane.addButton({ title: "Copy values for content/balance.json" }).on("click", () => {
+    const balance = { ...BALANCE, WORLD: { ...BALANCE.WORLD, gravity: world.gravity }, PLAYER, CAMERA, FX }
     const text = [
-      `export const GRAVITY = ${world.gravity}`,
-      `// ${GENRE.name === "platformer" ? "PLAYER in src/config.ts" : "HERO in src/topdown.ts"}
-${JSON.stringify(GENRE.tuning, null, 2)}`,
-      `export const CAMERA = ${JSON.stringify(CAMERA)}`,
-      `export const FX = ${JSON.stringify(FX)}`,
-      `// src/look.ts
-export const LOOK = ${JSON.stringify(LOOK)}`,
+      `// content/balance.json\n${JSON.stringify(balance, null, 2)}`,
+      ...(GENRE.name === "platformer" ? [] : [`// HERO in src/topdown.ts\n${JSON.stringify(GENRE.tuning, null, 2)}`]),
+      `// src/look.ts\nexport const LOOK = ${JSON.stringify(LOOK)}`,
     ].join("\n")
     void navigator.clipboard.writeText(text)
   })
@@ -133,6 +135,10 @@ export const LOOK = ${JSON.stringify(LOOK)}`,
     const scene = level()
     if (scene) scene.physics.world.gravity.y = world.gravity
   })
+
+  // ---------- F9: death heat map ----------
+  const heatmap = createHeatmap(game)
+  pane.addButton({ title: "Clear death heat map" }).on("click", () => heatmap.clear())
 
   // ---------- F7 / F8: input replays (src/replay.ts) ----------
   const toggleRecording = () => {
@@ -184,6 +190,7 @@ export const LOOK = ${JSON.stringify(LOOK)}`,
       F6: () => level()?.win(),
       F7: toggleRecording,
       F8: openReplay,
+      F9: () => (e.shiftKey ? heatmap.open() : heatmap.toggle()),
     }
     const action = actions[e.key]
     if (!action) return
@@ -192,5 +199,7 @@ export const LOOK = ${JSON.stringify(LOOK)}`,
     renderOverlay()
   })
 
-  console.info("Dev tools: F1 overlay · F2 tuning · F3 hitboxes · F4 god mode · F6 win · F7 record · F8 replay")
+  console.info(
+    "Dev tools: F1 overlay · F2 tuning · F3 hitboxes · F4 god mode · F6 win · F7 record · F8 replay · F9 heat map",
+  )
 }

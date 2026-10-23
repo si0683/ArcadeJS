@@ -1,0 +1,35 @@
+# Publishes the game to itch.io when you push a version tag (git tag v1.2.0 && git push --tags).
+# One-time setup:
+#   1. Create the game on itch.io (Kind of project: HTML), note its address: <user>.itch.io/<game>
+#   2. API key: itch.io → Settings → API keys → Generate; add it to the repository:
+#      Settings → Secrets and variables → Actions → New repository secret BUTLER_API_KEY
+#   3. Variables (same page, tab Variables): ITCH_USER = <user>, ITCH_GAME = <game>
+# Without the secret the workflow only builds and stops. Butler uploads only what changed.
+name: Publish to itch.io
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  itch:
+    runs-on: ubuntu-latest
+    env:
+      BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci || npm install
+      # Linter, types, tests, build, size budget and the portal rules: a broken game is never published
+      - run: npm run check
+      - run: node scripts/portal-check.mjs
+      - name: Upload with butler
+        if: env.BUTLER_API_KEY != ''
+        run: |
+          curl -fsSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler && chmod +x butler/butler
+          ./butler/butler push dist "${{ vars.ITCH_USER }}/${{ vars.ITCH_GAME }}:html5" --userversion "${GITHUB_REF_NAME}"

@@ -9,3 +9,6 @@ npm-debug.log*
 game.zip
 playwright-report/
 test-results/
+server/data/
+server/.env
+release/

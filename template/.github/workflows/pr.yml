@@ -1,0 +1,34 @@
+# Checks every pull request before it is merged: linter, types, unit tests, build, size budget, portal rules,
+# browser checks (game flow, golden runs, screenshots) — and attaches the playable build to the run.
+# Download it on the run page (Artifacts → game) and open index.html through any static server.
+name: Pull request check
+
+on:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci || npm install
+      - run: npm run check
+      - run: node scripts/portal-check.mjs
+      - run: npx playwright install --with-deps chromium
+      # Screenshots differ between systems: the first run on Linux saves them (commit e2e/*-snapshots/*-linux.png)
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        with:
+          name: game
+          path: dist
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results

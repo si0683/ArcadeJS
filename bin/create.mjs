@@ -17,7 +17,7 @@ const STACK = "Vite · Phaser 4 · Tiled · TypeScript"
 const DEFAULT_DIR = "my-game"
 const DEV_URL = "http://localhost:5173"
 const TIPS = `Уровни правятся в Tiled (https://www.mapeditor.org):
-  public/assets/maps/level1.tmj, level2.tmj; список уровней — src/levels.ts`
+  public/assets/maps/level1.tmj, level2.tmj; список уровней, баланс и тексты — content/*.json`
 
 const TEMPLATE = fileURLToPath(new URL("../template", import.meta.url))
 // Optional platform SDKs: sdks/<name>/ = sdk.json + files/ (copied over the template) + append/ (added to docs)
@@ -182,12 +182,13 @@ ${bold("Дальше:")}
   cd ${cd.includes(" ") ? `"${cd}"` : cd}${installed ? "" : `\n  ${pm} install`}
   ${pm} run dev          ${dim(`# ${DEV_URL}`)}
 ${sdkScripts()}  ${pm} run zip          ${dim("# game.zip для публикации")}
+  ${pm} run portal       ${dim("# проверка требований площадок перед загрузкой")}
   ${pm} run check        ${dim("# линтер, типы, тесты, сборка, размер — перед коммитом")}
 
 ${TIPS}
 В игре под ${pm} run dev: F1 — отладка, F2 — ползунки баланса, F3 — хитбоксы, F4 — бессмертие,
-F7 — запись прохождения, F8 — воспроизведение.
-Рецепты (враги, уровни, экраны, эффекты, геймпад, атласы, аналитика): RECIPES.md
+F7 — запись прохождения, F8 — воспроизведение, F9 — тепловая карта смертей.
+Рецепты (враги, уровни, экраны, эффекты, аналитика, сервер, Android, Steam, доступность): RECIPES.md
 `)
 
 function sdkScripts() {

@@ -82,6 +82,14 @@ export class MenuScene extends Phaser.Scene {
     const stats = [`${t("wallet")}: ${save.get().wallet}`]
     if (FEATURES.achievements) stats.push(`🏆 ${save.get().achievements.length}/${ACHIEVEMENTS.length}`)
     this.add.text(20, height - 80, stats.join("   "), { ...small, color: "#a69fc2" })
+    // Build version (package.json + git commit): players and testers can say which build they have
+    this.add
+      .text(width - 8, height - 6, `v${__APP_VERSION__}`, {
+        fontFamily: "system-ui, sans-serif",
+        fontSize: "11px",
+        color: "#6b6390",
+      })
+      .setOrigin(1, 1)
 
     // ---------- shop: "Remove ads" while it is sold here and not bought yet (click or B) ----------
     if (shop.available && !shop.has(PRODUCTS.noAds)) {

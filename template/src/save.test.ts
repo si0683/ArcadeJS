@@ -110,3 +110,12 @@ describe("createSaveStore", () => {
     expect(target.saveData).toHaveBeenCalledTimes(1)
   })
 })
+
+describe("accessibility settings", () => {
+  it("keep known values and fall back to the defaults", () => {
+    const good = parseSave({ settings: { colors: "deutan", captions: true, gameSpeed: 0.6, assist: true } }).settings
+    expect(good).toMatchObject({ colors: "deutan", captions: true, gameSpeed: 0.6, assist: true })
+    const bad = parseSave({ settings: { colors: "purple", captions: "yes", gameSpeed: 0.1, assist: 1 } }).settings
+    expect(bad).toMatchObject({ colors: "normal", captions: false, gameSpeed: 1, assist: false })
+  })
+})

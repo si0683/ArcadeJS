@@ -3,6 +3,7 @@ import type Phaser from "phaser"
 import { achievementTitle, checkAchievements, type RunStats } from "./achievements"
 import { FEATURES } from "./config"
 import { claimDaily } from "./daily"
+import { desktopAchievement } from "./desktop"
 import { fmt, t } from "./i18n"
 import { save } from "./save"
 import { track } from "./telemetry"
@@ -28,6 +29,8 @@ export function unlockAchievements(game: Phaser.Game, run: RunStats): string[] {
     const title = achievementTitle(id)
     toast(game, t("achievement"), title ? t(title) : id)
     track("achievement", { id })
+    // The Steam build (desktop/): the same id unlocks the Steam achievement
+    desktopAchievement(id)
   }
   return earned
 }

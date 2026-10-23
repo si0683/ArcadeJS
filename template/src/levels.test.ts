@@ -17,6 +17,8 @@ describe("progress", () => {
     expect(isUnlocked({}, 0)).toBe(true)
     expect(isUnlocked({}, 1)).toBe(false)
     expect(isUnlocked({ [LEVELS[0].key]: { stars: 1, best: 3 } }, 1)).toBe(true)
+    // Skipped with help (settings → accessibility): no stars, but the way on is open
+    expect(isUnlocked({ [LEVELS[0].key]: { stars: 0, best: 0 } }, 1)).toBe(true)
   })
 
   it("keeps the best stars and score", () => {

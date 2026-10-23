@@ -1,5 +1,6 @@
 import type Phaser from "phaser"
 
+import { gameEvents } from "./events"
 import { save } from "./save"
 
 // Every sound goes through these helpers: the player's volume settings (menu) apply to all of them.
@@ -19,15 +20,34 @@ export interface SfxOptions {
   limit?: number
 }
 
+/**
+ * The audio sprite that holds a sound with this name (npm run audio:sprite), when the name is not
+ * a file of its own: playSfx(scene, "jump") works the same with single files and with a sprite
+ */
+function spriteOf(scene: Phaser.Scene, key: string): string | undefined {
+  if (scene.cache.audio.exists(key)) return undefined
+  return scene.cache.json.getKeys().find((name) => {
+    const map = (scene.cache.json.get(name) as { spritemap?: Record<string, unknown> } | undefined)?.spritemap
+    return !!map && key in map && scene.cache.audio.exists(name)
+  })
+}
+
 /** A sound effect: jump, coin, hit */
 export function playSfx(scene: Phaser.Scene, key: string, volume = 1, options: SfxOptions = {}) {
   const level = volume * save.get().settings.sound
   if (level <= 0) return
   const { variation = 0.08, limit = 4 } = options
-  if (scene.sound.getAll(key).filter((s) => s.isPlaying).length >= limit) return
+  const sprite = spriteOf(scene, key)
+  const copies = sprite
+    ? scene.sound.getAll<Sound>(sprite).filter((s) => s.isPlaying && s.currentMarker?.name === key)
+    : scene.sound.getAll(key).filter((s) => s.isPlaying)
+  if (copies.length >= limit) return
   // detune is in cents: 100 cents = a semitone ≈ 6% of pitch
   const detune = variation > 0 ? (Math.random() * 2 - 1) * variation * 1600 : 0
-  scene.sound.play(key, { volume: level, detune })
+  if (sprite) scene.sound.playAudioSprite(sprite, key, { volume: level, detune })
+  else scene.sound.play(key, { volume: level, detune })
+  // Sound captions (settings → accessibility) show it on screen
+  gameEvents.emit("sound", { key })
 }
 
 // ---------- music ----------

@@ -9,7 +9,7 @@
 | Что | Метод VK Bridge | Где в игре |
 |---|---|---|
 | Запуск | `VKWebAppInit` | `platform.init()` при старте игры |
-| Язык | параметр запуска `vk_language` | `src/i18n.ts` — русский или английский |
+| Язык | параметр запуска `vk_language` | `content/i18n/*.json` — русский или английский |
 | Пауза | события `VKWebAppViewHide` / `VKWebAppViewRestore` | звук выключается, игра замирает |
 | Реклама между раундами | `VKWebAppCheckNativeAds` + `VKWebAppShowNativeAds` (`interstitial`) | после победы или проигрыша |
 | Реклама за награду | то же, `reward` | `platform.showRewardedAd()` — подключите сами |

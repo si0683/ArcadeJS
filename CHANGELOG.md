@@ -1,5 +1,18 @@
 # Changelog
 
+## 6.0.0 — 2026-10-23
+
+Studio-grade tooling: content as data, analytics, an own game server, release targets beyond the browser, art and sound pipelines, deterministic tests, accessibility.
+
+- Content as data: `content/balance.json`, `content/levels.json`, `content/i18n/<lang>.json`; zod schemas in `content/schema.ts`, `content/validate.ts` checks schemas, maps (layers, `player`, `flag`, hint keys) and translations (keys, placeholders, plural forms, length) — an error overlay in `npm run dev`, a failed build, a unit test. Plural forms in texts (`{n:монета|монеты|монет}`, `src/plural.ts`), `npm run i18n:export` / `i18n:import` (CSV, Google Sheets link), per-level assets (`assets` in levels.json, `src/assets.ts`). The dev panel copies JSON for `content/balance.json`.
+- Analytics: death heat map (F9, Shift+F9 adds a file of players' deaths), A/B tests (`src/experiments.ts`: remote config `experiments`, `variant()`), Sentry/GlitchTip reports without the SDK (`sentrySink`, stacks, debug ids, `npm run sentry:sourcemaps`), Yandex Metrica (`metricaSink`), sinks from `.env` (`.env.example`), anonymous player id (`src/player.ts`), `reportError()`.
+- Game server `server/` (no dependencies, Dockerfile): events (JSON lines), report (`/report.html`: level funnel, D1/D7 retention, A/B variants, errors), death points (`/deaths`), leaderboard with score checks from the maps and replay storage, cloud saves with a transfer code (settings), level records on the level select. Client `src/backend.ts` (`VITE_BACKEND_URL`; off when empty; portal SDKs keep their saves).
+- Release: `npm run portal` (`scripts/portal-check.mjs` + `e2e/portal.spec.ts`: archive layout, paths, file names, external links, no scroll/selection/context menu, no sound before input, silent hidden tab, language), itch.io workflow (butler on tags), pull request workflow (checks, e2e, build artifact), Android through Capacitor 8 (`npm run mobile:init`, `MOBILE.md`), PC and Steam through Electron (`desktop/`, `app://` protocol, `--smoke` check, Steam achievements through steamworks.js, `DESKTOP.md`).
+- Art and sound: runtime bitmap fonts with Cyrillic (`src/bitmapFont.ts`, HUD score), dynamic lighting for dark levels (`light` in levels.json, `src/lighting.ts`), audio sprites in pure JS (`npm run audio:sprite`, `playSfx` finds sprite markers), Aseprite export with watch (`npm run art`).
+- Architecture and tests: typed game events (`src/events.ts`) with systems in `src/systems.ts` — scenes no longer call analytics or the server; seeded `rng` (`src/random.ts`, seeded per level); golden runs (`npm run test:golden`: fixed 1/60 s headless steps, Date.now follows the simulated clock, end state per genre) and `npm run verify` for server records; build version in the menu (`__APP_VERSION__`); Tweakpane pre-bundled (no reload on the first dev run).
+- Accessibility (settings → Accessibility): colour modes (high contrast, protanopia, deuteranopia, tritanopia — daltonize), sound captions, game speed 100/80/60 %, help (+2 lives, "Skip level" in the pause menu); a skipped level opens the next one without stars.
+- Breaking for projects made from 5.x: balance numbers moved from `src/config.ts` to `content/balance.json` (the exports keep their names), `LEVELS` comes from `content/levels.json`, texts from `content/i18n/*.json`; GameScene emits `gameEvents` instead of `track()`; a level opens when the previous one has any progress entry; `tsconfig.json` has `resolveJsonModule` and `allowImportingTsExtensions`; GamePush's `.env.example` is appended to the template one.
+
 ## 5.0.0 — 2026-10-23
 
 A complete game structure on top of the engine features; every system can be switched off in `FEATURES` (`src/config.ts`).

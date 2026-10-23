@@ -1,6 +1,7 @@
 import Phaser from "phaser"
 
 import { playSfx } from "../audio"
+import { backendOn, leaderboard } from "../backend"
 import { TEXT_STYLE } from "../config"
 import { starsLabel, t } from "../i18n"
 import { Controls } from "../input"
@@ -17,11 +18,13 @@ const FOCUS = 0xf59e0b
 
 // Level select: a grid of cards with stars, closed levels show a lock. Arrows / stick / mouse move
 // the focus, Enter / A / click starts, Esc / B goes back. After a level it shows the result and
-// puts the focus on the next level.
+// puts the focus on the next level. With the game server (VITE_BACKEND_URL) the focused level's records
+// are shown in the corner.
 export class LevelSelectScene extends Phaser.Scene {
   private controls!: Controls
   private cards: Phaser.GameObjects.Rectangle[] = []
   private focus = 0
+  private records?: Phaser.GameObjects.Text
 
   constructor() {
     super("levels")
@@ -94,6 +97,11 @@ export class LevelSelectScene extends Phaser.Scene {
       .setOrigin(0, 1)
       .setInteractive({ useHandCursor: true })
     back.on("pointerdown", () => goTo(this, "menu"))
+    this.records = backendOn
+      ? this.add
+          .text(width - 24, height - 24, "", { ...TEXT_STYLE, fontSize: "15px", strokeThickness: 4, align: "right" })
+          .setOrigin(1, 1)
+      : undefined
 
     // Focus: the next level after a win, otherwise the level just played or the last open one
     let focus = 0
@@ -123,6 +131,16 @@ export class LevelSelectScene extends Phaser.Scene {
   private setFocus(i: number) {
     this.focus = i
     this.cards.forEach((card, j) => card.setStrokeStyle(4, j === i ? FOCUS : 0x4b3f80))
+    void this.showRecords(i)
+  }
+
+  /** The focused level's top 5 from the game server; a late answer for another level is dropped */
+  private async showRecords(i: number) {
+    if (!this.records) return
+    const top = await leaderboard(i + 1)
+    if (this.focus !== i || !this.records.scene) return
+    const lines = top.map((e) => `${e.rank}. ${e.you ? t("you") : e.name} — ${e.score}`)
+    this.records.setText(lines.length ? [`${t("leaderboard")} ${i + 1}`, ...lines].join("\n") : "")
   }
 
   private start(i: number) {

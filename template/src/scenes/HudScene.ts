@@ -1,12 +1,14 @@
 import Phaser from "phaser"
 
+import { CAPTIONS } from "../accessibility"
 import { TEXT_STYLE } from "../config"
+import { gameEvents } from "../events"
 import { t } from "../i18n"
 import { VirtualButtons, type Action } from "../input"
 import { GENRE } from "../genre"
 import { save } from "../save"
 
-// Runs on top of GameScene without camera zoom: score, lives and touch buttons.
+// Runs on top of GameScene without camera zoom: score, lives, touch buttons and sound captions.
 export class HudScene extends Phaser.Scene {
   /** Touch buttons, read by GameScene's Controls every frame */
   touch = new VirtualButtons()
@@ -17,7 +19,8 @@ export class HudScene extends Phaser.Scene {
 
   create() {
     this.touch = new VirtualButtons()
-    const score = this.add.text(20, 16, "", TEXT_STYLE)
+    // A bitmap font (PreloadScene): the score changes often, a BitmapText redraws for free
+    const score = this.add.bitmapText(20, 16, "hud", "")
     const hearts = this.add.group()
 
     const render = () => {
@@ -45,6 +48,29 @@ export class HudScene extends Phaser.Scene {
     this.events.once("shutdown", () => this.registry.events.off("changedata", pop))
 
     if (this.sys.game.device.input.touch) this.addTouchButtons()
+    this.addCaptions()
+  }
+
+  /** Sound captions (settings → accessibility): "[прыжок]" under the play area, fading out */
+  private addCaptions() {
+    const caption = this.add
+      .text(this.scale.width / 2, this.scale.height - 120, "", {
+        ...TEXT_STYLE,
+        fontSize: "20px",
+        strokeThickness: 5,
+        backgroundColor: "#1d1630aa",
+        padding: { x: 10, y: 4 },
+      })
+      .setOrigin(0.5)
+      .setAlpha(0)
+    const off = gameEvents.on("sound", ({ key }) => {
+      const text = CAPTIONS[key]
+      if (!text || !save.get().settings.captions) return
+      caption.setText(t(text)).setAlpha(1)
+      this.tweens.killTweensOf(caption)
+      this.tweens.add({ targets: caption, alpha: 0, delay: 700, duration: 400 })
+    })
+    this.events.once("shutdown", off)
   }
 
   private addTouchButtons() {

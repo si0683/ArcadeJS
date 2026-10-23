@@ -1,10 +1,12 @@
 import Phaser from "phaser"
 
 import { updateMusicVolume } from "../audio"
+import { backendOn, transferCode, useTransferCode } from "../backend"
 import { TEXT_STYLE } from "../config"
 import { effectsLabel, LANGUAGES, t, volumeLabel, type Key } from "../i18n"
 import { Controls, keyName, keysFor, REBINDABLE, type Action } from "../input"
-import { nextVolume, save, type Settings } from "../save"
+import { platform } from "../platform"
+import { COLOR_MODES, GAME_SPEEDS, nextVolume, save, type ColorMode, type Settings } from "../save"
 import { fadeIn, goTo } from "../transition"
 import { MenuItem, MenuList } from "../ui"
 
@@ -15,30 +17,74 @@ const ACTION_TITLES: Partial<Record<Action, Key>> = {
   pause: "actionPause",
 }
 const LANGUAGE_NAMES: Record<string, string> = { ru: "Русский", en: "English" }
+const COLOR_NAMES: Record<ColorMode, Key> = {
+  normal: "colorsNormal",
+  contrast: "colorsContrast",
+  protan: "colorsProtan",
+  deutan: "colorsDeutan",
+  tritan: "colorsTritan",
+}
 
-// Settings: volume, effects, language, fullscreen, touch controls, keys.
+// Settings: volume, effects, language, fullscreen, touch controls, keys; "Accessibility" opens the second
+// page: colours, sound captions, game speed, help (src/accessibility.ts).
 // Every change saves at once (with a 1 s delay that groups quick clicks into one write).
 export class SettingsScene extends Phaser.Scene {
   private controls!: Controls
   private menu!: MenuList
   /** Waiting for a key for this action */
   private rebinding?: Action
+  /** Index of the "Accessibility" item: the focus returns to it from the second page */
+  private accessItem = 0
+  /** Esc / B: the main page goes to the menu, the second page back to the main one */
+  private back = () => goTo(this, "menu")
 
   constructor() {
     super("settings")
   }
 
-  create(data: { focus?: number }) {
+  create(data: { focus?: number; page?: "main" | "access" }) {
     const { width, height } = this.scale
     this.cameras.main.setBackgroundColor("#1d1630")
     fadeIn(this)
     this.rebinding = undefined
     this.controls = new Controls(this)
-    this.add.text(width / 2, 40, t("settings"), { ...TEXT_STYLE, fontSize: "36px" }).setOrigin(0.5)
+    const title = data.page === "access" ? t("accessibility") : t("settings")
+    this.add.text(width / 2, 40, title, { ...TEXT_STYLE, fontSize: "36px" }).setOrigin(0.5)
+    this.back = () => goTo(this, "menu")
 
     const s = () => save.get().settings
     const set = (patch: Partial<Settings>) => save.update({ settings: patch }, 1000)
     const onOff = (on: boolean) => t(on ? "on" : "off")
+    const next = <T>(list: readonly T[], value: T) => list[(list.indexOf(value) + 1) % list.length]
+
+    if (data.page === "access") {
+      const back = () => this.scene.restart({ focus: this.accessItem })
+      this.menu = new MenuList(
+        this,
+        width / 2,
+        120,
+        [
+          {
+            label: () => `${t("colors")}: ${t(COLOR_NAMES[s().colors])}`,
+            action: () => set({ colors: next(COLOR_MODES, s().colors) }),
+          },
+          {
+            label: () => `${t("captions")}: ${onOff(s().captions)}`,
+            action: () => set({ captions: !s().captions }),
+          },
+          {
+            label: () => `${t("gameSpeed")}: ${Math.round(s().gameSpeed * 100)}%`,
+            action: () => set({ gameSpeed: next(GAME_SPEEDS, s().gameSpeed) }),
+          },
+          { label: () => `${t("assist")}: ${onOff(s().assist)}`, action: () => set({ assist: !s().assist }) },
+          { label: `← ${t("back")}`, action: back },
+        ],
+        this.controls,
+        { gap: 48, fontSize: 24, focus: data.focus ?? 0 },
+      )
+      this.back = back
+      return
+    }
 
     const items: MenuItem[] = [
       { label: () => volumeLabel("sound", s().sound), action: () => set({ sound: nextVolume(s().sound) }) },
@@ -71,6 +117,8 @@ export class SettingsScene extends Phaser.Scene {
       label: () => `${t("touchControls")}: ${t(s().touch === "joystick" ? "joystick" : "buttons")}`,
       action: () => set({ touch: s().touch === "joystick" ? "buttons" : "joystick" }),
     })
+    this.accessItem = items.length
+    items.push({ label: `${t("accessibility")} →`, action: () => this.scene.restart({ page: "access" }) })
     for (const action of REBINDABLE) {
       items.push({
         label: () =>
@@ -79,6 +127,22 @@ export class SettingsScene extends Phaser.Scene {
             : `${t(ACTION_TITLES[action]!)}: ${keysFor(action).join(" / ")}`,
         action: () => this.waitForKey(action),
       })
+    }
+    // Your own site with the game server: progress moves to another device with a code (src/backend.ts)
+    if (backendOn && platform.name === "none") {
+      items.push(
+        { label: t("transferShow"), action: () => void prompt(t("transferPrompt"), transferCode()) },
+        {
+          label: t("transferEnter"),
+          action: () => {
+            const code = prompt(t("transferAsk"))
+            if (!code) return
+            // The new id's save loads on the next start
+            if (useTransferCode(code)) location.reload()
+            else alert(t("transferBad"))
+          },
+        },
+      )
     }
     items.push(
       { label: t("resetKeys"), action: () => set({ keys: {} }) },
@@ -95,7 +159,7 @@ export class SettingsScene extends Phaser.Scene {
   update() {
     this.controls.update()
     if (this.rebinding) return
-    if (this.controls.justPressed("pause")) return goTo(this, "menu")
+    if (this.controls.justPressed("pause")) return this.back()
     this.menu.update()
   }
 
