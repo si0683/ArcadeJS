@@ -33,7 +33,7 @@ const sdkList = [
   })),
 ]
 function sdkRank(name) {
-  const order = ["yandex", "vk", "crazygames", "poki"]
+  const order = ["yandex", "vk", "gamepush", "crazygames", "poki"]
   return order.includes(name) ? order.indexOf(name) : order.length
 }
 const SKIP = new Set(["node_modules", "dist", "package-lock.json", "test-results", "playwright-report"])

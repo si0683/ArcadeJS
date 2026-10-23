@@ -52,6 +52,7 @@ The installer asks which portal to build for (or pass `--sdk`):
 npm create gamemonsterjs2d@latest my-game -- --sdk=none         # plain web build (default)
 npm create gamemonsterjs2d@latest my-game -- --sdk=yandex       # Yandex Games
 npm create gamemonsterjs2d@latest my-game -- --sdk=vk           # VK Games (vk.com/games)
+npm create gamemonsterjs2d@latest my-game -- --sdk=gamepush     # VK Play, OK and more through GamePush
 npm create gamemonsterjs2d@latest my-game -- --sdk=crazygames   # CrazyGames
 npm create gamemonsterjs2d@latest my-game -- --sdk=poki         # Poki
 ```
@@ -63,12 +64,13 @@ The game talks to one interface, `platform` in `src/platform/` (init, game ready
 | `none` | — | `npm run dev` only (test) | localStorage | — | — |
 | `yandex` | ✔ | ✔ | ✔ | ✔ | `YANDEX.md` |
 | `vk` | ✔ | needs your server | ✔ | — | `VK.md` |
+| `gamepush` (VK Play, OK, …) | ✔ | ✔ | ✔ | ✔ | `GAMEPUSH.md` |
 | `crazygames` | ✔ | Xsolla, approved games | ✔ | — | `CRAZYGAMES.md` |
 | `poki` | ✔ | — | localStorage | — | `POKI.md` |
 
 **Purchases** go through `src/shop.ts`: owned products are restored on every start, permanent and consumable products are supported. The template sells "Remove ads" in the menu wherever the portal allows purchases.
 
-VK Play (vkplay.ru) has no public JS SDK for HTML5 games (partner integration with a server only), so the VK option targets VK Games.
+**VK Play** (vkplay.ru) has no public JS SDK for HTML5 games, so games reach it through [GamePush](https://gamepush.com) (`--sdk=gamepush`): one SDK that detects the portal — VK Play, VK Games, OK, Yandex Games and more. It needs a free GamePush account and the project keys in `.env`; without them the game runs as with no SDK.
 
 Every project gets `npm run zip` → `game.zip` with `index.html` at the root for game portals.
 

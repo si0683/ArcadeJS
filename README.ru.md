@@ -52,6 +52,7 @@ Matter.js и Howler.js специально не ставятся отдельн
 npm create gamemonsterjs2d@latest my-game -- --sdk=none         # без SDK — обычная веб-сборка (по умолчанию)
 npm create gamemonsterjs2d@latest my-game -- --sdk=yandex       # Яндекс Игры
 npm create gamemonsterjs2d@latest my-game -- --sdk=vk           # VK Игры (vk.com/games)
+npm create gamemonsterjs2d@latest my-game -- --sdk=gamepush     # VK Play, OK и другие площадки через GamePush
 npm create gamemonsterjs2d@latest my-game -- --sdk=crazygames   # CrazyGames
 npm create gamemonsterjs2d@latest my-game -- --sdk=poki         # Poki
 ```
@@ -63,12 +64,13 @@ npm create gamemonsterjs2d@latest my-game -- --sdk=poki         # Poki
 | `none` | — | только в `npm run dev` (тест) | localStorage | — | — |
 | `yandex` | ✔ | ✔ | ✔ | ✔ | `YANDEX.md` |
 | `vk` | ✔ | нужен свой сервер | ✔ | — | `VK.md` |
+| `gamepush` (VK Play, OK и др.) | ✔ | ✔ | ✔ | ✔ | `GAMEPUSH.md` |
 | `crazygames` | ✔ | Xsolla, для одобренных игр | ✔ | — | `CRAZYGAMES.md` |
 | `poki` | ✔ | — | localStorage | — | `POKI.md` |
 
 **Покупки** — модуль `src/shop.ts`: восстановление купленного при каждом запуске, постоянные и расходуемые товары. Пример — кнопка «Убрать рекламу» в меню: показывается только там, где площадка продаёт.
 
-VK Play (vkplay.ru) открытого JS SDK для HTML5-игр не даёт (только партнёрская интеграция с сервером), поэтому для VK взят каталог VK Игр.
+**VK Play** (vkplay.ru) открытого JS SDK для HTML5-игр не даёт, поэтому игры туда выходят через [GamePush](https://gamepush.com) (`--sdk=gamepush`): один SDK, который сам определяет площадку — VK Play, VK Игры, Одноклассники, Яндекс Игры и другие. Нужен бесплатный аккаунт GamePush и ключи проекта в `.env`; без них игра работает как без SDK.
 
 В любом проекте есть `npm run zip`: он собирает `game.zip` с `index.html` в корне для игровых порталов.
 

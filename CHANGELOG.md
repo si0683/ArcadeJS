@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.6.0 — 2026-10-23
+
+- VK Play in the stack: new `--sdk=gamepush` ([GamePush](https://gamepush.com) — one SDK for VK Play, VK Games, OK, Yandex Games and more; the portal is detected by the page address). Wired: SDK from the official mirrors with `onGPInit`, `gp.player.ready`, `gameStart`, `gameplayStart/Stop`, fullscreen and rewarded ads with the SDK's own pause/resume, saves in the player field `save`, best score in `score`, purchases by product tag, language. Keys in `.env` (`.env.example`); without them it runs as no SDK. Guide: `GAMEPUSH.md`; the browser check mocks the GamePush SDK.
+- Website: new palette without green — a light theme (white, indigo ink, violet accent) and a dark indigo theme; VK Play row in the stack table.
+
 ## 4.5.0 — 2026-10-23
 
 Game feel and professional tooling in the template.

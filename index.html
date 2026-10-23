@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GameMonsterJS2D — стек для 2D-игры одной командой</title>
   <meta name="description" content="npm create gamemonsterjs2d — 2D-игра на Vite, Phaser 4 и Tiled со всеми зависимостями и готовым уровнем.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><rect width='16' height='16' fill='%2318261c'/><rect x='2' y='2' width='12' height='12' fill='%23ffc933'/><rect x='10' y='4' width='2' height='8' fill='%23e0a800'/><rect x='4' y='12' width='8' height='2' fill='%23e0a800'/></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'><rect width='16' height='16' fill='%231c1d2e'/><rect x='2' y='2' width='12' height='12' fill='%23ffc933'/><rect x='10' y='4' width='2' height='8' fill='%23e0a800'/><rect x='4' y='12' width='8' height='2' fill='%23e0a800'/></svg>">
   <script>
     // Theme before the first paint: saved choice, otherwise the system setting
     (function () {
@@ -18,16 +18,20 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400&family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
-    /* Flat 2D: square corners, solid outlines, hard pixel shadows, a platformer palette (grass, sky, coin) */
+    /* Flat 2D: square corners, solid outlines, hard pixel shadows. Palette: indigo ink, violet accent, gold coin */
     :root {
-      --bg: #e6f4ea; --surface: #ffffff; --text: #18261c; --muted: #4f6656; --ink: #18261c;
-      --line: #18261c; --grass: #2f9e44; --coin: #ffc933; --sky: #3fa7d6; --term: #18261c; --term-text: #e6f4ea;
+      --bg: #f4f5fb; --surface: #ffffff; --text: #1c1d2e; --muted: #5a5e78;
+      --border: #1c1d2e; --ink: #1c1d2e; --accent: #6750f0; --accent-text: #ffffff;
+      --coin: #ffc933; --coin-dark: #e0a800; --term: #1c1d2e; --term-text: #eef0ff;
+      --grid: rgba(103, 80, 240, 0.07);
       --shadow: 4px 4px 0 var(--ink);
       color-scheme: light;
     }
     :root[data-theme="dark"] {
-      --bg: #101a14; --surface: #182a1f; --text: #e6f4ea; --muted: #9dbba6; --ink: #000000;
-      --line: #3c5c47; --grass: #4cc35f; --coin: #ffd24d; --sky: #58b8e4; --term: #0a120d; --term-text: #c9f0d2;
+      --bg: #0e0f1d; --surface: #171932; --text: #eceefe; --muted: #a3a7cc;
+      --border: #3d4185; --ink: #04050d; --accent: #9b8cff; --accent-text: #0e0f1d;
+      --coin: #ffd24d; --coin-dark: #d9a400; --term: #08091a; --term-text: #dfe2ff;
+      --grid: rgba(155, 140, 255, 0.06);
       color-scheme: dark;
     }
     *, *::before, *::after { box-sizing: border-box; }
@@ -36,44 +40,43 @@
       margin: 0; display: grid; place-items: center; font: 400 14px/1.45 Inter, system-ui, sans-serif; color: var(--text);
       /* a pixel grid on the background, like a tile map */
       background-color: var(--bg);
-      background-image: linear-gradient(transparent 31px, color-mix(in srgb, var(--grass) 12%, transparent) 31px),
-        linear-gradient(90deg, transparent 31px, color-mix(in srgb, var(--grass) 12%, transparent) 31px);
+      background-image: linear-gradient(transparent 31px, var(--grid) 31px),
+        linear-gradient(90deg, transparent 31px, var(--grid) 31px);
       background-size: 32px 32px;
     }
-    a { color: var(--grass); text-underline-offset: 3px; }
+    a { color: var(--accent); text-underline-offset: 3px; }
     main { width: min(680px, 100% - 32px); padding: 10px 0; }
     .top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
     .logo { display: flex; align-items: center; gap: 10px; font: 400 12px/1 'Press Start 2P', monospace; letter-spacing: 0; }
     /* pixel coin */
-    .logo b { width: 22px; height: 22px; background: var(--coin); border: 3px solid var(--ink); box-shadow: inset -4px -4px 0 #e0a800, 2px 2px 0 var(--ink); }
+    .logo b { width: 22px; height: 22px; background: var(--coin); border: 3px solid var(--border); box-shadow: inset -4px -4px 0 var(--coin-dark), 2px 2px 0 var(--ink); }
     .top .end { margin-left: auto; display: flex; gap: 8px; }
-    .btn { display: grid; place-items: center; height: 30px; padding: 0 10px; border: 2px solid var(--ink); background: var(--surface); color: var(--text); font: 700 12px/1 Inter, sans-serif; text-decoration: none; cursor: pointer; box-shadow: 3px 3px 0 var(--ink); }
+    .btn { display: grid; place-items: center; height: 30px; padding: 0 10px; border: 2px solid var(--border); background: var(--surface); color: var(--text); font: 700 12px/1 Inter, sans-serif; text-decoration: none; cursor: pointer; box-shadow: 3px 3px 0 var(--ink); }
     .btn:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--ink); }
     .btn:active { transform: translate(3px, 3px); box-shadow: none; }
     h1 { font: 400 clamp(14px, 2.6vw, 18px)/1.5 'Press Start 2P', monospace; margin: 0 0 8px; }
-    .grad { color: var(--grass); }
+    .grad { color: var(--accent); }
     .lead { color: var(--muted); margin: 0 0 14px; }
-    h2 { display: inline-block; font: 400 9px/1 'Press Start 2P', monospace; text-transform: uppercase; color: var(--ink); background: var(--coin); border: 2px solid var(--ink); padding: 5px 7px 4px; margin: 0 0 8px; }
-    :root[data-theme="dark"] h2 { color: #18261c; }
+    h2 { display: inline-block; font: 400 9px/1 'Press Start 2P', monospace; text-transform: uppercase; color: #1c1d2e; background: var(--coin); border: 2px solid var(--border); padding: 5px 7px 4px; margin: 0 0 8px; }
     ol { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 8px; }
     li { counter-increment: s; display: grid; grid-template-columns: 24px 1fr; gap: 4px 10px; align-items: center; min-width: 0; }
-    li::before { content: counter(s); grid-row: span 2; align-self: start; width: 24px; height: 24px; display: grid; place-items: center; background: var(--grass); color: #fff; border: 2px solid var(--ink); font: 400 10px/1 'Press Start 2P', monospace; }
+    li::before { content: counter(s); grid-row: span 2; align-self: start; width: 24px; height: 24px; display: grid; place-items: center; background: var(--accent); color: var(--accent-text); border: 2px solid var(--border); font: 400 10px/1 'Press Start 2P', monospace; }
     li.one::before { grid-row: auto; }
     li b { font-weight: 700; }
-    .cmd { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 4px 4px 4px 12px; border: 2px solid var(--ink); background: var(--term); color: var(--term-text); box-shadow: var(--shadow); }
+    .cmd { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 4px 4px 4px 12px; border: 2px solid var(--border); background: var(--term); color: var(--term-text); box-shadow: var(--shadow); }
     .cmd code { flex: 1; min-width: 0; font: 12.5px/1.5 'JetBrains Mono', monospace; white-space: nowrap; overflow-x: auto; scrollbar-width: none; }
     .cmd code::before { content: "▶ "; color: var(--coin); }
-    .cmd button { flex: none; padding: 6px 9px; border: 2px solid var(--term-text); background: var(--coin); color: #18261c; font: 700 11.5px/1 Inter, sans-serif; cursor: pointer; }
+    .cmd button { flex: none; padding: 6px 9px; border: 2px solid var(--term-text); background: var(--coin); color: #1c1d2e; font: 700 11.5px/1 Inter, sans-serif; cursor: pointer; }
     .cmd button:active { transform: translate(1px, 1px); }
     .note { color: var(--muted); font-size: 12.5px; margin: 10px 0 14px; }
     code { font: 12px 'JetBrains Mono', monospace; }
-    table { width: 100%; border-collapse: collapse; background: var(--surface); border: 2px solid var(--ink); box-shadow: var(--shadow); }
-    td { padding: 4px 8px; font-size: 13.5px; border-bottom: 2px dashed color-mix(in srgb, var(--line) 25%, transparent); vertical-align: top; }
+    table { width: 100%; border-collapse: collapse; background: var(--surface); border: 2px solid var(--border); box-shadow: var(--shadow); }
+    td { padding: 4px 8px; font-size: 13.5px; border-bottom: 2px dashed color-mix(in srgb, var(--border) 25%, transparent); vertical-align: top; }
     tr:last-child td { border-bottom: 0; }
     td:first-child { width: 150px; font-weight: 700; padding-right: 8px; }
     td:last-child { color: var(--muted); }
-    td:first-child a { color: inherit; text-decoration: underline; text-decoration-color: var(--grass); text-decoration-thickness: 2px; }
-    td:first-child a:hover { color: var(--grass); }
+    td:first-child a { color: inherit; text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 2px; }
+    td:first-child a:hover { color: var(--accent); }
     footer { margin-top: 14px; color: var(--muted); font-size: 12px; }
     /* Phones: a narrower first column keeps the page on one screen */
     @media (max-width: 480px) { td:first-child { width: 104px; } }
@@ -107,7 +110,8 @@
       <tr><td><a href="https://github.com/liabru/matter-js" target="_blank" rel="noopener">Физика</a></td><td>Arcade по умолчанию, Matter.js встроен в Phaser</td></tr>
       <tr><td><a href="https://github.com/mapeditor/tiled" target="_blank" rel="noopener">Tiled</a></td><td>уровень <code>level1.tmj</code>, редактор — <a href="https://www.mapeditor.org">mapeditor.org</a></td></tr>
       <tr><td><a href="https://github.com/microsoft/TypeScript" target="_blank" rel="noopener">TypeScript</a></td><td>строгие типы</td></tr>
-      <tr><td><a href="https://yandex.ru/dev/games/doc/ru/sdk/sdk-about" target="_blank" rel="noopener">SDK</a></td><td>без SDK, Яндекс Игры, VK Игры, CrazyGames, Poki (<code>--sdk=…</code>)</td></tr>
+      <tr><td><a href="https://docs.gamepush.com/ru/docs/get-start/" target="_blank" rel="noopener">VK Play</a></td><td>через GamePush (<code>--sdk=gamepush</code>): VK Play, OK и другие площадки одной сборкой</td></tr>
+      <tr><td><a href="https://yandex.ru/dev/games/doc/ru/sdk/sdk-about" target="_blank" rel="noopener">SDK</a></td><td>без SDK, Яндекс Игры, VK Игры, GamePush, CrazyGames, Poki (<code>--sdk=…</code>)</td></tr>
     </table>
 
     <footer>MIT · графика Kenney (CC0) · <a href="https://github.com/si0683/GameMonsterJS2D#readme">README</a> · 3D: <a href="https://si0683.github.io/GameMonsterJS3D/">GameMonsterJS3D</a></footer>
