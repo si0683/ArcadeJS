@@ -84,25 +84,25 @@ npm create gamemonsterjs2d@latest my-game -- --template=topdown   # вид св�
 npm create gamemonsterjs2d@latest my-game -- --sdk=none         # без SDK — обычная веб-сборка (по умолчанию)
 npm create gamemonsterjs2d@latest my-game -- --sdk=yandex       # Яндекс Игры
 npm create gamemonsterjs2d@latest my-game -- --sdk=vk           # VK Игры (vk.com/games)
-npm create gamemonsterjs2d@latest my-game -- --sdk=gamepush     # VK Play, OK и другие площадки через GamePush
+npm create gamemonsterjs2d@latest my-game -- --sdk=vkplay       # VK Play (vkplay.ru), собственный JS API
 npm create gamemonsterjs2d@latest my-game -- --sdk=crazygames   # CrazyGames
 npm create gamemonsterjs2d@latest my-game -- --sdk=poki         # Poki
 ```
 
 Игра обращается к одному интерфейсу — `platform` в `src/platform/`: запуск, «игра готова», начало и конец геймплея, реклама (полноэкранная и за награду), сохранения, лидерборд, покупки, язык, пауза. SDK меняет только реализацию; код игры не меняется. Ошибки и зависания SDK перехватывает `guard()` — игра не ломается.
 
-| SDK                            | Реклама | Покупки                       | Облачные сохранения | Лидерборд | Файл с инструкцией |
-| ------------------------------ | ------- | ----------------------------- | ------------------- | --------- | ------------------ |
-| `none`                         | —       | только в `npm run dev` (тест) | localStorage        | —         | —                  |
-| `yandex`                       | ✔       | ✔                             | ✔                   | ✔         | `YANDEX.md`        |
-| `vk`                           | ✔       | нужен свой сервер             | ✔                   | —         | `VK.md`            |
-| `gamepush` (VK Play, OK и др.) | ✔       | ✔                             | ✔                   | ✔         | `GAMEPUSH.md`      |
-| `crazygames`                   | ✔       | Xsolla, для одобренных игр    | ✔                   | —         | `CRAZYGAMES.md`    |
-| `poki`                         | ✔       | —                             | localStorage        | —         | `POKI.md`          |
+| SDK          | Реклама              | Покупки                       | Облачные сохранения | Лидерборд | Файл с инструкцией |
+| ------------ | -------------------- | ----------------------------- | ------------------- | --------- | ------------------ |
+| `none`       | —                    | только в `npm run dev` (тест) | localStorage        | —         | —                  |
+| `yandex`     | ✔                    | ✔                             | ✔                   | ✔         | `YANDEX.md`        |
+| `vk`         | ✔                    | нужен свой сервер             | ✔                   | —         | `VK.md`            |
+| `vkplay`     | если включит VK Play | окно оплаты, цены в игре      | через свой сервер   | —         | `VKPLAY.md`        |
+| `crazygames` | ✔                    | Xsolla, для одобренных игр    | ✔                   | —         | `CRAZYGAMES.md`    |
+| `poki`       | ✔                    | —                             | localStorage        | —         | `POKI.md`          |
 
 **Покупки** — модуль `src/shop.ts`: восстановление купленного при каждом запуске, постоянные и расходуемые товары. Пример — кнопка «Убрать рекламу» в меню: показывается только там, где площадка продаёт.
 
-**VK Play** (vkplay.ru) открытого JS SDK для HTML5-игр не даёт, поэтому игры туда выходят через [GamePush](https://gamepush.com) (`--sdk=gamepush`): один SDK, который сам определяет площадку — VK Play, VK Игры, Одноклассники, Яндекс Игры и другие. Нужен бесплатный аккаунт GamePush и ключи проекта в `.env`; без них игра работает как без SDK.
+**VK Play** (vkplay.ru) — через собственный [JS API площадки](https://documentation.vkplay.ru) (`--sdk=vkplay`), без посредников: `mailru.core.js`, вход и регистрация игрока, окно оплаты `paymentFrame`. Нужен только номер игры (GMRID) в `.env`; без него игра работает как без SDK. Облачных сохранений и лидерборда в JS API нет — их даёт свой игровой сервер (`server/`).
 
 В любом проекте есть `npm run zip`: он собирает `game.zip` с `index.html` в корне для игровых порталов.
 

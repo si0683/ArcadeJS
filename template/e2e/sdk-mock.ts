@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test"
 
-// Fake portal SDKs for browser checks (Yandex, CrazyGames, Poki, GamePush). Builds made with --sdk=…
+// Fake portal SDKs for browser checks (Yandex, CrazyGames, Poki, VK Play). Builds made with --sdk=…
 // load the portal's script; the checks serve these mocks instead (no network, no real ads) and record
 // which SDK methods the game called in window.sdkCalls. VK Bridge is bundled and works only inside VK,
 // so a --sdk=vk build runs here in its no-SDK mode.
@@ -66,40 +66,23 @@ window.PokiSDK = {
 }
 `
 
-const GAMEPUSH = `${RECORD}
-const products = [{ id: 1, tag: "no_ads", name: "Без рекламы", price: 99, currencySymbol: "₽" }]
-const fields = { save: "", score: 0 }
-const gp = {
-  language: "ru",
-  gameStart: async () => call("ready"),
-  gameplayStart: async () => call("gameplayStart"),
-  gameplayStop: async () => call("gameplayStop"),
-  on: () => {},
-  ads: {
-    isFullscreenAvailable: true,
-    isRewardedAvailable: true,
-    showFullscreen: async () => { call("fullscreenAd"); return true },
-    showRewardedVideo: async () => { call("rewardedAd"); return true },
-  },
-  player: {
-    ready: Promise.resolve(),
-    get score() { return fields.score },
-    set score(value) { fields.score = value },
-    has: (key) => key in fields,
-    get: (key) => fields[key],
-    set: (key, value) => { fields[key] = value },
-    sync: async () => call("setData"),
-  },
-  payments: {
-    isAvailable: true,
-    products,
-    purchases: [],
-    purchase: async ({ tag }) => { call("purchase"); return { product: products.find((p) => p.tag === tag) } },
-    consume: async () => call("consumePurchase"),
-    getProduct: (idOrTag) => products.find((p) => p.id === idOrTag || p.tag === idOrTag),
-  },
+const VKPLAY = `${RECORD}
+window.iframeApi = async (callbacks) => {
+  call("init")
+  return {
+    getLoginStatus: () => setTimeout(() => callbacks.getLoginStatusCallback({ status: "ok", loginStatus: 2 })),
+    registerUser: () => setTimeout(() => callbacks.registerUserCallback({ status: "ok" })),
+    authUser: () => call("authUser"),
+    paymentFrame: (args) => {
+      call("purchase")
+      setTimeout(() => { callbacks.paymentReceivedCallback({ uid: 1 }); callbacks.paymentWindowClosedCallback() }, 50)
+    },
+    showAds: ({ interstitial }) => {
+      call(interstitial ? "fullscreenAd" : "rewardedAd")
+      setTimeout(() => { callbacks.adsCallback({ type: "adCompleted" }); callbacks.adsCallback({ type: "adDismissed" }) }, 50)
+    },
+  }
 }
-setTimeout(() => window.onGPInit?.(gp))
 `
 
 export async function mockPlatformSdk(page: Page) {
@@ -107,9 +90,7 @@ export async function mockPlatformSdk(page: Page) {
   await page.route("**/sdk.js", (route) => route.fulfill(serve(YANDEX)))
   await page.route("https://sdk.crazygames.com/**", (route) => route.fulfill(serve(CRAZYGAMES)))
   await page.route("https://game-cdn.poki.com/**", (route) => route.fulfill(serve(POKI)))
-  for (const host of ["gs.eponesh.com", "s3.gamepush.com", "s3-eu.gamepush.com", "gamepush.com"]) {
-    await page.route(`https://${host}/**`, (route) => route.fulfill(serve(GAMEPUSH)))
-  }
+  await page.route("https://vkplay.ru/app/**", (route) => route.fulfill(serve(VKPLAY)))
 }
 
 /** SDK methods the game called; null when no portal SDK was loaded (no SDK, or VK outside VK) */

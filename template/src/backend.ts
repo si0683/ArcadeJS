@@ -157,12 +157,15 @@ type Storage = Pick<Platform, "loadData" | "saveData">
 /** Saves with a time stamp, so the newer copy wins when the local and the server ones differ */
 const STAMP = "_savedAt"
 
+/** Platforms without cloud saves of their own: there the game server keeps a copy */
+const NO_CLOUD = ["none", "vkplay", "poki"]
+
 /**
- * Wraps the platform's storage: on your own site with a server, saves also go to the server and the newer
- * copy wins on load. Portal SDKs keep their own cloud saves — they are returned unchanged.
+ * Wraps the platform's storage: on your own site (and portals without cloud saves) with a server, saves also
+ * go to the server and the newer copy wins on load. Portal SDKs with cloud saves are returned unchanged.
  */
 export function cloudStorage(platform: Pick<Platform, "name"> & Storage): Storage {
-  if (!backendOn || platform.name !== "none") return platform
+  if (!backendOn || !NO_CLOUD.includes(platform.name)) return platform
   const remote = (data: SaveData) => request("PUT", "/save", { player: playerId(), secret: secret(), data })
   return {
     async loadData() {

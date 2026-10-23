@@ -40,9 +40,9 @@ test("@portal no sound before the player touches the game", async ({ page }) => 
 
 test("@portal a hidden tab is silent and frozen", async ({ page }) => {
   await openMenu(page)
-  // Portal SDKs (Yandex, GamePush) pause through their own events; the browser event is ours
+  // Portal SDKs (Yandex) pause through their own events; the browser event is ours
   test.skip(
-    !["none", "crazygames", "poki"].includes(await inGame(page, (w) => w.platform.name)),
+    !["none", "crazygames", "poki", "vkplay"].includes(await inGame(page, (w) => w.platform.name)),
     "the SDK pauses itself",
   )
   // A key press unlocks the browser's audio, as a real player does (muting a locked context is a no-op)
@@ -77,7 +77,9 @@ for (const [locale, title] of [
     const page = await context.newPage()
     await mockPlatformSdk(page)
     await openMenu(page)
-    test.skip((await inGame(page, (w) => w.platform.name)) !== "none", "the SDK mock sets its own language")
+    // VK Play has no language in its API: the browser's one is used, as without an SDK
+    const name = await inGame(page, (w) => w.platform.name)
+    test.skip(!["none", "vkplay"].includes(name), "the SDK mock sets its own language")
     const texts = await inGame(page, (w) =>
       w.game.scene
         .getScene("menu")

@@ -1,0 +1,5 @@
+{
+  "title": "VK Play (vkplay.ru)",
+  "description": "VK Play's own JS API (mailru.core.js, iframeApi): payment window with prices from the game, login and registration, pause in payment windows; ads only where VK Play enables showAds",
+  "append": ["AGENTS.md", "README.md", "PROMT.md", ".env.example"]
+}

@@ -33,7 +33,7 @@ const sdkList = [
   })),
 ]
 function sdkRank(name) {
-  const order = ["yandex", "vk", "gamepush", "crazygames", "poki"]
+  const order = ["yandex", "vk", "vkplay", "crazygames", "poki"]
   return order.includes(name) ? order.indexOf(name) : order.length
 }
 // Genre templates: templates/<name>/ = template.json + files/ (copied over the platformer) + append/

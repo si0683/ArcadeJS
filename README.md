@@ -84,25 +84,25 @@ The installer asks which portal to build for (or pass `--sdk`):
 npm create gamemonsterjs2d@latest my-game -- --sdk=none         # plain web build (default)
 npm create gamemonsterjs2d@latest my-game -- --sdk=yandex       # Yandex Games
 npm create gamemonsterjs2d@latest my-game -- --sdk=vk           # VK Games (vk.com/games)
-npm create gamemonsterjs2d@latest my-game -- --sdk=gamepush     # VK Play, OK and more through GamePush
+npm create gamemonsterjs2d@latest my-game -- --sdk=vkplay       # VK Play (vkplay.ru), its own JS API
 npm create gamemonsterjs2d@latest my-game -- --sdk=crazygames   # CrazyGames
 npm create gamemonsterjs2d@latest my-game -- --sdk=poki         # Poki
 ```
 
 The game talks to one interface, `platform` in `src/platform/` (init, game ready, gameplay start/stop, fullscreen and rewarded ads, saves, leaderboard, purchases, language, pause/resume). The SDK only swaps the implementation; `guard()` keeps SDK errors and hangs from breaking the game.
 
-| SDK                         | Ads | Purchases                 | Cloud saves  | Leaderboard | Guide           |
-| --------------------------- | --- | ------------------------- | ------------ | ----------- | --------------- |
-| `none`                      | —   | `npm run dev` only (test) | localStorage | —           | —               |
-| `yandex`                    | ✔   | ✔                         | ✔            | ✔           | `YANDEX.md`     |
-| `vk`                        | ✔   | needs your server         | ✔            | —           | `VK.md`         |
-| `gamepush` (VK Play, OK, …) | ✔   | ✔                         | ✔            | ✔           | `GAMEPUSH.md`   |
-| `crazygames`                | ✔   | Xsolla, approved games    | ✔            | —           | `CRAZYGAMES.md` |
-| `poki`                      | ✔   | —                         | localStorage | —           | `POKI.md`       |
+| SDK          | Ads                     | Purchases                          | Cloud saves         | Leaderboard | Guide           |
+| ------------ | ----------------------- | ---------------------------------- | ------------------- | ----------- | --------------- |
+| `none`       | —                       | `npm run dev` only (test)          | localStorage        | —           | —               |
+| `yandex`     | ✔                       | ✔                                  | ✔                   | ✔           | `YANDEX.md`     |
+| `vk`         | ✔                       | needs your server                  | ✔                   | —           | `VK.md`         |
+| `vkplay`     | when VK Play enables it | payment window, prices in the game | through your server | —           | `VKPLAY.md`     |
+| `crazygames` | ✔                       | Xsolla, approved games             | ✔                   | —           | `CRAZYGAMES.md` |
+| `poki`       | ✔                       | —                                  | localStorage        | —           | `POKI.md`       |
 
 **Purchases** go through `src/shop.ts`: owned products are restored on every start, permanent and consumable products are supported. The template sells "Remove ads" in the menu wherever the portal allows purchases.
 
-**VK Play** (vkplay.ru) has no public JS SDK for HTML5 games, so games reach it through [GamePush](https://gamepush.com) (`--sdk=gamepush`): one SDK that detects the portal — VK Play, VK Games, OK, Yandex Games and more. It needs a free GamePush account and the project keys in `.env`; without them the game runs as with no SDK.
+**VK Play** (vkplay.ru) through the platform's own [JS API](https://documentation.vkplay.ru) (`--sdk=vkplay`), no middleman: `mailru.core.js`, player login and registration, the `paymentFrame` payment window. Only the game id (GMRID) goes into `.env`; without it the game runs as with no SDK. The JS API has no cloud saves or leaderboard — your own game server (`server/`) provides them.
 
 Every project gets `npm run zip` → `game.zip` with `index.html` at the root for game portals.
 

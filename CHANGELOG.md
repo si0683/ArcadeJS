@@ -1,5 +1,12 @@
 # Changelog
 
+## 6.1.0 — 2026-10-23
+
+- VK Play through its own JS API: new `--sdk=vkplay` (https://documentation.vkplay.ru, "JS API integration"): `mailru.core.js` + `window.iframeApi(callbacks)`, login status, `authUser` / `registerUser` before a purchase, `paymentFrame` with prices from `VKPLAY_PRODUCTS` (rubles), pause in payment windows, `showAds` + `adsCallback` only when the API object has it (not in the public docs). The game id goes to `.env` as `VITE_VKPLAY_APP_ID`; without it the game runs as with no SDK. Guide: `VKPLAY.md`; the browser checks mock `mailru.core.js`.
+- GamePush removed (`--sdk=gamepush`, `GAMEPUSH.md`, its mock and allowed hosts): the stack no longer depends on a third-party aggregator.
+- The game server keeps cloud saves on VK Play and Poki too (portals without cloud saves of their own).
+- Website: new warm themes without blue — charcoal dark with a gold coin and a coral accent, paper light; the stack table covers content, release targets, the game server and tests; a link to the AI prompt; still one screen on desktop and phone.
+
 ## 6.0.0 — 2026-10-23
 
 Studio-grade tooling: content as data, analytics, an own game server, release targets beyond the browser, art and sound pipelines, deterministic tests, accessibility.

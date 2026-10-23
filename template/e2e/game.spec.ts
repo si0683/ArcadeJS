@@ -109,8 +109,10 @@ test("the game loads, starts and the player moves", async ({ page }) => {
   expect(await inGame(page, (w) => w.game.scene.isActive("pause"))).toBe(false)
 
   // With a portal SDK the game reports loading and play (moderation checks these)
+  // (VK Play's JS API has no such events: it is checked by connecting and by the purchase above)
   const calls = await sdkCalls(page)
-  if (calls) expect(calls).toEqual(expect.arrayContaining(["ready", "gameplayStart", "gameplayStop"]))
+  if (calls && (await inGame(page, (w) => w.platform.name)) === "vkplay") expect(calls).toContain("init")
+  else if (calls) expect(calls).toEqual(expect.arrayContaining(["ready", "gameplayStart", "gameplayStop"]))
 
   expect(errors).toEqual([])
 })
