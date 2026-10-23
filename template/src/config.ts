@@ -37,6 +37,33 @@ export const FX = {
   squash: 0.22,
 }
 
+/**
+ * Optional systems: switch off what your game does not need — the code stays, the feature disappears.
+ * Every one is described in RECIPES.md.
+ */
+export const FEATURES = {
+  /** Level select screen with stars; off — "Play" starts the first level, levels go one after another */
+  levelSelect: true,
+  /** Tiled points "checkpoint": respawn there instead of the level start */
+  checkpoints: true,
+  /** Tiled points "hint": tutorial texts that appear near the player */
+  hints: true,
+  /** Background layers that move slower than the level */
+  parallax: true,
+  /** Achievements with a pop-up (src/achievements.ts) */
+  achievements: true,
+  /** A reward for coming back every day (src/daily.ts) */
+  dailyReward: true,
+  /** "Rotate your phone" over a portrait screen */
+  rotatePrompt: true,
+  /** Balance overrides from a JSON file at this URL (src/remote.ts); "" — off */
+  remoteConfigUrl: "",
+}
+
+/** Springs and moving platforms (Tiled objects "spring", "platform") */
+export const SPRING_SPEED = 620
+export const PLATFORM_SPEED = 40
+
 // Points and rules (used by src/rules.ts)
 export const COIN_POINTS = 1
 export const STOMP_POINTS = 5

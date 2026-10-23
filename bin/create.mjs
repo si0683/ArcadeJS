@@ -3,7 +3,7 @@
 // into a new folder and installs its dependencies.
 //
 //   npm create gamemonsterjs2d@latest my-game
-//   npx create-gamemonsterjs2d my-game --no-install --no-git
+//   npx create-gamemonsterjs2d my-game --template=topdown --sdk=yandex --no-install --no-git
 
 import { spawnSync } from "node:child_process"
 import { appendFileSync, cpSync, existsSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs"
@@ -16,8 +16,8 @@ const PACKAGE = "gamemonsterjs2d"
 const STACK = "Vite · Phaser 4 · Tiled · TypeScript"
 const DEFAULT_DIR = "my-game"
 const DEV_URL = "http://localhost:5173"
-const TIPS = `Уровень правится в Tiled (https://www.mapeditor.org):
-  public/assets/maps/level1.tmj`
+const TIPS = `Уровни правятся в Tiled (https://www.mapeditor.org):
+  public/assets/maps/level1.tmj, level2.tmj; список уровней — src/levels.ts`
 
 const TEMPLATE = fileURLToPath(new URL("../template", import.meta.url))
 // Optional platform SDKs: sdks/<name>/ = sdk.json + files/ (copied over the template) + append/ (added to docs)
@@ -36,6 +36,15 @@ function sdkRank(name) {
   const order = ["yandex", "vk", "gamepush", "crazygames", "poki"]
   return order.includes(name) ? order.indexOf(name) : order.length
 }
+// Genre templates: templates/<name>/ = template.json + files/ (copied over the platformer) + append/
+const GENRES = fileURLToPath(new URL("../templates", import.meta.url))
+const genreList = [
+  { name: "platformer", title: "платформер (бег, прыжки, уровни сбоку)" },
+  ...(existsSync(GENRES) ? readdirSync(GENRES) : []).sort().map((name) => ({
+    name,
+    ...JSON.parse(readFileSync(join(GENRES, name, "template.json"), "utf8")),
+  })),
+]
 const SKIP = new Set(["node_modules", "dist", "package-lock.json", "test-results", "playwright-report"])
 const { version } = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"))
 
@@ -50,10 +59,13 @@ const args = process.argv.slice(2)
 const flags = new Set()
 let target
 let sdk
+let genre
 for (let i = 0; i < args.length; i++) {
   const arg = args[i]
   if (arg === "--sdk") sdk = args[++i]
   else if (arg.startsWith("--sdk=")) sdk = arg.slice(6)
+  else if (arg === "--template") genre = args[++i]
+  else if (arg.startsWith("--template=")) genre = arg.slice(11)
   else if (arg.startsWith("-")) flags.add(arg)
   else target ??= arg
 }
@@ -62,8 +74,9 @@ if (flags.has("-h") || flags.has("--help")) {
   console.log(`
 ${bold(`create-${PACKAGE}`)} ${dim(version)}
 
-  npm create ${PACKAGE}@latest ${dim("[folder]")} ${dim("[-- --sdk=<name> --no-install --no-git]")}
+  npm create ${PACKAGE}@latest ${dim("[folder]")} ${dim("[-- --template=<genre> --sdk=<name> --no-install --no-git]")}
 
+  --template=<genre>  game genre: ${genreList.map((g) => `${g.name} (${g.title})`).join(", ")}
   --sdk=<name>   platform SDK: ${sdkList.map((s) => `${s.name} (${s.title})`).join(", ")}
   --no-install   do not run npm install
   --no-git       do not run git init
@@ -73,9 +86,15 @@ ${bold(`create-${PACKAGE}`)} ${dim(version)}
 
 console.log(`\n${magenta(bold(NAME))} ${dim(version)} — ${STACK}\n`)
 
-if (process.stdin.isTTY && (!target || !sdk)) {
+if (process.stdin.isTTY && (!target || !sdk || !genre)) {
   const rl = createInterface({ input: process.stdin, output: process.stdout })
   if (!target) target = (await rl.question(`Папка проекта ${dim(`(${DEFAULT_DIR})`)}: `)).trim()
+  if (!genre && genreList.length > 1) {
+    console.log("Жанр игры:")
+    genreList.forEach((g, i) => console.log(`  ${i + 1} — ${g.title}`))
+    const answer = (await rl.question(`Выберите ${dim("(1)")}: `)).trim()
+    genre = genreList[Number(answer) - 1]?.name ?? (genreList.some((g) => g.name === answer) ? answer : undefined)
+  }
   if (!sdk && sdkList.length > 1) {
     console.log("SDK платформы:")
     sdkList.forEach((s, i) => console.log(`  ${i + 1} — ${s.title}`))
@@ -86,6 +105,12 @@ if (process.stdin.isTTY && (!target || !sdk)) {
 }
 target ||= DEFAULT_DIR
 sdk ||= "none"
+genre ||= "platformer"
+const genreInfo = genreList.find((g) => g.name === genre)
+if (!genreInfo) {
+  console.error(red(`Неизвестный жанр «${genre}». Доступны: ${genreList.map((g) => g.name).join(", ")}`))
+  process.exit(1)
+}
 const sdkInfo = sdkList.find((s) => s.name === sdk)
 if (!sdkInfo) {
   console.error(red(`Неизвестный SDK «${sdk}». Доступны: ${sdkList.map((s) => s.name).join(", ")}`))
@@ -109,6 +134,15 @@ const pkgPath = join(root, "package.json")
 const pkg = JSON.parse(readFileSync(pkgPath, "utf8"))
 pkg.name = toPackageName(basename(root))
 
+if (genre !== "platformer") {
+  const dir = join(GENRES, genre)
+  // The genre replaces GameScene, the maps, its entities and src/genre.ts; the rest is shared
+  if (existsSync(join(dir, "files"))) cpSync(join(dir, "files"), root, { recursive: true })
+  for (const file of genreInfo.append ?? []) {
+    appendFileSync(join(root, file), readFileSync(join(dir, "append", file), "utf8"))
+  }
+}
+
 if (sdk !== "none") {
   const dir = join(SDKS, sdk)
   // Files replace or extend the template (e.g. src/platform/index.ts → the SDK implementation)
@@ -125,6 +159,7 @@ if (sdk !== "none") {
 writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n")
 
 console.log(`${green("✔")} Проект создан: ${bold(root)}`)
+console.log(`${green("✔")} Жанр: ${genreInfo.title}`)
 console.log(`${green("✔")} SDK: ${sdkInfo.title}`)
 
 const agent = (process.env.npm_config_user_agent ?? "npm").split("/")[0]
@@ -150,7 +185,8 @@ ${sdkScripts()}  ${pm} run zip          ${dim("# game.zip для публика�
   ${pm} run check        ${dim("# линтер, типы, тесты, сборка, размер — перед коммитом")}
 
 ${TIPS}
-В игре под ${pm} run dev: F1 — отладка, F2 — ползунки баланса, F3 — хитбоксы, F4 — бессмертие.
+В игре под ${pm} run dev: F1 — отладка, F2 — ползунки баланса, F3 — хитбоксы, F4 — бессмертие,
+F7 — запись прохождения, F8 — воспроизведение.
 Рецепты (враги, уровни, экраны, эффекты, геймпад, атласы, аналитика): RECIPES.md
 `)
 

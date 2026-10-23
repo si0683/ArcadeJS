@@ -133,8 +133,17 @@ export const platform: Platform = {
         console.warn("[platform] GamePush SDK did not load — running without it.")
         return
       }
-      // The player (saves, purchases) syncs with the server before the game may use it
-      await sdk.player.ready
+      // The player (saves, purchases) syncs with the server before the game may use it. Wrong keys or
+      // a dead server: the SDK may never get ready — then the whole session runs without it, rather
+      // than switching to the SDK in the middle of a game
+      const ready = await Promise.race([
+        sdk.player.ready.then(() => true),
+        new Promise<boolean>((resolve) => setTimeout(() => resolve(false), INIT_TIMEOUT)),
+      ])
+      if (!ready) {
+        console.warn("[platform] GamePush player did not get ready — running without the SDK.")
+        return
+      }
       gp = sdk
     } catch (error) {
       console.warn("[platform] GamePush SDK failed to start — running without it:", error)

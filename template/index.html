@@ -2,7 +2,7 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Моя игра</title>
     <link rel="icon" type="image/png" href="./assets/sprites/coin.png" />
     <style>
@@ -21,9 +21,30 @@
         -webkit-user-select: none;
         -webkit-touch-callout: none;
       }
+      /* Phones with a notch or rounded corners: keep the game inside the safe area */
       #game {
-        width: 100%;
-        height: 100%;
+        position: fixed;
+        inset: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      }
+      /* "Turn your phone sideways" (src/orientation.ts): only on touch screens held upright */
+      #rotate {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        place-items: center;
+        padding: 24px;
+        background: #1d1630;
+        color: #fff;
+        font:
+          700 22px/1.4 system-ui,
+          sans-serif;
+        text-align: center;
+      }
+      @media (orientation: portrait) and (pointer: coarse) {
+        #rotate.on {
+          display: grid;
+        }
       }
       canvas {
         display: block;
@@ -33,6 +54,7 @@
   </head>
   <body oncontextmenu="return false">
     <div id="game"></div>
+    <div id="rotate"></div>
     <script type="module" src="./src/main.ts"></script>
   </body>
 </html>

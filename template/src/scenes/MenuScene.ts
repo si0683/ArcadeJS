@@ -1,8 +1,11 @@
 import Phaser from "phaser"
 
-import { TEXT_STYLE } from "../config"
+import { ACHIEVEMENTS } from "../achievements"
+import { FEATURES, TEXT_STYLE } from "../config"
+import { GENRE } from "../genre"
 import { effectsLabel, t, volumeLabel } from "../i18n"
 import { Controls } from "../input"
+import { claimDailyReward } from "../meta"
 import { nextVolume, save } from "../save"
 import { PRODUCTS, shop } from "../shop"
 import { fadeIn, goTo } from "../transition"
@@ -32,7 +35,7 @@ export class MenuScene extends Phaser.Scene {
       .setOrigin(0.5)
     this.tweens.add({ targets: hint, alpha: 0.3, duration: 700, yoyo: true, repeat: -1 })
     this.add
-      .text(width / 2, height - 40, t("controls"), {
+      .text(width / 2, height - 40, t(GENRE.controls), {
         ...TEXT_STYLE,
         fontSize: "18px",
         color: "#a69fc2",
@@ -62,6 +65,24 @@ export class MenuScene extends Phaser.Scene {
     }
     const settings = [button(16, "sound", "S"), button(46, "music", "M"), button(76, "effects", "E")]
 
+    // All settings (language, fullscreen, keys, touch controls) on their own screen: click or O
+    const openSettings = () => goTo(this, "settings")
+    const more = this.add
+      .text(width - 20, 106, `⚙ ${t("settings")}  [O]`, small)
+      .setOrigin(1, 0)
+      .setInteractive({ useHandCursor: true })
+    more.on("pointerdown", openSettings)
+    more.on("pointerover", () => more.setColor("#f59e0b"))
+    more.on("pointerout", () => more.setColor("#ffffff"))
+    settings.push({ change: openSettings, code: "KeyO" })
+
+    // Daily reward first: the piggy bank below already shows it
+    claimDailyReward(this.game)
+    // Piggy bank and achievements
+    const stats = [`${t("wallet")}: ${save.get().wallet}`]
+    if (FEATURES.achievements) stats.push(`🏆 ${save.get().achievements.length}/${ACHIEVEMENTS.length}`)
+    this.add.text(20, height - 80, stats.join("   "), { ...small, color: "#a69fc2" })
+
     // ---------- shop: "Remove ads" while it is sold here and not bought yet (click or B) ----------
     if (shop.available && !shop.has(PRODUCTS.noAds)) {
       const label = `${t("noAds")} · ${shop.product(PRODUCTS.noAds).price}  [B]`
@@ -84,7 +105,8 @@ export class MenuScene extends Phaser.Scene {
     const start = () => {
       if (started) return
       started = true
-      goTo(this, "game")
+      // With the level select the menu opens it; without — the first level starts
+      goTo(this, FEATURES.levelSelect ? "levels" : "game")
     }
     this.start = start
     // Gamepad: A or Start begins the game (keys and taps are handled by the listeners below)

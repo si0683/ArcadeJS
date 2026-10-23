@@ -1,11 +1,15 @@
 import Phaser from "phaser"
 
+import { GENRE } from "./genre"
+import { replay } from "./replay"
+import { save } from "./save"
+
 // Controls by action, not by key: the game asks "is jump pressed?", and keyboard, gamepad and touch
 // all answer. Change the keys here — the scenes never name a key themselves.
 
 export type Action = "left" | "right" | "up" | "down" | "jump" | "pause" | "confirm"
 
-/** Keyboard keys for every action (names from Phaser.Input.Keyboard.KeyCodes) */
+/** Default keyboard keys for every action (names from Phaser.Input.Keyboard.KeyCodes) */
 export const KEYS: Record<Action, string[]> = {
   left: ["LEFT", "A"],
   right: ["RIGHT", "D"],
@@ -25,6 +29,20 @@ export const PAD_BUTTONS: Record<Action, number[]> = {
   jump: [0],
   pause: [9],
   confirm: [0],
+}
+
+/** Actions the player can re-assign in the settings */
+export const REBINDABLE: Action[] = ["left", "right", "jump", "pause"]
+
+/** Keys of an action: the player's choice from the settings, otherwise the genre's or the default */
+export function keysFor(action: Action): string[] {
+  return save.get().settings.keys[action] ?? GENRE.keys[action] ?? KEYS[action]
+}
+
+/** A key name for KEYS from a browser key event ("SPACE", "A", "LEFT"); undefined for unknown keys */
+export function keyName(event: KeyboardEvent): string | undefined {
+  const codes = Phaser.Input.Keyboard.KeyCodes as unknown as Record<string, number>
+  return Object.keys(codes).find((name) => codes[name] === event.keyCode)
 }
 
 /** Stick tilt that counts as a press */
@@ -72,12 +90,18 @@ export class Controls {
   private released = new Set<Action>()
   /** Horizontal axis −1…1: stick or keys */
   axisX = 0
+  /** Vertical axis −1 (up) … 1 (down): stick or keys — for top-down games */
+  axisY = 0
+  /** Sum of the game loop's frame times since this scene started — the clock the physics steps on */
+  private clock = 0
   /** When update() last ran (event time base): a key tapped between two frames still counts */
   private lastUpdate = performance.now()
 
   constructor(
     private scene: Phaser.Scene,
     private virtual: () => VirtualButtons | undefined = () => undefined,
+    /** GameScene: this input is recorded and replayed (src/replay.ts) */
+    private recordable = false,
   ) {
     const keyboard = scene.input.keyboard
     if (keyboard) {
@@ -85,13 +109,18 @@ export class Controls {
         // The same key in two actions (Space: jump and confirm) is one Key object — that is fine
         this.keys.set(
           action,
-          KEYS[action].map((name) => keyboard.addKey(name)),
+          keysFor(action).map((name) => keyboard.addKey(name)),
         )
       }
     }
   }
 
   update() {
+    // A replay plays: the recording is the input, the devices are ignored
+    this.clock += this.scene.game.loop.delta
+    const played = this.recordable ? replay.next(this.clock) : undefined
+    if (played) return this.apply(played.down as Set<Action>, played.axisX)
+
     const pad = this.pad()
     const virtual = this.virtual()
     const taps = virtual?.takeTaps()
@@ -111,14 +140,22 @@ export class Controls {
       if (key || button || stick || touch) now.add(action)
     }
 
+    const keysX = (now.has("right") ? 1 : 0) - (now.has("left") ? 1 : 0)
+    const keysY = (now.has("down") ? 1 : 0) - (now.has("up") ? 1 : 0)
+    this.axisY = stickY !== 0 ? Phaser.Math.Clamp(stickY, -1, 1) : keysY
+    this.apply(now, stickX !== 0 ? Phaser.Math.Clamp(stickX, -1, 1) : keysX)
+    if (this.recordable) replay.record(now, this.axisX, this.clock)
+  }
+
+  private apply(now: Set<Action>, axisX: number) {
     this.pressed.clear()
     this.released.clear()
     for (const action of now) if (!this.down.has(action)) this.pressed.add(action)
     for (const action of this.down) if (!now.has(action)) this.released.add(action)
     this.down = now
-
-    const keysX = (now.has("right") ? 1 : 0) - (now.has("left") ? 1 : 0)
-    this.axisX = stickX !== 0 ? Phaser.Math.Clamp(stickX, -1, 1) : keysX
+    this.axisX = axisX
+    // Replays store only the horizontal axis; the vertical one comes from up/down
+    if (this.recordable && replay.isPlaying) this.axisY = (now.has("down") ? 1 : 0) - (now.has("up") ? 1 : 0)
     this.lastUpdate = performance.now()
   }
 

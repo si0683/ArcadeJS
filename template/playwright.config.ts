@@ -13,7 +13,14 @@ export default defineConfig({
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  // Screenshots that do not exist yet are saved on the first run (then committed and compared)
+  updateSnapshots: "missing",
+  projects: [
+    // npm run test:e2e — everything except the slow performance check
+    { name: "chromium", use: { ...devices["Desktop Chrome"] }, testIgnore: "perf.spec.ts" },
+    // npm run test:perf — frame rate with a slowed-down CPU
+    { name: "perf", use: { ...devices["Desktop Chrome"] }, testMatch: "perf.spec.ts" },
+  ],
   // The dev server: window.game and window.save are available there for the checks
   webServer: {
     command: `npm run dev -- --port ${PORT} --strictPort`,

@@ -12,11 +12,14 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --project=chromium",
     "check": "npm run lint && npm run typecheck && npm test && npm run build && npm run size",
     "zip": "npm run build && node scripts/zip.mjs",
     "atlas": "node scripts/atlas.mjs",
-    "size": "node scripts/size.mjs"
+    "size": "node scripts/size.mjs",
+    "build:web": "npm run build && node scripts/pwa.mjs",
+    "audio": "node scripts/audio.mjs",
+    "test:perf": "playwright test --project=perf"
   },
   "dependencies": {
     "phaser": "^4.2.1"

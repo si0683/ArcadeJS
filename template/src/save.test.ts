@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { createSaveStore, DEFAULT_SAVE, nextVolume, parseSave } from "./save"
+import { createSaveStore, DEFAULT_SAVE, DEFAULT_SETTINGS, nextVolume, parseSave } from "./save"
 
 describe("parseSave", () => {
   it("gives defaults for empty or broken data", () => {
@@ -11,19 +11,39 @@ describe("parseSave", () => {
 
   it("keeps valid values and clamps the rest", () => {
     expect(parseSave({ best: 42, settings: { sound: 0.5, music: 0 } })).toEqual({
+      ...DEFAULT_SAVE,
       best: 42,
-      settings: { sound: 0.5, music: 0, effects: true },
+      settings: { ...DEFAULT_SETTINGS, sound: 0.5, music: 0 },
     })
     expect(parseSave({ best: -5, settings: { sound: 3, music: -1 } })).toEqual({
-      best: 0,
-      settings: { sound: 1, music: 0, effects: true },
+      ...DEFAULT_SAVE,
+      settings: { ...DEFAULT_SETTINGS, sound: 1, music: 0 },
     })
     expect(parseSave({ settings: { effects: false } }).settings.effects).toBe(false)
     expect(parseSave({ settings: { effects: "no" } }).settings.effects).toBe(true)
   })
 
   it("reads saves of the old format ({ best } only)", () => {
-    expect(parseSave({ best: 7 })).toEqual({ best: 7, settings: DEFAULT_SAVE.settings })
+    expect(parseSave({ best: 7 })).toEqual({ ...DEFAULT_SAVE, best: 7 })
+  })
+
+  it("checks the newer fields: levels, achievements, daily reward, language, keys", () => {
+    const save = parseSave({
+      wallet: 12.7,
+      levels: { level1: { stars: 2, best: 9 } },
+      achievements: ["first_win", "first_win", 5],
+      daily: { last: "2026-10-23", streak: 3 },
+      settings: { lang: "en", touch: "joystick", keys: { jump: ["X", 7], left: "A" } },
+    })
+    expect(save.wallet).toBe(12)
+    expect(save.levels).toEqual({ level1: { stars: 2, best: 9 } })
+    expect(save.achievements).toEqual(["first_win"])
+    expect(save.daily).toEqual({ last: "2026-10-23", streak: 3 })
+    expect(save.settings).toMatchObject({ lang: "en", touch: "joystick", keys: { jump: ["X"] } })
+    expect(parseSave({ daily: { last: "yesterday" }, settings: { touch: "wheel" } })).toMatchObject({
+      daily: { last: "" },
+      settings: { touch: "buttons" },
+    })
   })
 })
 
@@ -51,7 +71,7 @@ describe("createSaveStore", () => {
 
   it("loads and normalizes", async () => {
     const store = createSaveStore(storage({ best: 3 }))
-    expect(await store.load()).toEqual({ best: 3, settings: DEFAULT_SAVE.settings })
+    expect(await store.load()).toEqual({ ...DEFAULT_SAVE, best: 3 })
   })
 
   it("saving the record keeps the settings", async () => {
@@ -59,7 +79,9 @@ describe("createSaveStore", () => {
     const store = createSaveStore(target)
     await store.load()
     store.update({ best: 10 })
-    expect(target.saveData).toHaveBeenLastCalledWith({ best: 10, settings: { sound: 0.25, music: 0, effects: true } })
+    expect(target.saveData).toHaveBeenLastCalledWith(
+      expect.objectContaining({ best: 10, settings: { ...DEFAULT_SETTINGS, sound: 0.25, music: 0 } }),
+    )
   })
 
   it("groups quick settings changes into one write", async () => {
@@ -72,7 +94,9 @@ describe("createSaveStore", () => {
     expect(target.saveData).not.toHaveBeenCalled()
     vi.advanceTimersByTime(1000)
     expect(target.saveData).toHaveBeenCalledTimes(1)
-    expect(target.saveData).toHaveBeenCalledWith({ best: 0, settings: { sound: 0.5, music: 0, effects: true } })
+    expect(target.saveData).toHaveBeenCalledWith(
+      expect.objectContaining({ settings: { ...DEFAULT_SETTINGS, sound: 0.5, music: 0 } }),
+    )
   })
 
   it("flush writes a delayed change at once", async () => {

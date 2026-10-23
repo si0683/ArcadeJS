@@ -28,6 +28,8 @@ jobs:
       - run: npm ci || npm install
       # Linter, types, unit tests and the build: a broken game is never published
       - run: npm run check
+      # Your own site: an installable offline web app (PWA). Portals get `npm run zip` instead
+      - run: node scripts/pwa.mjs
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist

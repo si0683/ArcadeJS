@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { pickLanguage, texts, volumeLabel } from "./i18n"
+import { fmt, pickLanguage, starsLabel, texts, volumeLabel } from "./i18n"
 
 describe("i18n", () => {
   it("every language has every text", () => {
@@ -22,5 +22,12 @@ describe("i18n", () => {
   it("volume labels show percent or off", () => {
     expect(volumeLabel("sound", 0.75)).toMatch(/75%$/)
     expect(volumeLabel("music", 0)).not.toMatch(/%/)
+  })
+})
+
+describe("texts with values", () => {
+  it("fills {n} placeholders and draws stars", () => {
+    expect(fmt("dailyText", { n: 3, m: 20 })).toMatch(/3.*20/)
+    expect(starsLabel(2)).toBe("★★☆")
   })
 })

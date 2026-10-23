@@ -1,6 +1,6 @@
 import Phaser from "phaser"
 
-import { updateMusicVolume } from "../audio"
+import { duckMusic, updateMusicVolume } from "../audio"
 import { TEXT_STYLE } from "../config"
 import { effectsLabel, t, volumeLabel } from "../i18n"
 import { Controls } from "../input"
@@ -28,6 +28,7 @@ export class PauseScene extends Phaser.Scene {
 
     this.controls = new Controls(this)
     const game = this.scene.get("game") as GameScene
+    duckMusic(this, true)
     const setting = (patch: Parameters<typeof save.update>[0]) => save.update(patch, 1000)
     this.menu = new MenuList(
       this,
@@ -53,7 +54,8 @@ export class PauseScene extends Phaser.Scene {
             game.look.setEnabled(save.get().settings.effects)
           },
         },
-        { label: t("toMenu"), action: () => this.quit() },
+        { label: t("restart"), action: () => this.quit("game", { level: game.level }) },
+        { label: t("toMenu"), action: () => this.quit("menu") },
       ],
       this.controls,
     )
@@ -66,16 +68,22 @@ export class PauseScene extends Phaser.Scene {
   }
 
   private resume() {
+    duckMusic(this, false)
     this.scene.stop()
     this.scene.resume("hud")
     this.scene.resume("game")
     platform.gameplayStart()
   }
 
-  private quit() {
-    track("quit", { level: 1, score: this.registry.get("score") as number })
+  /** Leave the level: to the menu or into the same level again */
+  private quit(key: "menu" | "game", data?: object) {
+    duckMusic(this, false)
+    track(key === "game" ? "restart" : "quit", {
+      level: (this.registry.get("level") as number) + 1,
+      score: this.registry.get("score") as number,
+    })
     this.scene.stop("hud")
     this.scene.stop("game")
-    goTo(this, "menu")
+    goTo(this, key, data)
   }
 }

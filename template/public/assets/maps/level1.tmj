@@ -12,7 +12,7 @@
  "version": "1.10",
  "backgroundcolor": "#cfefff",
  "nextlayerid": 4,
- "nextobjectid": 21,
+ "nextobjectid": 26,
  "layers": [
   {
    "data": [
@@ -2084,6 +2084,94 @@
      "point": true,
      "rotation": 0,
      "visible": true
+    },
+    {
+     "id": 21,
+     "name": "hint",
+     "type": "",
+     "x": 81,
+     "y": 162,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "text",
+       "type": "string",
+       "value": "hintMove"
+      }
+     ]
+    },
+    {
+     "id": 22,
+     "name": "hint",
+     "type": "",
+     "x": 207,
+     "y": 126,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "text",
+       "type": "string",
+       "value": "hintJump"
+      }
+     ]
+    },
+    {
+     "id": 23,
+     "name": "hint",
+     "type": "",
+     "x": 261,
+     "y": 162,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "text",
+       "type": "string",
+       "value": "hintStomp"
+      }
+     ]
+    },
+    {
+     "id": 24,
+     "name": "checkpoint",
+     "type": "",
+     "x": 495,
+     "y": 216,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "rotation": 0,
+     "visible": true
+    },
+    {
+     "id": 25,
+     "name": "hint",
+     "type": "",
+     "x": 495,
+     "y": 162,
+     "width": 0,
+     "height": 0,
+     "point": true,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "text",
+       "type": "string",
+       "value": "hintCheckpoint"
+      }
+     ]
     }
    ],
    "opacity": 1,
@@ -2132,6 +2220,11 @@
      "properties": [
       {
        "name": "collides",
+       "type": "bool",
+       "value": true
+      },
+      {
+       "name": "oneWay",
        "type": "bool",
        "value": true
       }

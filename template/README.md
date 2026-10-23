@@ -11,8 +11,11 @@ npm run build    # готовая игра в папке dist/ — загруз�
 npm run preview  # посмотреть собранную dist/
 npm run zip      # game.zip (index.html в корне) для игровых порталов
 npm run check     # перед коммитом: линтер, типы, тесты, сборка, бюджет размера
+npm run build:web # сборка для своего сайта: офлайн-версия (PWA), ставится на телефон
 npm run atlas     # упаковать картинки из art/atlas/<имя>/ в атлас public/assets/atlas/
+npm run audio     # сжать звуки WAV → OGG + M4A (нужен ffmpeg)
 npm run size      # размер собранной игры: JS (gzip) и всё вместе
+npm run test:perf # FPS при замедленном в 4 раза процессоре
 npm test          # модульные тесты (Vitest): правила, сохранения, платформа
 npm run test:e2e  # игра в браузере (Playwright); первый раз: npx playwright install chromium
 npm run lint      # ESLint; npm run format — Prettier
@@ -29,6 +32,7 @@ npm run lint      # ESLint; npm run format — Prettier
 | F3 | хитбоксы физики |
 | F4 | бессмертие |
 | F6 | пройти уровень |
+| F7 / F8 | записать прохождение / воспроизвести запись |
 
 В собранную игру инструменты не попадают.
 
@@ -36,7 +40,15 @@ npm run lint      # ESLint; npm run format — Prettier
 
 ```
 src/main.ts              настройки игры: размер, физика, геймпад, сцены
-src/config.ts            баланс: движение героя, гравитация, камера, эффекты, жизни, очки
+src/config.ts            баланс и FEATURES — включение опциональных систем
+src/genre.ts             жанр проекта (платформер / top-down)
+src/levels.ts            список уровней, звёзды, открытие уровней (тесты)
+src/achievements.ts      достижения; src/daily.ts — ежедневная награда; src/meta.ts — всплывающие окна
+src/remote.ts            удалённый конфиг баланса
+src/replay.ts            запись и воспроизведение прохождений
+src/tiled.ts             свойства объектов Tiled
+src/parallax.ts          фон из слоёв (параллакс)
+src/orientation.ts       «поверните телефон»
 src/rules.ts             правила игры (тесты — rules.test.ts)
 src/movement.ts          движение героя: разгон, coyote time, буфер и высота прыжка (тесты)
 src/fsm.ts               автомат состояний для героя и врагов
@@ -46,37 +58,46 @@ src/look.ts              фильтры Phaser 4: виньетка, цветок
 src/transition.ts        переходы между сценами с затемнением
 src/ui.ts                меню для клавиатуры, геймпада и тача
 src/telemetry.ts         аналитика и отлов ошибок
-src/save.ts              сохранение: рекорд и настройки (громкость, эффекты)
-src/audio.ts             playSfx / playMusic с учётом громкости
+src/save.ts              сохранение: рекорд, копилка, уровни, достижения, настройки
+src/audio.ts             звук: вариации, лимит, музыка с плавной сменой, тише на паузе
 src/i18n.ts              тексты на русском и английском
 src/entities/
   Player.ts              герой: движение, анимации, отклик
   Slime.ts               враг-патрульный
+  MovingPlatform.ts      движущаяся платформа
 src/scenes/
   PreloadScene.ts        загрузка картинок, звуков, карты
-  MenuScene.ts           меню, экран «Победа / Игра окончена», настройки (S, M, E)
+  MenuScene.ts           меню: старт, быстрые настройки (S, M, E), настройки (O), награда дня
+  LevelSelectScene.ts    выбор уровня со звёздами
+  SettingsScene.ts       настройки: звук, эффекты, язык, экран, управление, клавиши
+  ToastScene.ts          всплывающие окна поверх всех сцен
   GameScene.ts           уровень: игрок, монеты, враги, флаг, камера
   HudScene.ts            счёт, жизни, кнопки для телефона
-  PauseScene.ts          пауза (Esc / P / Start): продолжить, громкость, эффекты, меню
+  PauseScene.ts          пауза (Esc / P / Start): продолжить, громкость, эффекты, заново, меню
 src/debug/               инструменты разработчика (только npm run dev)
-scripts/                 zip, атлас, бюджет размера
+scripts/                 zip, атлас, звук, PWA, бюджет размера
 public/assets/
-  maps/level1.tmj        уровень из Tiled
+  maps/level1.tmj        уровни из Tiled (level2.tmj — платформы, пружина, чекпоинт)
   maps/tiles.png         тайлы 18×18
   sprites/  sounds/      картинки и звуки (CREDITS.md — авторы)
-e2e/game.spec.ts         проверка игры в браузере (Playwright)
+e2e/                     браузерные тесты: игра, скриншоты экранов, FPS (Playwright)
 ```
 
 ## Уровни в Tiled
 
 1. Скачайте бесплатный редактор: https://www.mapeditor.org
-2. Откройте `public/assets/maps/level1.tmj`.
+2. Откройте `public/assets/maps/level1.tmj` (или `level2.tmj`).
 3. Рисуйте тайлами в слоях `ground` (земля, платформы) и `decor` (украшения).
-   Монеты, слизней, флаг и старт игрока ставьте точками в слое `objects` — важно имя точки:
-   `player`, `coin`, `slime`, `flag`.
+   Объекты ставьте в слой `objects` — важно имя: `player`, `coin`, `slime`, `flag`, `checkpoint`,
+   `spring`, `hint` (подсказка), `platform` (прямоугольник — движущаяся платформа). Их числа — свойства объекта.
 4. Сохраните (Ctrl+S) и обновите страницу игры (F5).
 
-Свойства тайлов: `collides` — твёрдый, `hazard` — ранит (шипы, вода).
+Свойства тайлов: `collides` — твёрдый, `oneWay` — твёрдый только сверху, `hazard` — ранит (шипы, вода).
+Новый уровень — строка в `src/levels.ts`. Подробно — «Новый уровень» и «Механики уровня в Tiled» в RECIPES.md.
+
+## Опциональные системы
+
+Выбор уровня со звёздами, чекпоинты, подсказки обучения, параллакс, достижения, ежедневная награда, «поверните телефон», удалённый конфиг — всё включается и выключается флагами `FEATURES` в `src/config.ts`.
 
 ## Физика
 

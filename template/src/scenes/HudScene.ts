@@ -3,6 +3,8 @@ import Phaser from "phaser"
 import { TEXT_STYLE } from "../config"
 import { t } from "../i18n"
 import { VirtualButtons, type Action } from "../input"
+import { GENRE } from "../genre"
+import { save } from "../save"
 
 // Runs on top of GameScene without camera zoom: score, lives and touch buttons.
 export class HudScene extends Phaser.Scene {
@@ -54,9 +56,56 @@ export class HudScene extends Phaser.Scene {
       b.on("pointerup", () => this.touch.release(action))
       b.on("pointerout", () => this.touch.release(action))
     }
-    button(80, height - 70, 46, "◀", "left")
-    button(190, height - 70, 46, "▶", "right")
-    button(width - 90, height - 70, 46, "▲", "jump")
+    // Settings → touch controls: two arrow buttons or a joystick
+    if (GENRE.joystickOnly || save.get().settings.touch === "joystick") this.addJoystick(110, height - 100)
+    else {
+      button(80, height - 70, 46, "◀", "left")
+      button(190, height - 70, 46, "▶", "right")
+    }
+    button(width - 90, height - 70, 46, GENRE.actionLabel, "jump")
     button(width / 2, 34, 24, "II", "pause")
+  }
+
+  /** A joystick on the left: touch anywhere in the left third and slide */
+  private addJoystick(x: number, y: number) {
+    const RADIUS = 60
+    const DEAD = 14
+    const base = this.add.circle(x, y, RADIUS, 0xffffff, 0.15).setStrokeStyle(3, 0xffffff, 0.5)
+    const knob = this.add.circle(x, y, 28, 0xffffff, 0.45)
+    const zone = this.add.zone(0, this.scale.height / 3, this.scale.width / 3, this.scale.height).setOrigin(0)
+    zone.setInteractive()
+    let pointerId = -1
+
+    const move = (pointer: Phaser.Input.Pointer) => {
+      const dx = Phaser.Math.Clamp(pointer.x - base.x, -RADIUS, RADIUS)
+      const dy = Phaser.Math.Clamp(pointer.y - base.y, -RADIUS, RADIUS)
+      knob.setPosition(base.x + dx, base.y + dy)
+      if (dx < -DEAD) this.touch.press("left")
+      else this.touch.release("left")
+      if (dx > DEAD) this.touch.press("right")
+      else this.touch.release("right")
+      // Up/down only for genres that walk in four directions (a platformer jumps with its button)
+      if (GENRE.joystickOnly && dy < -DEAD) this.touch.press("up")
+      else this.touch.release("up")
+      if (GENRE.joystickOnly && dy > DEAD) this.touch.press("down")
+      else this.touch.release("down")
+    }
+    const release = () => {
+      pointerId = -1
+      knob.setPosition(base.x, base.y)
+      for (const action of ["left", "right", "up", "down"] as const) this.touch.release(action)
+    }
+    zone.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      pointerId = pointer.id
+      // The joystick appears where the thumb lands
+      base.setPosition(pointer.x, pointer.y)
+      move(pointer)
+    })
+    this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
+      if (pointer.id === pointerId) move(pointer)
+    })
+    this.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
+      if (pointer.id === pointerId) release()
+    })
   }
 }

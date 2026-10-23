@@ -2,8 +2,10 @@ import type Phaser from "phaser"
 import { Pane } from "tweakpane"
 
 import { cheats } from "../cheats"
-import { CAMERA, FX, GRAVITY, PLAYER } from "../config"
+import { CAMERA, FX, GRAVITY } from "../config"
+import { GENRE } from "../genre"
 import { LOOK } from "../look"
+import { parseReplay, replay } from "../replay"
 import type { GameScene } from "../scenes/GameScene"
 import { recent } from "../telemetry"
 
@@ -12,6 +14,7 @@ import { recent } from "../telemetry"
 //   F2 — tuning panel: speed, jump, gravity, camera, effects — live; "Copy" puts the values
 //        on the clipboard to paste into src/config.ts
 //   F3 — physics hitboxes   F4 — god mode   F6 — win the level
+//   F7 — record input from the level start / stop and download replay.json   F8 — play a replay file
 
 export function installDebug(game: Phaser.Game) {
   const level = () => {
@@ -47,14 +50,24 @@ export function installDebug(game: Phaser.Game) {
         .join(", ")}`,
     ]
     if (scene) {
-      const p = scene.player
+      // Any genre's player: position, speed, state machine and movement timers if it has them
+      const p = scene.player as unknown as {
+        x: number
+        y: number
+        body: Phaser.Physics.Arcade.Body
+        states?: { state?: string }
+        move?: Record<string, number | boolean>
+      }
       const b = p.body
       lines.push(
-        `player ${p.x.toFixed(0)},${p.y.toFixed(0)}  v ${b.velocity.x.toFixed(0)},${b.velocity.y.toFixed(0)}  ${p.states.state}`,
-        `coyote ${p.move.coyote.toFixed(0)} ms  buffer ${p.move.buffer.toFixed(0)} ms  floor ${b.blocked.down}`,
+        `player ${p.x.toFixed(0)},${p.y.toFixed(0)}  v ${b.velocity.x.toFixed(0)},${b.velocity.y.toFixed(0)}  ${p.states?.state ?? ""}`,
+        Object.entries(p.move ?? {})
+          .map(([k, v]) => `${k} ${typeof v === "number" ? v.toFixed(Number.isInteger(v) ? 0 : 2) : v}`)
+          .join("  "),
       )
     }
-    lines.push(`god ${cheats.god ? "ON" : "off"}   hitboxes ${hitboxes ? "ON" : "off"}`, "— events —")
+    const rec = replay.isRecording ? "REC ●" : replay.isPlaying ? "REPLAY ▶" : "off"
+    lines.push(`god ${cheats.god ? "ON" : "off"}   hitboxes ${hitboxes ? "ON" : "off"}   replay ${rec}`, "— events —")
     for (const e of recent.slice(-6)) lines.push(`${(e.time / 1000).toFixed(1)}s ${e.name} ${JSON.stringify(e.data)}`)
     overlay.textContent = lines.join("\n")
   }
@@ -64,17 +77,15 @@ export function installDebug(game: Phaser.Game) {
   const world = { gravity: GRAVITY }
   const pane = new Pane({ title: "Tuning (F2)" })
   pane.hidden = true
+  // The genre's movement numbers (PLAYER for the platformer, HERO for top-down): a slider per number,
+  // range from 0 to 4× the starting value
   const player = pane.addFolder({ title: "Player" })
-  player.addBinding(PLAYER, "speed", { min: 40, max: 400, step: 1 })
-  player.addBinding(PLAYER, "accel", { min: 100, max: 5000, step: 50 })
-  player.addBinding(PLAYER, "decel", { min: 100, max: 5000, step: 50 })
-  player.addBinding(PLAYER, "airControl", { min: 0, max: 1, step: 0.05 })
-  player.addBinding(PLAYER, "jumpSpeed", { min: 100, max: 800, step: 5 })
-  player.addBinding(PLAYER, "jumpCut", { min: 0.1, max: 1, step: 0.05 })
-  player.addBinding(PLAYER, "coyoteMs", { min: 0, max: 250, step: 5 })
-  player.addBinding(PLAYER, "bufferMs", { min: 0, max: 250, step: 5 })
-  player.addBinding(PLAYER, "fallGravity", { min: 1, max: 3, step: 0.05 })
-  player.addBinding(PLAYER, "maxFall", { min: 100, max: 1200, step: 10 })
+  const tuning = GENRE.tuning as Record<string, number>
+  for (const [key, value] of Object.entries(tuning)) {
+    if (typeof value !== "number") continue
+    const max = value === 0 ? 1 : Math.abs(value) * 4
+    player.addBinding(tuning, key, { min: 0, max, step: max <= 4 ? 0.01 : 1 })
+  }
   const physics = pane.addFolder({ title: "World & camera" })
   physics.addBinding(world, "gravity", { min: 100, max: 3000, step: 10 }).on("change", ({ value }) => {
     const scene = level()
@@ -96,7 +107,8 @@ export function installDebug(game: Phaser.Game) {
   pane.addButton({ title: "Copy values for config.ts" }).on("click", () => {
     const text = [
       `export const GRAVITY = ${world.gravity}`,
-      `export const PLAYER: MoveTuning = ${JSON.stringify(PLAYER, null, 2)}`,
+      `// ${GENRE.name === "platformer" ? "PLAYER in src/config.ts" : "HERO in src/topdown.ts"}
+${JSON.stringify(GENRE.tuning, null, 2)}`,
       `export const CAMERA = ${JSON.stringify(CAMERA)}`,
       `export const FX = ${JSON.stringify(FX)}`,
       `// src/look.ts
@@ -122,6 +134,40 @@ export const LOOK = ${JSON.stringify(LOOK)}`,
     if (scene) scene.physics.world.gravity.y = world.gravity
   })
 
+  // ---------- F7 / F8: input replays (src/replay.ts) ----------
+  const toggleRecording = () => {
+    const scene = level()
+    if (replay.isRecording) {
+      const data = replay.stopRecording()
+      if (!data) return
+      const link = document.createElement("a")
+      link.href = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: "application/json" }))
+      link.download = `replay-level${data.level + 1}-${Date.now()}.json`
+      link.click()
+      URL.revokeObjectURL(link.href)
+      console.info(`[replay] ${(data.duration / 1000).toFixed(1)} s, ${data.events.length} input changes saved`)
+    } else if (scene) {
+      replay.startRecording(scene.level)
+      scene.scene.restart({ level: scene.level })
+      console.info("[replay] recording from the level start; F7 again to stop")
+    }
+  }
+  const openReplay = () => {
+    const input = document.createElement("input")
+    input.type = "file"
+    input.accept = ".json,application/json"
+    input.onchange = async () => {
+      const data = parseReplay((await input.files?.[0]?.text()) ?? "")
+      if (!data) return console.warn("[replay] not a replay file")
+      replay.startPlayback(data)
+      // From whatever screen is open: stop it and start the recorded level
+      for (const s of game.scene.getScenes(true)) if (s.scene.key !== "toast") s.scene.stop()
+      game.scene.start("game", { level: data.level })
+      console.info(`[replay] playing ${(data.duration / 1000).toFixed(1)} s`)
+    }
+    input.click()
+  }
+
   // ---------- keys ----------
   addEventListener("keydown", (e) => {
     const actions: Record<string, () => void> = {
@@ -136,6 +182,8 @@ export const LOOK = ${JSON.stringify(LOOK)}`,
       },
       F4: () => (cheats.god = !cheats.god),
       F6: () => level()?.win(),
+      F7: toggleRecording,
+      F8: openReplay,
     }
     const action = actions[e.key]
     if (!action) return
@@ -144,5 +192,5 @@ export const LOOK = ${JSON.stringify(LOOK)}`,
     renderOverlay()
   })
 
-  console.info("Dev tools: F1 overlay · F2 tuning · F3 hitboxes · F4 god mode · F6 win the level")
+  console.info("Dev tools: F1 overlay · F2 tuning · F3 hitboxes · F4 god mode · F6 win · F7 record · F8 replay")
 }

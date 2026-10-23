@@ -11,7 +11,7 @@ npm run dev
 ```
 
 Until the package is on npm, run it from GitHub: `npx github:si0683/GameMonsterJS2D my-game`.
-Options: `--no-install`, `--no-git`. Needs Node.js 20.19+.
+Options: `--template=<genre>`, `--sdk=<portal>`, `--no-install`, `--no-git`. Needs Node.js 20.19+.
 
 ## What you get
 
@@ -25,6 +25,26 @@ Options: `--no-install`, `--no-git`. Needs Node.js 20.19+.
 Plus a playable platformer (run, jump, coins, slimes, spikes, water, flag), menu and HUD, touch buttons for phones, free CC0 art by Kenney, `AGENTS.md` for AI assistants and a GitHub Pages workflow.
 
 Matter.js and Howler.js are deliberately not separate packages: Phaser already contains Matter.js and its own sound manager.
+
+## Genres
+
+```bash
+npm create gamemonsterjs2d@latest my-game                         # platformer (default)
+npm create gamemonsterjs2d@latest my-game -- --template=topdown   # top-down: walking, dash, chasing enemies
+```
+
+A genre changes only the level scene, its entities and maps; menus, levels, saves, effects, SDKs and tests are shared.
+
+## Game systems included
+
+Each one is switched in `FEATURES` (`src/config.ts`):
+
+- **Levels:** a list in `src/levels.ts`, level select with stars, unlocking in order, maps loaded when a level starts.
+- **Tiled mechanics:** checkpoints, springs, moving platforms, jump-through planks, tutorial hints, object properties (enemy speed, platform path).
+- **Meta game:** achievements with pop-ups, a daily reward with a streak, a coin wallet, remote balance config.
+- **Settings:** sound, music, effects, language, fullscreen, touch buttons or joystick, key re-assignment; "rotate your phone", safe areas.
+- **Audio:** pitch variation, copy limit, music crossfade, ducking under the pause, `npm run audio` compression.
+- **Release and QA:** offline web app for your own site (`npm run build:web`), input recording and replay (F7/F8), screenshot tests, FPS test on a slowed-down CPU (`npm run test:perf`).
 
 ## Game feel and pro tools
 

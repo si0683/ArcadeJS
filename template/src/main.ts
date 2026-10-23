@@ -5,18 +5,24 @@ import { platform } from "./platform"
 import { save } from "./save"
 import { shop } from "./shop"
 import { GameScene } from "./scenes/GameScene"
+import { loadRemoteConfig } from "./remote"
+import { replay } from "./replay"
 import { HudScene } from "./scenes/HudScene"
+import { LevelSelectScene } from "./scenes/LevelSelectScene"
 import { MenuScene } from "./scenes/MenuScene"
 import { PauseScene } from "./scenes/PauseScene"
 import { PreloadScene } from "./scenes/PreloadScene"
+import { SettingsScene } from "./scenes/SettingsScene"
+import { ToastScene } from "./scenes/ToastScene"
 import { addSink, captureErrors } from "./telemetry"
 
 // Errors and analytics events: printed in dev; in production add a sink (RECIPES.md → "Аналитика")
 captureErrors()
 if (import.meta.env.DEV) addSink((e) => console.debug("[track]", e.name, e.data))
 
-// The platform (SDK) first: it sets the language and may need to load its script
-await platform.init()
+// The platform (SDK) first: it sets the language and may need to load its script.
+// Remote balance overrides (FEATURES.remoteConfigUrl) load at the same time
+await Promise.all([platform.init(), loadRemoteConfig()])
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -39,7 +45,7 @@ const game = new Phaser.Game({
     arcade: { gravity: { x: 0, y: GRAVITY }, debug: false },
   },
   input: { activePointers: 3, gamepad: true },
-  scene: [PreloadScene, MenuScene, GameScene, HudScene, PauseScene],
+  scene: [PreloadScene, MenuScene, LevelSelectScene, SettingsScene, GameScene, HudScene, PauseScene, ToastScene],
 })
 
 // Ads, purchase windows and hidden tabs: silence and freeze the game
@@ -59,6 +65,6 @@ addEventListener("pagehide", () => void save.flush())
 // and the dev tools are on: F1 overlay, F2 tuning panel, F3 hitboxes, F4 god mode, F6 win the level.
 // `import.meta.env.DEV` is false in `npm run build`, so none of this code reaches the players
 if (import.meta.env.DEV) {
-  Object.assign(window, { game, platform, save, shop })
+  Object.assign(window, { game, platform, save, shop, replay })
   void import("./debug").then(({ installDebug }) => installDebug(game))
 }

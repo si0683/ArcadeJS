@@ -43,7 +43,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   /** Called by the scene every frame; `dt` in ms */
   step(controls: Controls, time: number, dt: number) {
-    const onFloor = this.body.blocked.down
+    // blocked — tiles and world bounds, touching — bodies such as moving platforms
+    const onFloor = this.body.blocked.down || this.body.touching.down
     const r = stepMovement(
       this.move,
       { x: controls.axisX, jumpHeld: controls.isDown("jump"), jumpPressed: controls.justPressed("jump") },
@@ -92,10 +93,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setVelocityY(-knockback)
   }
 
-  /** Bounce up off an enemy; holding jump bounces higher (the jump cut applies as usual) */
-  bounce(speed: number) {
+  /**
+   * Bounce up: off an enemy (holding jump bounces higher — the jump cut applies as usual)
+   * or a spring (`holdable = false`: always the full height)
+   */
+  bounce(speed: number, holdable = true) {
     this.setVelocityY(-speed)
-    this.move = { ...this.move, rising: true }
+    this.move = { ...this.move, rising: holdable }
   }
 
   respawn(x: number, y: number) {

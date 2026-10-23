@@ -11,6 +11,7 @@ type GameWindow = Window & {
   save: typeof import("../src/save").save
   shop: typeof import("../src/shop").shop
   platform: typeof import("../src/platform").platform
+  replay: typeof import("../src/replay").replay
 }
 
 /** Runs `read` in the page with the dev-mode globals (window.game, save, shop, platform) */
@@ -19,6 +20,9 @@ const inGame = <T>(page: Page, read: (w: GameWindow) => T) => page.evaluate(`(${
 const activeScene = (page: Page, key: string) =>
   page.waitForFunction((k) => (window as unknown as GameWindow).game?.scene.isActive(k), key)
 
+// Every test serves fake portal SDKs: browser checks never reach a real portal, even with keys in .env
+test.beforeEach(({ page }) => mockPlatformSdk(page))
+
 test("the game loads, starts and the player moves", async ({ page }) => {
   const errors: string[] = []
   page.on("pageerror", (error) => errors.push(error.message))
@@ -26,7 +30,6 @@ test("the game loads, starts and the player moves", async ({ page }) => {
     if (message.type() === "error") errors.push(message.text())
   })
 
-  await mockPlatformSdk(page)
   await page.goto("/")
   await activeScene(page, "menu")
   await expect(page.locator("canvas")).toBeVisible()
@@ -48,9 +51,12 @@ test("the game loads, starts and the player moves", async ({ page }) => {
     await page.waitForFunction(() => (window as unknown as GameWindow).shop.has("no_ads"))
   }
 
-  // Any other key starts the level
+  // Any other key opens the level select; the second level is closed, Enter starts the first
+  await page.keyboard.press("Enter")
+  await activeScene(page, "levels")
   await page.keyboard.press("Enter")
   await activeScene(page, "game")
+  expect(await inGame(page, (w) => w.game.registry.get("level"))).toBe(0)
 
   const playerX = () =>
     page.evaluate(() => {
@@ -67,7 +73,6 @@ test("the game loads, starts and the player moves", async ({ page }) => {
   await page.keyboard.up("ArrowRight")
   expect(await playerX()).toBeGreaterThan(before + 20)
 
-  // Jump: Space lifts the player off the ground
   const playerY = () =>
     page.evaluate(() => {
       const scene = (window as unknown as GameWindow).game.scene.getScene("game") as unknown as {
@@ -76,12 +81,21 @@ test("the game loads, starts and the player moves", async ({ page }) => {
       return scene.player.y
     })
   await page.waitForTimeout(300)
-  const ground = await playerY()
-  await page.keyboard.down("Space")
-  await page.waitForTimeout(200)
-  expect(await playerY()).toBeLessThan(ground - 10)
-  await page.keyboard.up("Space")
-  await page.waitForTimeout(800)
+  const startY = await playerY()
+  if ((await inGame(page, (w) => w.game.registry.get("genre"))) === "topdown") {
+    // Top-down: ↓ walks down
+    await page.keyboard.down("ArrowDown")
+    await page.waitForTimeout(500)
+    await page.keyboard.up("ArrowDown")
+    expect(await playerY()).toBeGreaterThan(startY + 10)
+  } else {
+    // Platformer: Space lifts the player off the ground
+    await page.keyboard.down("Space")
+    await page.waitForTimeout(200)
+    expect(await playerY()).toBeLessThan(startY - 10)
+    await page.keyboard.up("Space")
+    await page.waitForTimeout(800)
+  }
 
   // Pause: Esc opens the pause screen and freezes the level, Esc again resumes
   await page.keyboard.press("Escape")
@@ -97,4 +111,85 @@ test("the game loads, starts and the player moves", async ({ page }) => {
   if (calls) expect(calls).toEqual(expect.arrayContaining(["ready", "gameplayStart", "gameplayStop"]))
 
   expect(errors).toEqual([])
+})
+
+test("levels: finishing a level gives stars and opens the next one", async ({ page }) => {
+  await page.goto("/")
+  await activeScene(page, "menu")
+  await page.keyboard.press("Enter")
+  await activeScene(page, "levels")
+  await page.keyboard.press("Enter")
+  await activeScene(page, "game")
+  // The dev shortcut F6 wins the level at once
+  await page.waitForTimeout(400)
+  await page.keyboard.press("F6")
+  await activeScene(page, "levels")
+  const progress = await inGame(page, (w) => w.save.get().levels)
+  expect(progress.level1.stars).toBeGreaterThan(0)
+  // Focus moved to level 2, which is open now
+  await page.keyboard.press("Enter")
+  await activeScene(page, "game")
+  expect(await inGame(page, (w) => w.game.registry.get("level"))).toBe(1)
+  expect(await inGame(page, (w) => w.save.get().achievements)).toContain("first_win")
+})
+
+test("settings: the language switch is saved", async ({ page }) => {
+  await page.goto("/")
+  await activeScene(page, "menu")
+  await page.keyboard.press("KeyO")
+  await activeScene(page, "settings")
+  // Language: 4th item (sound, music, effects, language)
+  for (let i = 0; i < 3; i++) {
+    await page.keyboard.press("ArrowDown")
+    await page.waitForTimeout(80)
+  }
+  await page.keyboard.press("Enter")
+  await expect.poll(() => inGame(page, (w) => w.save.get().settings.lang)).toBe("ru")
+})
+
+test("replay: a recorded run plays back the same way", async ({ page }) => {
+  await page.goto("/")
+  await activeScene(page, "menu")
+  await page.evaluate(() => (window as unknown as GameWindow).game.scene.getScene("menu").scene.start("game"))
+  await activeScene(page, "game")
+  await page.waitForTimeout(500)
+  const playerX = () =>
+    page.evaluate(
+      () =>
+        ((window as unknown as GameWindow).game.scene.getScene("game") as unknown as { player: { x: number } }).player
+          .x,
+    )
+
+  // Record: run right for a while from the level start
+  await page.evaluate(() => {
+    const w = window as unknown as GameWindow
+    w.replay.startRecording(0)
+    w.game.scene.getScene("game").scene.restart({ level: 0 })
+  })
+  // Input through the HUD touch buttons: steady in a headless browser, where a held key may drop
+  const touch = (action: "press" | "release") =>
+    page.evaluate((a) => {
+      const hud = (window as unknown as GameWindow).game.scene.getScene("hud") as unknown as {
+        touch: { press(x: string): void; release(x: string): void }
+      }
+      hud.touch[a]("right")
+    }, action)
+  await page.waitForTimeout(400)
+  await touch("press")
+  await page.waitForTimeout(800)
+  await touch("release")
+  await page.waitForTimeout(300)
+  const recordedX = await playerX()
+  const changes = await page.evaluate(() => {
+    const w = window as unknown as GameWindow
+    const data = w.replay.stopRecording()!
+    w.replay.startPlayback(data)
+    w.game.scene.getScene("game").scene.restart({ level: 0 })
+    return data.events.length
+  })
+  // Nothing pressed → right held → released
+  expect(changes).toBeGreaterThanOrEqual(3)
+  // Play back with no keys pressed: the player runs by the recording
+  await page.waitForFunction(() => !(window as unknown as GameWindow).replay.isPlaying, null, { timeout: 10_000 })
+  expect(Math.abs((await playerX()) - recordedX)).toBeLessThan(16)
 })

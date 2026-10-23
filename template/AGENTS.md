@@ -10,20 +10,26 @@ Phaser ships its own skills: `node_modules/phaser/skills/<topic>/SKILL.md` (scen
 
 ## Structure
 
-- `src/main.ts` — game config: size 960×540 (`Scale.FIT`), `pixelArt`, physics, gamepad, list of scenes; error capture; dev tools in `npm run dev`.
-- `src/config.ts` — balance numbers: `GRAVITY`, `PLAYER` (movement tuning), `CAMERA`, `FX`, lives, points, text style. Objects, not constants, so the dev panel (F2) can change them live.
-- `src/scenes/` — `PreloadScene` (all assets + animations + particle textures) → `MenuScene` → `GameScene` (level) + `HudScene` (score, lives, touch buttons, runs in parallel, no zoom) + `PauseScene` (over the level).
-- `src/entities/` — `Player` (movement, state machine, juice) and `Slime`: one class per entity with `start()`/`step()`; scenes only wire them up.
-- `src/movement.ts` — platformer movement as plain math (acceleration, coyote time, jump buffer, variable jump, fall gravity) + `pickPlayerState`, tested in `movement.test.ts`; `src/fsm.ts` — `StateMachine` for entities.
-- `src/input.ts` — `Controls`: actions (`left right up down jump pause confirm`) from keyboard, gamepad and HUD touch buttons; `justPressed`/`isDown`/`justReleased`/`axisX`.
-- `src/fx.ts` — `Fx`: dust, sparks, pop text, squash, flash, hitstop, shake (respect the "Effects" setting); `src/look.ts` — camera filters (vignette, colour grade) and `glowLayer()`; `src/transition.ts` — `goTo()`/`fadeIn()` scene fades; `src/ui.ts` — `MenuList` (keyboard/gamepad/pointer menu with visible focus).
-- `src/telemetry.ts` — `track()` events, `captureErrors()`, sinks; `src/cheats.ts` — dev switches; `src/debug/` — dev tools (F1 overlay, F2 Tweakpane tuning, F3 hitboxes, F4 god mode, F6 win), loaded only under `npm run dev`.
-- `scripts/` — `zip.mjs` (portal archive), `atlas.mjs` (`npm run atlas`: `art/atlas/<name>/*.png` → `public/assets/atlas/<name>.png|json`), `size.mjs` (`npm run size`: JS gzip and total size budget, part of `npm run check`).
-- `public/assets/maps/level1.tmj` — Tiled map (JSON). Layers: `decor` (tiles, no collision), `ground` (tiles), `objects` (points by **name**: `player`, `coin`, `slime`, `flag`). Tileset `tiles` is embedded, image `maps/tiles.png`, tiles 18×18. Tile properties: `collides` (solid), `hazard` (hurts).
+- `src/main.ts` — game config: size 960×540 (`Scale.FIT`), `pixelArt`, physics, gamepad, list of scenes; platform init + remote config; error capture; dev tools in `npm run dev`.
+- `src/config.ts` — balance numbers: `GRAVITY`, `PLAYER` (movement tuning), `CAMERA`, `FX`, springs/platforms, lives, points, text style, and **`FEATURES`** — switches of the optional systems (level select, checkpoints, hints, parallax, achievements, daily reward, rotate prompt, remote config URL).
+- `src/genre.ts` — `GENRE`: platformer (default) or a genre template (`--template=topdown` replaces this file, `GameScene`, the maps and adds its entities). Controls text, key overrides, touch layout, dev-panel tuning object.
+- `src/scenes/` — `PreloadScene` (shared assets, animations, generated textures; maps are NOT here) → `MenuScene` (start, quick settings S/M/E, settings O, shop, daily reward) → `LevelSelectScene` (grid with stars, locks) → `GameScene` (one level; `init({ level })`, map loaded in its `preload()`) + `HudScene` (score, lives, touch buttons or joystick) + `PauseScene` (resume, volume, effects, restart, menu). `SettingsScene` (volume, effects, language, fullscreen, touch controls, key re-assignment). `ToastScene` — pop-ups above everything, launched once.
+- `src/levels.ts` — `LEVELS` (key, file, title) and progress as plain functions: `starsFor`, `isUnlocked`, `recordResult`, `totalStars`, `parseProgress` (tests in `levels.test.ts`).
+- `src/entities/` — `Player` (movement, state machine, juice), `Slime` (patrol, Tiled property `speed`), `MovingPlatform` (Tiled rectangle `platform` with `dx`/`dy`/`speed`, carries the player): one class per entity with `start()`/`step()`.
+- `src/movement.ts` — platformer movement as plain math (acceleration, coyote time, jump buffer, variable jump, fall gravity) + `pickPlayerState`; `src/fsm.ts` — `StateMachine`; `src/tiled.ts` — `prop(obj, name, fallback)` for custom properties of Tiled objects.
+- `src/input.ts` — `Controls`: actions (`left right up down jump pause confirm`) from keyboard (re-assignable: `keysFor()` = settings → genre → `KEYS`), gamepad and `VirtualButtons` (HUD buttons/joystick; taps shorter than a frame are kept); `justPressed`/`isDown`/`justReleased`/`axisX`/`axisY`. GameScene's Controls are recordable (`src/replay.ts`).
+- `src/fx.ts` — `Fx`: dust, sparks, pop text, squash, flash, hitstop, shake (respect the "Effects" setting); `src/look.ts` — camera filters and `glowLayer()`; `src/parallax.ts` — background layers + generated textures (hills, spring); `src/transition.ts` — `goTo()`/`fadeIn()`; `src/ui.ts` — `MenuList` (keyboard/gamepad/pointer, visible focus, options `gap`/`fontSize`/`focus`).
+- `src/audio.ts` — `playSfx(scene, key, volume, { variation, limit })` (random pitch, copy limit), `playMusic` (one track, crossfade, same track keeps playing), `stopMusic`, `duckMusic` (pause), `updateMusicVolume`. Fades run on the game clock.
+- `src/save.ts` — the one save record: `best`, `wallet`, `levels`, `achievements`, `daily`, `settings` (`sound`, `music`, `effects`, `lang`, `touch`, `keys`) with `parseSave` and `save.update()` (merges, optional delay).
+- `src/achievements.ts` (list + `checkAchievements`), `src/daily.ts` (`claimDaily`, streak), `src/remote.ts` (`applyOverrides`, `loadRemoteConfig`), `src/meta.ts` (`toast`, `unlockAchievements`, `claimDailyReward`) — tested in `meta.test.ts`.
+- `src/i18n.ts` — texts ru/en, `t()`, `fmt()` (`{n}` placeholders), `currentLanguage()` (settings → platform), `starsLabel`; `src/orientation.ts` — "turn your phone" (HTML `#rotate` + CSS media query).
+- `src/telemetry.ts` — `track()` events, `captureErrors()`, sinks; `src/replay.ts` — input recording/playback; `src/cheats.ts` — dev switches; `src/debug/` — dev tools (F1 overlay, F2 Tweakpane tuning, F3 hitboxes, F4 god mode, F6 win, F7 record, F8 replay), only under `npm run dev`.
+- `scripts/` — `zip.mjs` (portal archive), `atlas.mjs` (`npm run atlas`), `size.mjs` (`npm run size`, part of `check`), `pwa.mjs` (`npm run build:web`: offline web app; the GitHub Pages workflow runs it), `audio.mjs` (`npm run audio`: WAV → OGG/M4A with ffmpeg).
+- `public/assets/maps/level*.tmj` — Tiled maps (JSON). Layers: `decor` (no collision), `ground`, `objects` (points/rectangles by **name**: `player`, `coin`, `slime`, `flag`, `checkpoint`, `spring`, `hint` (property `text` = i18n key), `platform` (rectangle)). Tileset `tiles` embedded, image `maps/tiles.png`, 18×18. Tile properties: `collides` (solid), `oneWay` (solid from above only — planks), `hazard` (hurts). The same image is loaded as the sheet `tiles-sheet` (frames 18×18).
 - `public/assets/sprites|sounds` — loaded with `this.load.setPath("assets")`.
-- Shared state goes through `this.registry` (`score`, `lives`); HUD listens to `changedata`.
-- `src/rules.ts` — game rules as plain functions (stomp, record, lives) with tests in `src/rules.test.ts`; `src/save.ts` — the one save record (best + settings: sound, music, effects) with `parseSave` and `save.update()`; `src/audio.ts` — `playSfx` / `playMusic` / `updateMusicVolume` apply the volume settings; `src/i18n.ts` — texts.
-- `e2e/game.spec.ts` — Playwright check of the running game (menu settings, shop, run, jump, pause); `RECIPES.md` — step-by-step recipes (enemy, level, sound, save field, screen, language, purchase, assets, accessibility, performance, juice, filters, Aseprite, atlas, controls, live tuning, state machine, analytics, genre libraries).
+- Shared state goes through `this.registry` (`score`, `lives`, `level`, `genre`); HUD listens to `changedata`.
+- `src/rules.ts` — game rules as plain functions (stomp, record, lives) with tests.
+- `e2e/game.spec.ts` — Playwright: menu settings, shop, level select, run, jump (or walk for top-down), pause, level progress, settings, replay; `e2e/visual.spec.ts` — screenshot tests (snapshots saved on the first run per OS, commit them; `--update-snapshots` after an intended change); `e2e/perf.spec.ts` — FPS with a 4× slower CPU (`npm run test:perf`, `MIN_FPS` env). `RECIPES.md` — step-by-step recipes.
 
 ## Rules
 
@@ -37,6 +43,12 @@ Phaser ships its own skills: `node_modules/phaser/skills/<topic>/SKILL.md` (scen
 - Scene changes: `goTo(scene, key, data)` + `fadeIn(this)` in the next scene's create() (`src/transition.ts`); overlays (pause, shop) use `scene.launch` + `scene.pause` and `platform.gameplayStop/Start`. Menus are `MenuList` (`src/ui.ts`).
 - Balance numbers live in `src/config.ts` objects; when adding one, also add an `addBinding` line in `src/debug/index.ts`. Dev-only code goes to `src/debug/` behind `import.meta.env.DEV` (dynamic import) so it never ships.
 - Analytics: `track(name, data)` from `src/telemetry.ts` at meaningful moments (level start/end, death, purchase); never send personal data. Production sinks are added in `src/main.ts`.
+- Optional systems are switched in `FEATURES` (`src/config.ts`); code that belongs to one of them checks its flag, so turning it off never breaks the game.
+- Levels: add maps to `LEVELS` in `src/levels.ts` (+ title in i18n); never load maps in `PreloadScene`. `GameScene` takes `{ level }`; finishing goes to `levels` (or the next level / menu without the level select). Stars and unlocking are rules in `levels.ts` with tests.
+- Level objects come from Tiled by name; their numbers are custom properties read with `prop()` (`src/tiled.ts`), with defaults in `config.ts`.
+- Sound: effects through `playSfx` (pitch variation on by default — pass `{ variation: 0 }` for UI and jingles), music only through `playMusic`/`stopMusic`; never `this.sound.stopAll()` (it kills the crossfade).
+- Meta: achievements are data in `src/achievements.ts` (title in i18n); call `unlockAchievements(game, run)` at the end of a run. Pop-ups only through `toast()`.
+- Key re-assignment: scenes create `Controls` after settings may have changed (every scene does it in `create()`), so new keys apply on the next screen.
 - Phaser keyboard events may be delivered twice when several keys arrive in one frame: handlers of `keydown` that toggle something must dedupe by event (see `MenuScene`), or use `Controls.justPressed`.
 - Asset paths are relative (`base: "./"` in vite.config.ts), so the build runs from any folder and GitHub Pages.
 - In dev mode `window.game` is the Phaser.Game and `window.save` the save store: test with `game.scene.getScene("game")`; `e2e/` uses them too.
@@ -55,7 +67,8 @@ Phaser ships its own skills: `node_modules/phaser/skills/<topic>/SKILL.md` (scen
 
 ```bash
 npm run check     # ESLint + tsc + Vitest + vite build + size budget — must pass
-npm run test:e2e  # Playwright: the game loads, starts and the player moves (first time: npx playwright install chromium)
+npm run test:e2e  # Playwright: game flow, levels, settings, replay, screenshots (first time: npx playwright install chromium)
+npm run test:perf # optional: frame rate with a 4× slower CPU
 ```
 
 Add a unit test for every new rule and a step in `e2e/game.spec.ts` for every new core mechanic. `e2e/sdk-mock.ts` serves fake Yandex, CrazyGames and Poki SDKs (records calls in `window.sdkCalls`), so portal builds are checked too; VK Bridge works only inside VK, so `--sdk=vk` runs in its no-SDK mode there. Format with `npm run format` (Prettier: no semicolons, double quotes, width 120).

@@ -16,6 +16,14 @@ export interface MenuItem {
 const COLOR = "#ffffff"
 const FOCUS = "#f59e0b"
 
+export interface MenuOptions {
+  /** Distance between items, px */
+  gap?: number
+  fontSize?: number
+  /** Item focused at the start */
+  focus?: number
+}
+
 export class MenuList {
   private texts: Phaser.GameObjects.Text[] = []
   private focus = 0
@@ -26,17 +34,28 @@ export class MenuList {
     y: number,
     private items: MenuItem[],
     private controls: Controls,
-    gap = 52,
+    { gap = 52, fontSize = 30, focus = 0 }: MenuOptions = {},
   ) {
+    this.focus = Math.min(focus, items.length - 1)
     items.forEach((_item, i) => {
       const text = scene.add
-        .text(x, y + i * gap, "", { ...TEXT_STYLE, fontSize: "30px" })
+        .text(x, y + i * gap, "", { ...TEXT_STYLE, fontSize: `${fontSize}px` })
         .setOrigin(0.5)
         .setInteractive({ useHandCursor: true })
       text.on("pointerover", () => this.setFocus(i))
       text.on("pointerdown", () => this.choose(i))
       this.texts.push(text)
     })
+    this.render()
+  }
+
+  /** Index of the focused item */
+  get focused() {
+    return this.focus
+  }
+
+  /** Redraw the labels (after a change outside the menu) */
+  refresh() {
     this.render()
   }
 

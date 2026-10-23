@@ -1,0 +1,5 @@
+{
+  "title": "top-down (вид сверху: приключение, рогалик)",
+  "description": "Top-down: 8-direction walking with a dash, chasing enemies (state machine), wall maps from Tiled",
+  "append": ["AGENTS.md", "README.md"]
+}

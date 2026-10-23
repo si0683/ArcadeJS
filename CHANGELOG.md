@@ -1,5 +1,21 @@
 # Changelog
 
+## 5.0.0 — 2026-10-23
+
+A complete game structure on top of the engine features; every system can be switched off in `FEATURES` (`src/config.ts`).
+
+- Levels: `src/levels.ts` (list, stars by coins, unlocking, best score, tested), `LevelSelectScene` (grid, locks, result of the last level, focus on the next), maps load when a level starts (`GameScene.preload`), a second level.
+- Tiled mechanics: checkpoints, springs, moving platforms (carry the player), one-way planks (tile property `oneWay`), tutorial hints (`hint` + i18n key), object properties through `prop()` (`src/tiled.ts`); parallax background (`src/parallax.ts`).
+- Audio: pitch variation and a copy limit for effects, one music track with crossfades on the game clock, ducking under the pause; `npm run audio` (ffmpeg: WAV → OGG + M4A).
+- Settings scene: volume, effects, language override, fullscreen, touch buttons or a virtual joystick, key re-assignment (saved); "rotate your phone" overlay, safe areas for notched phones.
+- Meta game: achievements with pop-ups (`ToastScene`), daily reward with a streak, coin wallet, remote balance config (`FEATURES.remoteConfigUrl`).
+- Save: `wallet`, `levels`, `achievements`, `daily`, `settings.lang/touch/keys`; old saves keep loading.
+- QA: input recording and replay (`src/replay.ts`, F7/F8 in dev), screenshot tests (`e2e/visual.spec.ts`), FPS test with a 4× slower CPU (`npm run test:perf`); the browser check covers level progress, settings and replays.
+- Release: `npm run build:web` — offline installable web app (manifest, icons, service worker); the GitHub Pages workflow publishes it.
+- Genre templates: `--template=topdown` (8-direction walking with a dash, chasing enemies with a state machine, wall maps); `src/genre.ts` describes the genre for shared code; the installer asks for the genre.
+- Fixes: short taps and key presses between frames are no longer lost; pop-ups sent before their scene starts are queued.
+- Breaking for projects made from 4.x: `GameScene` takes `{ level }`, `Slime.start(speed)`, `playSfx` options, `save` has new fields, `MenuList` takes an options object.
+
 ## 4.6.0 — 2026-10-23
 
 - VK Play in the stack: new `--sdk=gamepush` ([GamePush](https://gamepush.com) — one SDK for VK Play, VK Games, OK, Yandex Games and more; the portal is detected by the page address). Wired: SDK from the official mirrors with `onGPInit`, `gp.player.ready`, `gameStart`, `gameplayStart/Stop`, fullscreen and rewarded ads with the SDK's own pause/resume, saves in the player field `save`, best score in `score`, purchases by product tag, language. Keys in `.env` (`.env.example`); without them it runs as no SDK. Guide: `GAMEPUSH.md`; the browser check mocks the GamePush SDK.
